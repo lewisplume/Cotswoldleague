@@ -19,57 +19,12 @@
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col">
 
-    <!-- NAVIGATION -->
-    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
-                    <a href="index.html" class="flex-shrink-0">
-                        <img class="h-10 w-auto" src="images/league-logo.png" alt="Cotswold League">
-                    </a>
-                    <!-- Desktop Menu -->
-                    <div class="hidden md:block">
-                        <div class="ml-10 flex items-baseline space-x-4">
-                            <a href="index.html" class="bg-slate-800 text-white px-3 py-2 rounded-md text-sm font-medium">Home</a>
-                            <a href="clubs.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Clubs</a>
-                            <a href="spectators.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Spectators</a>
-                            <a href="table.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">League Table</a>
-                            <a href="history.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">History</a>
-                            <a href="join.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Join Us</a>
-                            <a href="admin.html" class="text-slate-300 hover:text-sky-400 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
-                                <i data-lucide="lock" class="w-3 h-3"></i> Club Rep Portal
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <div class="hidden sm:block text-sky-500 font-bold text-sm tracking-wider uppercase">Season 2026</div>
-                    <button id="mobile-menu-button" class="md:hidden text-slate-300 hover:text-white p-2 transition-colors">
-                        <i data-lucide="menu" id="menu-icon"></i>
-                        <i data-lucide="x" id="close-icon" class="hidden"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mobile Menu Container -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 pt-2 pb-6 space-y-1">
-            <a href="index.html" class="block bg-slate-800 text-white px-3 py-2 rounded-md text-base font-medium">Home</a>
-            <a href="clubs.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Clubs</a>
-            <a href="spectators.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Spectators</a>
-            <a href="table.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">League Table</a>
-            <a href="history.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">History</a>
-            <a href="join.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Join Us</a>
-            <a href="admin.html" class="block text-sky-400 hover:text-sky-300 px-3 py-2 rounded-md text-base font-medium flex items-center gap-2">
-                <i data-lucide="lock" class="w-4 h-4"></i> Club Rep Portal
-            </a>
-        </div>
-    </nav>
+    <?php include 'nav.php'; ?>
 
     <!-- MAIN CONTENT -->
     <main class="flex-grow flex items-center justify-center">
         <div class="max-w-4xl px-6 text-center py-12">
+            
             <div class="mb-6">
                 <img src="images/league-logo.png" alt="The Cotswold League Logo" class="h-32 md:h-48 w-auto mx-auto drop-shadow-2xl">
             </div>
@@ -81,10 +36,10 @@
                 <p class="text-lg text-slate-400 uppercase tracking-widest mb-6">2026 Season</p>
                 
                 <div class="flex flex-wrap justify-center gap-4">
-                    <a href="clubs.html" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-sky-600 hover:bg-sky-700 transition-colors shadow-lg hover:shadow-sky-500/30">
+                    <a href="clubs.php" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-sky-600 hover:bg-sky-700 transition-colors shadow-lg hover:shadow-sky-500/30">
                         View Participating Teams
                     </a>
-                    <a href="join.html" class="inline-flex items-center px-6 py-3 border border-slate-700 text-base font-medium rounded-full text-white bg-transparent hover:bg-slate-800 transition-colors">
+                    <a href="join.php" class="inline-flex items-center px-6 py-3 border border-slate-700 text-base font-medium rounded-full text-white bg-transparent hover:bg-slate-800 transition-colors">
                         Join The Waiting List
                     </a>
                 </div>
@@ -123,8 +78,10 @@
                             <span class="text-slate-900 font-black text-2xl tracking-tighter">WYVERN SWIMWEAR</span>
                         </div>
                     </a>
+                    
                     <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="mt-4 text-sky-400 hover:text-sky-300 text-sm font-medium tracking-wide flex items-center gap-2">
-                        Shop Official Merchandise &rarr;
+                        Shop Official Merchandise 
+                        <span aria-hidden="true">&rarr;</span>
                     </a>
                 </div>
             </div>
@@ -138,42 +95,50 @@
     <script>
         lucide.createIcons();
 
-        // Mobile Menu Toggle Logic
-        const menuBtn = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const menuIcon = document.getElementById('menu-icon');
-        const closeIcon = document.getElementById('close-icon');
-
-        menuBtn.addEventListener('click', () => {
-            const isHidden = mobileMenu.classList.contains('hidden');
-            if (isHidden) {
-                mobileMenu.classList.remove('hidden');
-                menuIcon.classList.add('hidden');
-                closeIcon.classList.remove('hidden');
-            } else {
-                mobileMenu.classList.add('hidden');
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
-            }
-        });
-
+        // Mobile Menu Toggle Logic is now handled in nav.php but added here as fallback/init
         const targetDate = new Date("January 31, 2026 00:00:00").getTime();
+
         const countdown = setInterval(function() {
             const now = new Date().getTime();
             const distance = targetDate - now;
+
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
             document.getElementById("days").innerHTML = days;
             document.getElementById("hours").innerHTML = hours;
             document.getElementById("minutes").innerHTML = minutes;
             document.getElementById("seconds").innerHTML = seconds;
+
             if (distance < 0) {
                 clearInterval(countdown);
                 document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Round 1 Underway!</div>";
             }
         }, 1000);
+        
+        // Initializing mobile menu listener for included nav
+        const menuBtn = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const closeIcon = document.getElementById('close-icon');
+
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    mobileMenu.classList.remove('hidden');
+                    menuIcon.classList.add('hidden');
+                    closeIcon.classList.remove('hidden');
+                } else {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                }
+            });
+        }
     </script>
+
 </body>
 </html>

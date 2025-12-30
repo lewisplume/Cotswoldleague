@@ -15,54 +15,7 @@
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col">
 
-    <!-- NAVIGATION -->
-    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
-                    <a href="index.html" class="flex-shrink-0">
-                        <img class="h-10 w-auto" src="images/league-logo.png" alt="Cotswold League">
-                    </a>
-                    <!-- Desktop Menu -->
-                    <div class="hidden md:block">
-                        <div class="ml-10 flex items-baseline space-x-4">
-                            <a href="index.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
-                            <a href="clubs.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Clubs</a>
-                            <a href="spectators.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Spectators</a>
-                            <a href="table.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">League Table</a>
-                            <a href="history.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">History</a>
-                            <a href="join.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Join Us</a>
-                            <a href="admin.html" class="bg-slate-800 text-sky-400 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-                                <i data-lucide="lock" class="w-3 h-3"></i> Club Rep Portal
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Mobile Toggle -->
-                <div class="flex items-center gap-4">
-                    <div class="hidden sm:block text-sky-500 font-bold text-sm tracking-wider uppercase">Season 2026</div>
-                    <button id="mobile-menu-button" class="md:hidden text-slate-300 hover:text-white p-2 transition-colors">
-                        <i data-lucide="menu" id="menu-icon"></i>
-                        <i data-lucide="x" id="close-icon" class="hidden"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mobile Menu Container -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 pt-2 pb-6 space-y-1">
-            <a href="index.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Home</a>
-            <a href="clubs.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Clubs</a>
-            <a href="spectators.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Spectators</a>
-            <a href="table.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">League Table</a>
-            <a href="history.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">History</a>
-            <a href="join.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Join Us</a>
-            <a href="admin.html" class="block bg-slate-800 text-sky-400 px-3 py-2 rounded-md text-base font-medium flex items-center gap-2">
-                <i data-lucide="lock" class="w-4 h-4"></i> Club Rep Portal
-            </a>
-        </div>
-    </nav>
+    <?php include 'nav.php'; ?>
 
     <!-- CONTENT AREA -->
     <div class="flex-grow flex flex-col items-center justify-center p-4">
@@ -237,7 +190,7 @@
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
-                        <a href="https://drive.google.com/file/d/11rLnUl9JXNNNdJPYAGrBO9ikds5XRkFh/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
+                        <a href="https://drive.google.com/file/d/11rLnUl9JXNNNdJPYAGrBO9ikds5XRkFh/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
                                 <i data-lucide="clock" class="text-amber-500 w-5 h-5"></i>
                             </div>
@@ -247,7 +200,7 @@
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
-                        <a href="https://drive.google.com/file/d/1-k3n51SVyMO6nYI0nIZUqs7j1e6CdZ45/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
+                        <a href="https://drive.google.com/file/d/1-k3n51SVyMO6nYI0nIZUqs7j1e6CdZ45/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
                                 <i data-lucide="clipboard" class="text-amber-500 w-5 h-5"></i>
                             </div>
@@ -257,7 +210,7 @@
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
-                        <a href="https://drive.google.com/file/d/1kEluz8_lO-xkq9H3n3qViDtkbcoTQx2s/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
+                        <a href="https://drive.google.com/file/d/1kEluz8_lO-xkq9H3n3qViDtkbcoTQx2s/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
                                 <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
                             </div>
@@ -286,18 +239,20 @@
         const menuIcon = document.getElementById('menu-icon');
         const closeIcon = document.getElementById('close-icon');
 
-        menuBtn.addEventListener('click', () => {
-            const isHidden = mobileMenu.classList.contains('hidden');
-            if (isHidden) {
-                mobileMenu.classList.remove('hidden');
-                menuIcon.classList.add('hidden');
-                closeIcon.classList.remove('hidden');
-            } else {
-                mobileMenu.classList.add('hidden');
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
-            }
-        });
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    mobileMenu.classList.remove('hidden');
+                    menuIcon.classList.add('hidden');
+                    closeIcon.classList.remove('hidden');
+                } else {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                }
+            });
+        }
 
         const LEAGUE_PASSWORD = "Cotswold2026Galas"; 
         function checkPassword() {
