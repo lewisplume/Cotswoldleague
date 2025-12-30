@@ -1,0 +1,7 @@
+# Ignore temporary Google Drive folders
+.tmp.driveupload/
+.tmp.drivedownload/
+
+# Ignore local server logs or large zip files
+*.log
+*.zip
