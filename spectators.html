@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotswold League | Spectators</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        body { background-color: #0f172a; }
+        .card-gradient { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); }
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="text-white font-sans min-h-screen">
+
+    <!-- NAVIGATION -->
+    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex-shrink-0">
+                        <img class="h-10 w-auto" src="images/league-logo.png" alt="Cotswold League">
+                    </a>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="index.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+                            <a href="clubs.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Clubs</a>
+                            <a href="spectators.html" class="bg-slate-800 text-white px-3 py-2 rounded-md text-sm font-medium">Spectators</a>
+                            <a href="table.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">League Table</a>
+                            <a href="history.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">History</a>
+                            <a href="join.html" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Join Us</a>
+                            <a href="admin.html" class="text-slate-300 hover:text-sky-400 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+                                <i data-lucide="lock" class="w-3 h-3"></i> Club Rep Portal
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:block text-sky-500 font-bold text-sm tracking-wider uppercase">Season 2026</div>
+                    <button id="mobile-menu-button" class="md:hidden text-slate-300 hover:text-white p-2 transition-colors">
+                        <i data-lucide="menu" id="menu-icon"></i>
+                        <i data-lucide="x" id="close-icon" class="hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 pt-2 pb-6 space-y-1">
+            <a href="index.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Home</a>
+            <a href="clubs.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Clubs</a>
+            <a href="spectators.html" class="block bg-slate-800 text-white px-3 py-2 rounded-md text-base font-medium">Spectators</a>
+            <a href="table.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">League Table</a>
+            <a href="history.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">History</a>
+            <a href="join.html" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Join Us</a>
+            <a href="admin.html" class="block text-sky-400 hover:text-sky-300 px-3 py-2 rounded-md text-base font-medium flex items-center gap-2">
+                <i data-lucide="lock" class="w-4 h-4"></i> Club Rep Portal
+            </a>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <div class="py-12 text-center px-4">
+        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl mb-4">
+            Spectator <span class="text-sky-500">Information</span>
+        </h1>
+        <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+            Everything you need to know for the 2026 Cotswold League rounds.
+        </p>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div class="lg:col-span-2 space-y-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <i data-lucide="info" class="text-sky-500"></i> Essential Gala Info
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="font-bold text-sky-400 mb-2">Admission Pricing</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Host teams set their own entry prices for preliminary rounds. Most clubs charge around £5.00. Please check with your club representative for venue-specific pricing.
+                        </p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="font-bold text-sky-400 mb-2">Raffles & Fundraising</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Many host clubs organize raffles during the rounds. These are optional, and proceeds support the hosting club's fundraising efforts.
+                        </p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="font-bold text-sky-400 mb-2">Warm-Up Times</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Warm-ups typically last 30 minutes. Please refer to your club's coach or TM for the specific arrival time for your swimmer.
+                        </p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <h3 class="font-bold text-sky-400 mb-2">Photography & Conduct</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            The League adopts the Swim England Child Protection Policy. Please follow venue-specific rules regarding photography and video recording.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <i data-lucide="download" class="text-sky-500"></i> Downloads
+                </h2>
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="flex items-center p-5 hover:bg-white/5 transition-colors group">
+                        <div class="bg-sky-500/10 p-3 rounded-xl mr-4 group-hover:bg-sky-500/20">
+                            <i data-lucide="file-text" class="text-sky-500 w-6 h-6"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="font-bold text-white">Spectator Programme</p>
+                            <p class="text-xs text-slate-500">Full Season Event List</p>
+                        </div>
+                        <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold">Season <span class="text-sky-500">Draw</span></h2>
+                    <p class="text-slate-400">All preliminary rounds for the 2026 season.</p>
+                </div>
+                <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl border border-slate-700">
+                    <button onclick="filterDraw(1)" id="btnR1" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-sky-600 text-white">R1</button>
+                    <button onclick="filterDraw(2)" id="btnR2" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R2</button>
+                    <button onclick="filterDraw(3)" id="btnR3" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R3</button>
+                    <button onclick="filterDraw(4)" id="btnR4" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R4</button>
+                </div>
+            </div>
+            <div id="drawContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </div>
+
+        <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
+            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const menuBtn = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const closeIcon = document.getElementById('close-icon');
+
+        menuBtn.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.contains('hidden');
+            if (isHidden) {
+                mobileMenu.classList.remove('hidden');
+                menuIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+            } else {
+                mobileMenu.classList.add('hidden');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            }
+        });
+
+        const drawData = [
+            { 
+                round: 1, 
+                date: "31/01/2026", 
+                galas: [
+                    { host: "Cwmbran", details: "Halo Pontypool Active Living Centre (NP4 8AT). Doors 5:30PM. Cash Only. Free Parking.", teams: ["Cwmbran", "Yeovil", "Dursley", "Monnow"] },
+                    { host: "Backwell", details: "Backwell Leisure Ctr (BS48 3PB). Doors 5pm, W/U 5:15pm. Spectators £3 (Cash).", teams: ["Backwell", "Brockworth", "Bridgwater", "FOD"] },
+                    { host: "Corsham", details: "Springfield Community Campus (SN13 9DN). Doors 2:15pm. Spectators £3 (Cash/Card). Free Parking.", teams: ["Corsham", "Swindon", "Burnham", "Bristol North"] },
+                    { host: "Bath", details: "Bath Leisure Centre (BA2 4ET). Doors 4:30pm, W/U 5pm. Spectators £3 (Cash). Paid parking available.", teams: ["Bath", "Clevedon", "Wells", "Newport"] },
+                    { host: "City Of Bristol", details: "Hengrove Park LC (BS14 0DE). Doors 2:15pm. Spectators £3 (Cash/Card). Free parking (3hrs) - Register car at reception.", teams: ["City Of Bristol", "AST", "Southwold", "Severnside"] }
+                ]
+            },
+            { 
+                round: 2, 
+                date: "14/02/2026", 
+                galas: [
+                    { host: "Yeovil", details: "Sherbourne Sports Centre (DT9 3QN). Doors 5pm, W/U 5:30pm. Spectators £3 (Cash).", teams: ["Yeovil", "Bath", "Bridgwater", "Bristol North"] },
+                    { host: "Brockworth", details: "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", teams: ["Brockworth", "City Of Bristol", "Burnham", "Newport"] },
+                    { host: "Swindon", details: "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", teams: ["Swindon", "Cwmbran", "Wells", "Severnside"] },
+                    { host: "Clevedon", details: "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", teams: ["Clevedon", "Backwell", "Southwold", "Monnow"] },
+                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors ~3PM (TBC). Cash & Card accepted.", teams: ["AST", "Corsham", "Dursley", "FOD"] }
+                ]
+            },
+            { 
+                round: 3, 
+                date: "07/03/2026", 
+                galas: [
+                    { host: "Dursley", details: "Details TBC", teams: ["Dursley", "City Of Bristol", "Clevedon", "Bristol North"] },
+                    { host: "Bridgwater", details: "Details TBC", teams: ["Bridgwater", "Cwmbran", "AST", "Newport"] },
+                    { host: "Burnham", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Burnham", "Backwell", "Yeovil", "Severnside"] },
+                    { host: "Wells", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Wells", "Corsham", "Brockworth", "Monnow"] },
+                    { host: "Southwold", details: "Yate Leisure Centre (BS37 4DQ). Doors 6pm. Rear car park free from 6pm.", teams: ["Southwold", "Bath", "Swindon", "FOD"] }
+                ]
+            },
+            { 
+                round: 4, 
+                date: "28/03/2026", 
+                galas: [
+                    { host: "Monnow", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Monnow", "Bath", "AST", "Burnham"] },
+                    { host: "FOD", details: "GL1 Leisure Centre (GL1 1DT). Details TBC.", teams: ["FOD", "City Of Bristol", "Yeovil", "Wells"] },
+                    { host: "Bristol North", details: "Details TBC", teams: ["Bristol North", "Cwmbran", "Brockworth", "Southwold"] },
+                    { host: "Newport", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Newport", "Backwell", "Swindon", "Dursley"] },
+                    { host: "Severnside", details: "GL1 Leisure Centre (GL1 1DT). Details TBC.", teams: ["Severnside", "Corsham", "Clevedon", "Bridgwater"] }
+                ]
+            }
+        ];
+
+        function filterDraw(roundNum) {
+            const container = document.getElementById('drawContainer');
+            container.innerHTML = "";
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`btnR${i}`);
+                if (i === roundNum) {
+                    btn.classList.add('bg-sky-600', 'text-white');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-sky-600', 'text-white');
+                    btn.classList.add('text-slate-400');
+                }
+            }
+            const round = drawData.find(r => r.round === roundNum);
+            round.galas.forEach(gala => {
+                const card = `
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
+                            <span class="text-xs text-slate-500 font-medium">${round.date}</span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors">${gala.host}</h3>
+                            <div class="space-y-2 mb-4">
+                                ${gala.teams.map(team => `
+                                    <div class="flex items-center gap-3 text-sm py-2 border-b border-white/5 last:border-0">
+                                        <div class="w-1.5 h-1.5 rounded-full ${team === gala.host ? 'bg-sky-500' : 'bg-slate-600'}"></div>
+                                        <span class="${team === gala.host ? 'text-white font-bold' : 'text-slate-400'}">${team}</span>
+                                        ${team === gala.host ? '<span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>' : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <!-- VENUE DETAILS -->
+                            <div class="mt-4 pt-3 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+                                <p class="text-xs text-slate-300 leading-relaxed">${gala.details}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+            lucide.createIcons(); // Re-init icons for new content
+        }
+        filterDraw(1);
+    </script>
+</body>
+</html>
