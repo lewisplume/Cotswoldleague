@@ -94,7 +94,20 @@ $result = $conn->query($sql);
                 </div>
                 <p class="text-xs text-slate-400">The top 8 teams compete for the league championship.</p>
             </div>
-            <!-- B and C blocks remain similar -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></div>
+                    <h4 class="font-bold text-sm">B Final</h4>
+                </div>
+                <p class="text-xs text-slate-400">The next 6 teams compete in the B Final.</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50"></div>
+                    <h4 class="font-bold text-sm">C Final</h4>
+                </div>
+                <p class="text-xs text-slate-400">The final 6 teams compete in the C Final.</p>
+            </div>
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em] py-8">
