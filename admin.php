@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Club Login</title>
+    <link rel="icon" href="images/league-logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
@@ -23,7 +24,7 @@
         <div id="loginScreen" class="max-w-md w-full text-center py-12">
             <div class="admin-card p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
                 <h1 class="text-2xl font-bold mb-2 uppercase tracking-tight">Club Rep Login</h1>
-                <p class="text-slate-400 text-sm mb-6 leading-relaxed">Enter the league password to access official resources and Google Drive folders.</p>
+                <p class="text-slate-400 text-sm mb-6 leading-relaxed">Enter the league password to access official resources and Google Drive folders. Contact your club representative if you need access. Or contact Lewis.</p>
                 <div class="space-y-4">
                     <input type="password" id="passwordInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600" placeholder="Enter Password" onkeydown="if(event.key === 'Enter') checkPassword()">
                     <button onclick="checkPassword()" class="w-full swim-gradient text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg">Login</button>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Join Us</title>
+    <link rel="icon" href="images/league-logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
@@ -104,7 +105,7 @@
                         <i data-lucide="pound-sterling" class="w-6 h-6"></i>
                     </div>
                     <h3 class="font-bold text-lg mb-2">Fees</h3>
-                    <p class="text-sm text-slate-400">Membership fees are typically due by Nov 30th. <strong>Note:</strong> 2026 Season fees have been waived.</p>
+                    <p class="text-sm text-slate-400">Membership fees are typically £100 per year & due by Nov 30th. <strong>Note:</strong> 2026 Season fees have been waived.</p>
                 </div>
             </div>
         </div>
