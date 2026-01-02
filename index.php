@@ -20,6 +20,9 @@
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col">
 
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v24.0&appId=2628298884190796"></script>
+
     <?php include 'nav.php'; ?>
 
     <!-- MAIN CONTENT -->
@@ -68,6 +71,14 @@
                     </div>
                 </div>
                 <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, January 31st, 2026</p>
+            </div>
+
+            <!-- FACEBOOK FEED -->
+            <div class="mb-16 flex flex-col items-center">
+                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Latest News</h2>
+                <div class="bg-white rounded-xl overflow-hidden shadow-2xl w-full max-w-[500px]">
+                    <div class="fb-page" data-href="https://www.facebook.com/profile.php?id=100094686571540" data-tabs="timeline" data-width="500" data-height="600" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"><blockquote cite="https://www.facebook.com/profile.php?id=100094686571540" class="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/profile.php?id=100094686571540">Cotswolds Swimming Series</a></blockquote></div>
+                </div>
             </div>
 
             <!-- SPONSOR SECTION -->
