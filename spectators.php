@@ -154,7 +154,7 @@
                 date: "07/03/2026", 
                 galas: [
                     { host: "Dursley", details: "Details TBC", teams: ["Dursley", "City Of Bristol", "Clevedon", "Bristol North"] },
-                    { host: "Bridgwater", details: "Details TBC", teams: ["Bridgwater", "Cwmbran", "AST", "Newport"] },
+                    { host: "Bridgwater", details: "Trinity Sports Centre, Bridgwater. Time TBC", teams: ["Bridgwater", "Cwmbran", "AST", "Newport"] },
                     { host: "Burnham", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Burnham", "Backwell", "Yeovil", "Severnside"] },
                     { host: "Wells", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Wells", "Corsham", "Brockworth", "Monnow"] },
                     { host: "Southwold", details: "Yate Leisure Centre (BS37 4DQ). Doors 6pm. Rear car park free from 6pm.", teams: ["Southwold", "Bath", "Swindon", "FOD"] }
