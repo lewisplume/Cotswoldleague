@@ -153,7 +153,7 @@
                 round: 3, 
                 date: "07/03/2026", 
                 galas: [
-                    { host: "Dursley", details: "Details TBC", teams: ["Dursley", "City Of Bristol", "Clevedon", "Bristol North"] },
+                    { host: "Dursley", details: "Keynsham Leisure Centre, Temple Street, BS31 1HE. Doors open 12.30pm", teams: ["Dursley", "City Of Bristol", "Clevedon", "Bristol North"] },
                     { host: "Bridgwater", details: "Trinity Sports Centre, Bridgwater. Time TBC", teams: ["Bridgwater", "Cwmbran", "AST", "Newport"] },
                     { host: "Burnham", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Burnham", "Backwell", "Yeovil", "Severnside"] },
                     { host: "Wells", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Wells", "Corsham", "Brockworth", "Monnow"] },
