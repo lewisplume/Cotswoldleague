@@ -146,7 +146,7 @@
                     { host: "Brockworth", details: "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", teams: ["Brockworth", "City Of Bristol", "Burnham", "Newport"] },
                     { host: "Swindon", details: "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", teams: ["Swindon", "Cwmbran", "Wells", "Severnside"] },
                     { host: "Clevedon", details: "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", teams: ["Clevedon", "Backwell", "Southwold", "Monnow"] },
-                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors ~3PM (TBC). Cash & Card accepted.", teams: ["AST", "Corsham", "Dursley", "FOD"] }
+                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted.", teams: ["AST", "Corsham", "Dursley", "FOD"] }
                 ]
             },
             { 
@@ -166,7 +166,7 @@
                 galas: [
                     { host: "Monnow", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Monnow", "Bath", "AST", "Burnham"] },
                     { host: "FOD", details: "GL1 Leisure Centre (GL1 1DT). Details TBC.", teams: ["FOD", "City Of Bristol", "Yeovil", "Wells"] },
-                    { host: "Bristol North", details: "Details TBC", teams: ["Bristol North", "Cwmbran", "Brockworth", "Southwold"] },
+                    { host: "Bristol North", details: "Keynsham Leisure Centre, Temple Street, BS31 1HE. 12.30pm-15.30pm", teams: ["Bristol North", "Cwmbran", "Brockworth", "Southwold"] },
                     { host: "Newport", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Newport", "Backwell", "Swindon", "Dursley"] },
                     { host: "Severnside", details: "GL1 Leisure Centre (GL1 1DT). Details TBC.", teams: ["Severnside", "Corsham", "Clevedon", "Bridgwater"] }
                 ]
