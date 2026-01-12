@@ -40,10 +40,10 @@
                 <p class="text-lg text-slate-400 uppercase tracking-widest mb-6">2026 Season</p>
                 
                 <div class="flex flex-wrap justify-center gap-4">
-                    <a href="clubs.php" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-sky-600 hover:bg-sky-700 transition-colors shadow-lg hover:shadow-sky-500/30">
+                    <a href="clubs" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-sky-600 hover:bg-sky-700 transition-colors shadow-lg hover:shadow-sky-500/30">
                         View Participating Teams
                     </a>
-                    <a href="join.php" class="inline-flex items-center px-6 py-3 border border-slate-700 text-base font-medium rounded-full text-white bg-transparent hover:bg-slate-800 transition-colors">
+                    <a href="join" class="inline-flex items-center px-6 py-3 border border-slate-700 text-base font-medium rounded-full text-white bg-transparent hover:bg-slate-800 transition-colors">
                         Join The Waiting List
                     </a>
                 </div>

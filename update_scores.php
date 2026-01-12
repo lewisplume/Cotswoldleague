@@ -54,7 +54,7 @@ $result = $conn->query($sql);
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold">Update Scores</h1>
-            <a href="index.php" class="text-slate-400 hover:text-white">Back to Site</a>
+            <a href="index" class="text-slate-400 hover:text-white">Back to Site</a>
         </div>
 
         <?php if (isset($message)): ?>
