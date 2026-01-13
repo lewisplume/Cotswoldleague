@@ -61,7 +61,7 @@
                 <ul class="space-y-3 text-sm text-slate-300">
                     <li class="flex items-start gap-2">
                         <i data-lucide="check-circle" class="text-rose-500 w-4 h-4 mt-0.5"></i>
-                        <span><strong>Priority 1:</strong> Independent clubs from lower divisions of the National Arena Swimming League (NASL).</span>
+                        <span><strong>Priority 1:</strong> Independent local clubs with a desire to allow lower level swimmers entries into competitive swimming events.</span>
                     </li>
                     <li class="flex items-start gap-2">
                         <i data-lucide="x-circle" class="text-slate-500 w-4 h-4 mt-0.5"></i>
@@ -122,11 +122,11 @@
             </p>
             
             <div class="flex flex-col items-center gap-4">
-                <a href="mailto:lewisplume@gmail.com" class="swim-gradient px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform">
+                <a href="mailto:admin@thecotswoldleague.co.uk" class="swim-gradient px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform">
                     <i data-lucide="send" class="w-5 h-5"></i>
                     Contact the Secretary
                 </a>
-                <span class="text-slate-500 font-mono text-sm">lewisplume@gmail.com</span>
+                <span class="text-slate-500 font-mono text-sm">admin@thecotswoldleague.co.uk</span>
             </div>
         </div>
 
