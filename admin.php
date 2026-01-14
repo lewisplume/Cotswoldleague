@@ -98,7 +98,7 @@
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-plus" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
                                 <p class="text-sm font-medium">Google Sheets Version</p>
-                                <p class="text-xs text-slate-500">Direct Link (Create Copy)</p>
+                                <p class="text-xs text-slate-500">Full Featured Version</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
@@ -106,7 +106,7 @@
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-down" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
                                 <p class="text-sm font-medium">Excel Version</p>
-                                <p class="text-xs text-slate-500">Direct Link (Stripped Version)</p>
+                                <p class="text-xs text-slate-500">Reduced Functionality</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
@@ -115,7 +115,7 @@
                         <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="sheet" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
-                                <p class="text-sm font-medium">Google Sheets Guide</p>
+                                <p class="text-sm font-medium">Google Sheets Version Guide</p>
                                 <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
@@ -123,18 +123,26 @@
                         <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-spreadsheet" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
-                                <p class="text-sm font-medium">Excel Guide (Stripped)</p>
+                                <p class="text-sm font-medium">Excel Guide Version Guide</p>
                                 <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
 
                         <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mt-2">Results Calculator</div>
-                        <a href="https://drive.google.com/file/d/1OcotXLlR8aUAIsVUk8vK-vyKYaO8XnJ3/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                        <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="download-cloud" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
-                                <p class="text-sm font-medium">Calculator MASTER.zip</p>
+                                <p class="text-sm font-medium">Results Calculator</p>
                                 <p class="text-xs text-slate-500">Main Software Download</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                        </a>
+                        <a href="https://docs.google.com/document/d/10CvL07WJMVqDPZJU7LXIhFinBAcUarDiF7jNj03fdb4/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="book-open" class="text-emerald-500 w-5 h-5"></i></div>
+                            <div class="flex-grow">
+                                <p class="text-sm font-medium">Full User Guide</p>
+                                <p class="text-xs text-slate-500">Comprehensive instructions</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
@@ -223,6 +231,13 @@
                         </a>
                     </div>
                 </div>
+            </div>
+
+            <div class="mt-12 glass-panel p-6 rounded-2xl text-center border border-white/5">
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    <i data-lucide="help-circle" class="w-4 h-4 inline mr-1 text-sky-500 relative -top-0.5"></i>
+                    You can reach me (Lewis) via the WhatsApp link above, email at <a href="mailto:lewisplume@gmail.com" class="text-sky-400 hover:text-sky-300 transition-colors font-medium">lewisplume@gmail.com</a>, or if you have contacts interested in joining, please provide them with the league email: <a href="mailto:admin@thecotswoldleague.co.uk" class="text-sky-400 hover:text-sky-300 transition-colors font-medium">admin@thecotswoldleague.co.uk</a>.
+                </p>
             </div>
         </div>
 

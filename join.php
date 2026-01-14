@@ -124,7 +124,7 @@
             <div class="flex flex-col items-center gap-4">
                 <a href="mailto:admin@thecotswoldleague.co.uk" class="swim-gradient px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 shadow-lg shadow-sky-500/20 hover:scale-105 transition-transform">
                     <i data-lucide="send" class="w-5 h-5"></i>
-                    Contact the Secretary
+                    Contact Lewis the League Administrator
                 </a>
                 <span class="text-slate-500 font-mono text-sm">admin@thecotswoldleague.co.uk</span>
             </div>

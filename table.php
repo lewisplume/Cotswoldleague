@@ -46,7 +46,7 @@ $result = $conn->query($sql);
             <div>
                 <h3 class="font-bold text-white text-sm">Update Schedule</h3>
                 <p class="text-xs text-slate-400 leading-relaxed mt-1">
-                    The league table is updated following each of the four rounds. Standings refresh on the <span class="text-sky-400 font-semibold">Sunday following the Saturday gala</span>.
+                    The league table is updated following each of the four rounds. Standings refresh on the <span class="text-sky-400 font-semibold">Sunday following the Saturday galas</span>.
                 </p>
             </div>
         </div>
