@@ -133,7 +133,7 @@
                 galas: [
                     { host: "Cwmbran", details: "Halo Pontypool Active Living Centre (NP4 8AT). Doors 5:30PM. Cash Only. Free Parking.", teams: ["Cwmbran", "Yeovil", "Dursley", "Monnow"] },
                     { host: "Backwell", details: "Backwell Leisure Ctr (BS48 3PB). Doors 5pm, W/U 5:15pm. Spectators £3 (Cash).", teams: ["Backwell", "Brockworth", "Bridgwater", "FOD"] },
-                    { host: "Corsham", details: "Springfield Community Campus (SN13 9DN). Doors 2:15pm. Spectators £3 (Cash/Card). Free Parking.", teams: ["Corsham", "Swindon", "Burnham", "Bristol North"] },
+                    { host: "Corsham", details: "Trowbridge Sports Centre, Frome Road, Trowbridge. Wilts. BA14 0DN. Doors Open 2:15pm. Spectators: £3 (Cash&Card). Free Parking.", teams: ["Corsham", "Swindon", "Burnham", "Bristol North"] },
                     { host: "Bath", details: "Bath Leisure Centre (BA2 4ET). Doors 4:30pm, W/U 5pm. Spectators £3 (Cash). Paid parking available.", teams: ["Bath", "Clevedon", "Wells", "Newport"] },
                     { host: "City Of Bristol", details: "Hengrove Park LC (BS14 0DE). Doors 2:15pm. Spectators £3 (Cash/Card). Free parking (3hrs) - Register car at reception.", teams: ["City Of Bristol", "AST", "Southwold", "Severnside"] }
                 ]
