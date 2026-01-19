@@ -93,7 +93,7 @@
                         <i data-lucide="calculator" class="w-5 h-5"></i> Teamsheets & Results
                     </h2>
                     <div class="glass-panel rounded-2xl overflow-hidden">
-                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Direct Teamsheets</div>
+                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Teamsheets</div>
                         <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-plus" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
