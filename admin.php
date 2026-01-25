@@ -146,7 +146,7 @@
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
-                        <a href="https://docs.google.com/document/d/11rLnUl9JXNNNdJPYAGrBO9ikds5XRkFh/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
+                        <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="zap" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
                                 <p class="text-sm font-medium">Poolside Quick Guide</p>
