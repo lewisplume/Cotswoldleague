@@ -95,6 +95,9 @@
             </div>
             <div id="drawContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             </div>
+            
+            <!-- LIVE RESULTS VIEWER (Full Width) -->
+            <div id="liveViewer" class="hidden mt-8 glass-panel overflow-hidden rounded-2xl border border-sky-500/30 shadow-[0_0_50px_rgba(14,165,233,0.15)] transition-all duration-500"></div>
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
@@ -146,7 +149,7 @@
                     { host: "Brockworth", details: "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", teams: ["Brockworth", "City Of Bristol", "Burnham", "Newport"] },
                     { host: "Swindon", details: "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", teams: ["Swindon", "Cwmbran", "Wells", "Severnside"] },
                     { host: "Clevedon", details: "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", teams: ["Clevedon", "Backwell", "Southwold", "Monnow"] },
-                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", teams: ["AST", "Corsham", "Dursley", "FOD"] }
+                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", teams: ["AST", "Corsham", "Dursley", "FOD"], embedUrl: "https://1drv.ms/x/c/7c197ed7ec71ffca/IQS9Tesj4d9aQpR_yNS7S-xEAWiRlEIXnmRg-k9zpSfUlIU?em=2&wdAllowInteractivity=False&Item='NO-TEAMS%2004'!A1%3AL116&wdHideGridlines=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" }
                 ]
             },
             { 
@@ -173,9 +176,12 @@
             }
         ];
 
+        let currentActiveGala = null;
+
         function filterDraw(roundNum) {
             const container = document.getElementById('drawContainer');
-            container.innerHTML = "";
+            
+            // Update buttons
             for (let i = 1; i <= 4; i++) {
                 const btn = document.getElementById(`btnR${i}`);
                 if (i === roundNum) {
@@ -186,40 +192,107 @@
                     btn.classList.add('text-slate-400');
                 }
             }
+
             const round = drawData.find(r => r.round === roundNum);
-            round.galas.forEach(gala => {
-                const card = `
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
-                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
-                            <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
-                            <span class="text-xs text-slate-500 font-medium">${round.date}</span>
+            
+            // Generate all cards at once
+            container.innerHTML = round.galas.map((gala, index) => `
+                <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                    <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                        <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
+                        <span class="text-xs text-slate-500 font-medium">${round.date}</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors">${gala.host}</h3>
+                        <div class="space-y-2 mb-4">
+                            ${gala.teams.map(team => `
+                                <div class="flex items-center gap-3 text-sm py-2 border-b border-white/5 last:border-0">
+                                    <div class="w-1.5 h-1.5 rounded-full ${team === gala.host ? 'bg-sky-500' : 'bg-slate-600'}"></div>
+                                    <span class="${team === gala.host ? 'text-white font-bold' : 'text-slate-400'}">${team}</span>
+                                    ${team === gala.host ? '<span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>' : ''}
+                                </div>
+                            `).join('')}
                         </div>
-                        <div class="p-5">
-                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors">${gala.host}</h3>
-                            <div class="space-y-2 mb-4">
-                                ${gala.teams.map(team => `
-                                    <div class="flex items-center gap-3 text-sm py-2 border-b border-white/5 last:border-0">
-                                        <div class="w-1.5 h-1.5 rounded-full ${team === gala.host ? 'bg-sky-500' : 'bg-slate-600'}"></div>
-                                        <span class="${team === gala.host ? 'text-white font-bold' : 'text-slate-400'}">${team}</span>
-                                        ${team === gala.host ? '<span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>' : ''}
-                                    </div>
-                                `).join('')}
+                        
+                        <!-- VENUE DETAILS -->
+                        <div class="mt-4 pt-3 border-t border-white/10">
+                            <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1 flex items-center gap-1">
+                                <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                            </p>
+                            <p class="text-xs text-slate-300 leading-relaxed">${gala.details}</p>
+                        </div>
+
+                        ${gala.embedUrl ? `
+                            <div class="mt-4 pt-4 border-t border-white/5">
+                                <button onclick="toggleLive(${roundNum}, ${index})" class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
+                                    <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
+                                </button>
                             </div>
-                            
-                            <!-- VENUE DETAILS -->
-                            <div class="mt-4 pt-3 border-t border-white/10">
-                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1 flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
-                                </p>
-                                <p class="text-xs text-slate-300 leading-relaxed">${gala.details}</p>
-                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+            
+            // Close live viewer when switching rounds
+            closeLive();
+        }
+
+        function toggleLive(roundNum, galaIndex) {
+            const viewer = document.getElementById('liveViewer');
+            const round = drawData.find(r => r.round === roundNum);
+            const gala = round.galas[galaIndex];
+            const galaId = `${roundNum}-${galaIndex}`;
+
+            // If clicking the same active button, close it
+            if (currentActiveGala === galaId && !viewer.classList.contains('hidden')) {
+                closeLive();
+                return;
+            }
+
+            currentActiveGala = galaId;
+            viewer.classList.remove('hidden');
+            
+            // Inject content
+            viewer.innerHTML = `
+                <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-red-500/20 p-2 rounded-lg border border-red-500/30">
+                            <i data-lucide="radio" class="w-6 h-6 text-red-500 animate-pulse"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white leading-none">Live Results</h3>
+                            <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">${gala.host} Gala • Round ${roundNum}</p>
                         </div>
                     </div>
-                `;
-                container.innerHTML += card;
-            });
-            lucide.createIcons(); // Re-init icons for new content
+                    <button onclick="closeLive()" class="group bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white p-2 rounded-lg transition-all border border-slate-700 hover:border-slate-500">
+                        <span class="sr-only">Close</span>
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="bg-white w-full h-[800px] md:h-[900px] relative">
+                     <iframe width="100%" height="100%" frameborder="0" scrolling="no" src="${gala.embedUrl}" class="absolute inset-0"></iframe>
+                </div>
+            `;
+            
+            lucide.createIcons();
+            
+            // Smooth scroll to the viewer with a slight delay to ensure rendering
+            setTimeout(() => {
+                viewer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 50);
         }
+
+        function closeLive() {
+             const viewer = document.getElementById('liveViewer');
+             if (viewer) {
+                viewer.classList.add('hidden');
+                viewer.innerHTML = '';
+             }
+             currentActiveGala = null;
+        }
+
         filterDraw(1);
     </script>
 </body>
