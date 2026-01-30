@@ -194,8 +194,8 @@
                                 <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
                             </div>
                             <div class="flex-grow">
-                                <p class="text-sm font-medium">Coach/TM Programme</p>
-                                <p class="text-xs text-slate-500">Word Document</p>
+                                <p class="text-sm font-medium">Coach/TM Programme - Manual</p>
+                                <p class="text-xs text-slate-500">Manual Version - For automated see Smart Programme Tool</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
