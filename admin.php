@@ -224,7 +224,7 @@
                                 <i data-lucide="clipboard" class="text-amber-500 w-5 h-5"></i>
                             </div>
                             <div class="flex-grow">
-                                <p class="text-sm font-medium">Chief TK Slips</p>
+                                <p class="text-sm font-medium">Chief TK Slips (4 Lane)</p>
                                 <p class="text-xs text-slate-500">PDF Printout</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
