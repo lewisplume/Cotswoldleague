@@ -149,7 +149,7 @@
                     { host: "Brockworth", details: "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", teams: ["Brockworth", "City Of Bristol", "Burnham", "Newport"] },
                     { host: "Swindon", details: "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", teams: ["Swindon", "Cwmbran", "Wells", "Severnside"] },
                     { host: "Clevedon", details: "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", teams: ["Clevedon", "Backwell", "Southwold", "Monnow"] },
-                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", teams: ["AST", "Corsham", "Dursley", "FOD"], embedUrl: "https://1drv.ms/x/c/7c197ed7ec71ffca/IQS9Tesj4d9aQpR_yNS7S-xEAWiRlEIXnmRg-k9zpSfUlIU?em=2&wdAllowInteractivity=False&Item='NO-TEAMS%2004'!A1%3AL116&wdHideGridlines=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" }
+                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", teams: ["AST", "Corsham", "Dursley", "FOD"], embedUrl: "https://1drv.ms/x/c/7c197ed7ec71ffca/IQS9Tesj4d9aQpR_yNS7S-xEAWiRlEIXnmRg-k9zpSfUlIU?em=2&wdAllowInteractivity=True&Item='NO-TEAMS%2004'!A1%3AL116&wdHideGridlines=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" }
                 ]
             },
             { 
@@ -177,6 +177,7 @@
         ];
 
         let currentActiveGala = null;
+        let liveRefreshInterval = null;
 
         function filterDraw(roundNum) {
             const container = document.getElementById('drawContainer');
@@ -264,6 +265,7 @@
                         <div>
                             <h3 class="text-xl font-bold text-white leading-none">Live Results</h3>
                             <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">${gala.host} Gala • Round ${roundNum}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Auto-refreshing every 60s</p>
                         </div>
                     </div>
                     <button onclick="closeLive()" class="group bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white p-2 rounded-lg transition-all border border-slate-700 hover:border-slate-500">
@@ -272,11 +274,20 @@
                     </button>
                 </div>
                 <div class="bg-white w-full h-[800px] md:h-[900px] relative">
-                     <iframe width="100%" height="100%" frameborder="0" scrolling="no" src="${gala.embedUrl}" class="absolute inset-0"></iframe>
+                     <iframe id="live-iframe" width="100%" height="100%" frameborder="0" scrolling="no" src="${gala.embedUrl}" class="absolute inset-0"></iframe>
                 </div>
             `;
             
             lucide.createIcons();
+
+            // Set up auto-refresh
+            if (liveRefreshInterval) clearInterval(liveRefreshInterval);
+            liveRefreshInterval = setInterval(() => {
+                const iframe = document.getElementById('live-iframe');
+                if (iframe) {
+                    iframe.src = iframe.src;
+                }
+            }, 60000); // 60 seconds
             
             // Smooth scroll to the viewer with a slight delay to ensure rendering
             setTimeout(() => {
@@ -291,6 +302,10 @@
                 viewer.innerHTML = '';
              }
              currentActiveGala = null;
+             if (liveRefreshInterval) {
+                 clearInterval(liveRefreshInterval);
+                 liveRefreshInterval = null;
+             }
         }
 
         filterDraw(1);

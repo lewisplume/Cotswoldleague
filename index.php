@@ -51,7 +51,7 @@
 
             <!-- COUNTDOWN SECTION -->
             <div class="mb-16">
-                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 1 Begins In:</h2>
+                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 2 Begins In:</h2>
                 <div class="grid grid-cols-4 gap-2 md:gap-4 max-w-md mx-auto">
                     <div class="timer-box p-3 rounded-xl">
                         <div id="days" class="text-3xl md:text-4xl font-black text-white">00</div>
@@ -70,7 +70,7 @@
                         <div class="text-[10px] uppercase tracking-widest text-slate-500">Sec</div>
                     </div>
                 </div>
-                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, January 31st, 2026</p>
+                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, February 14th, 2026</p>
             </div>
 
             <!-- FACEBOOK FEED -->
@@ -151,7 +151,7 @@
         lucide.createIcons();
 
         // Mobile Menu Toggle Logic is now handled in nav.php but added here as fallback/init
-        const targetDate = new Date("January 31, 2026 00:00:00").getTime();
+        const targetDate = new Date("February 14, 2026 00:00:00").getTime();
 
         const countdown = setInterval(function() {
             const now = new Date().getTime();
@@ -169,7 +169,7 @@
 
             if (distance < 0) {
                 clearInterval(countdown);
-                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Round 1 Underway!</div>";
+                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Round 2 Underway!</div>";
             }
         }, 1000);
         
