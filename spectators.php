@@ -1,3 +1,15 @@
+<?php
+include 'db.php';
+// Fetch Round 1 points for Spectators page
+$r1_points = [];
+$sql = "SELECT c.name, r.round_1 FROM results r JOIN clubs c ON r.club_id = c.id";
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $r1_points[$row['name']] = $row['round_1'];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +118,7 @@
     </div>
 
     <script>
+        const round1Results = <?php echo json_encode($r1_points); ?>;
         lucide.createIcons();
 
         // Nav JS logic (same as other files)
@@ -134,44 +147,44 @@
                 round: 1, 
                 date: "31/01/2026", 
                 galas: [
-                    { host: "Cwmbran", details: "Halo Pontypool Active Living Centre (NP4 8AT). Doors 5:30PM. Cash Only. Free Parking.", teams: ["Cwmbran", "Yeovil", "Dursley", "Monnow"] },
-                    { host: "Backwell", details: "Backwell Leisure Ctr (BS48 3PB). Doors 5pm, W/U 5:15pm. Spectators £3 (Cash).", teams: ["Backwell", "Brockworth", "Bridgwater", "FOD"] },
-                    { host: "Corsham", details: "Trowbridge Sports Centre, Frome Road, Trowbridge. Wilts. BA14 0DN. Doors Open 2:15pm. Spectators: £3 (Cash&Card). Free Parking.", teams: ["Corsham", "Swindon", "Burnham", "Bristol North"] },
-                    { host: "Bath", details: "Bath Leisure Centre (BA2 4ET). Doors 4:30pm, W/U 5pm. Spectators £3 (Cash). Paid parking available.", teams: ["Bath", "Clevedon", "Wells", "Newport"] },
-                    { host: "City Of Bristol", details: "Hengrove Park LC (BS14 0DE). Doors 2:15pm. Spectators £3 (Cash/Card). Free parking (3hrs) - Register car at reception.", teams: ["City Of Bristol", "AST", "Southwold", "Severnside"] }
+                    { host: "Cwmbran", details: "Halo Pontypool Active Living Centre (NP4 8AT). Doors 5:30PM. Cash Only. Free Parking.", teams: ["Cwmbran", "Yeovil", "Dursley", "Monnow SC"] },
+                    { host: "Backwell", details: "Backwell Leisure Ctr (BS48 3PB). Doors 5pm, W/U 5:15pm. Spectators £3 (Cash).", teams: ["Backwell", "Brockworth", "Bridgwater", "Forest of Dean"] },
+                    { host: "Corsham", details: "Trowbridge Sports Centre, Frome Road, Trowbridge. Wilts. BA14 0DN. Doors Open 2:15pm. Spectators: £3 (Cash&Card). Free Parking.", teams: ["Corsham", "Swindon ASC", "Burnham-On-Sea", "Bristol North"] },
+                    { host: "Bath Dolphin", details: "Bath Leisure Centre (BA2 4ET). Doors 4:30pm, W/U 5pm. Spectators £3 (Cash). Paid parking available.", teams: ["Bath Dolphin", "Clevedon", "Wells", "Newport"] },
+                    { host: "COB (City of Bristol)", details: "Hengrove Park LC (BS14 0DE). Doors 2:15pm. Spectators £3 (Cash/Card). Free parking (3hrs) - Register car at reception.", teams: ["COB (City of Bristol)", "Academy Swim Team", "Southwold SC", "Severnside Tritons"] }
                 ]
             },
             { 
                 round: 2, 
                 date: "14/02/2026", 
                 galas: [
-                    { host: "Yeovil", details: "Sherbourne Sports Centre (DT9 3QN). Doors 5pm, W/U 5:30pm. Spectators £3 (Cash).", teams: ["Yeovil", "Bath", "Bridgwater", "Bristol North"] },
-                    { host: "Brockworth", details: "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", teams: ["Brockworth", "City Of Bristol", "Burnham", "Newport"] },
-                    { host: "Swindon", details: "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", teams: ["Swindon", "Cwmbran", "Wells", "Severnside"] },
-                    { host: "Clevedon", details: "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", teams: ["Clevedon", "Backwell", "Southwold", "Monnow"] },
-                    { host: "AST", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", teams: ["AST", "Corsham", "Dursley", "FOD"], embedUrl: "https://1drv.ms/x/c/7c197ed7ec71ffca/IQS9Tesj4d9aQpR_yNS7S-xEAWiRlEIXnmRg-k9zpSfUlIU?em=2&wdAllowInteractivity=True&Item='NO-TEAMS%2004'!A1%3AL116&wdHideGridlines=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" }
+                    { host: "Yeovil", details: "Sherbourne Sports Centre (DT9 3QN). Doors 5pm, W/U 5:30pm. Spectators £3 (Cash).", teams: ["Yeovil", "Bath Dolphin", "Bridgwater", "Bristol North"] },
+                    { host: "Brockworth", details: "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", teams: ["Brockworth", "COB (City of Bristol)", "Burnham-On-Sea", "Newport"] },
+                    { host: "Swindon ASC", details: "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", teams: ["Swindon ASC", "Cwmbran", "Wells", "Severnside Tritons"] },
+                    { host: "Clevedon", details: "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", teams: ["Clevedon", "Backwell", "Southwold SC", "Monnow SC"] },
+                    { host: "Academy Swim Team", details: "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", teams: ["Academy Swim Team", "Corsham", "Dursley", "Forest of Dean"], embedUrl: "https://1drv.ms/x/c/7c197ed7ec71ffca/IQS9Tesj4d9aQpR_yNS7S-xEAWiRlEIXnmRg-k9zpSfUlIU?em=2&wdAllowInteractivity=True&Item='NO-TEAMS%2004'!A1%3AL116&wdHideGridlines=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" }
                 ]
             },
             { 
                 round: 3, 
                 date: "07/03/2026", 
                 galas: [
-                    { host: "Dursley", details: "Keynsham Leisure Centre, Temple Street, BS31 1HE. Doors open 12.30pm", teams: ["Dursley", "City Of Bristol", "Clevedon", "Bristol North"] },
-                    { host: "Bridgwater", details: "Trinity Sports Centre, Bridgwater. 5PM Doors Open", teams: ["Bridgwater", "Cwmbran", "AST", "Newport"] },
-                    { host: "Burnham", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Burnham", "Backwell", "Yeovil", "Severnside"] },
-                    { host: "Wells", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Wells", "Corsham", "Brockworth", "Monnow"] },
-                    { host: "Southwold", details: "Yate Leisure Centre (BS37 4DQ). Doors 6pm. Rear car park free from 6pm.", teams: ["Southwold", "Bath", "Swindon", "FOD"] }
+                    { host: "Dursley", details: "Keynsham Leisure Centre, Temple Street, BS31 1HE. Doors open 12.30pm", teams: ["Dursley", "COB (City of Bristol)", "Clevedon", "Bristol North"] },
+                    { host: "Bridgwater", details: "Trinity Sports Centre, Bridgwater. 5PM Doors Open", teams: ["Bridgwater", "Cwmbran", "Academy Swim Team", "Newport"] },
+                    { host: "Burnham-On-Sea", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Burnham-On-Sea", "Backwell", "Yeovil", "Severnside Tritons"] },
+                    { host: "Wells", details: "Millfield School (BA16 0ST). Doors 6pm. Card preferred. Free parking.", teams: ["Wells", "Corsham", "Brockworth", "Monnow SC"] },
+                    { host: "Southwold SC", details: "Yate Leisure Centre (BS37 4DQ). Doors 6pm. Rear car park free from 6pm.", teams: ["Southwold SC", "Bath Dolphin", "Swindon ASC", "Forest of Dean"] }
                 ]
             },
             { 
                 round: 4, 
                 date: "28/03/2026", 
                 galas: [
-                    { host: "Monnow", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Monnow", "Bath", "AST", "Burnham"] },
-                    { host: "FOD", details: "GL1 Leisure Centre (GL1 1DT). Doors open 17.00.", teams: ["FOD", "City Of Bristol", "Yeovil", "Wells"] },
-                    { host: "Bristol North", details: "Keynsham Leisure Centre, Temple Street, BS31 1HE. 12.30pm-15.30pm", teams: ["Bristol North", "Cwmbran", "Brockworth", "Southwold"] },
-                    { host: "Newport", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Newport", "Backwell", "Swindon", "Dursley"] },
-                    { host: "Severnside", details: "GL1 Leisure Centre (GL1 1DT). Doors open 17.00", teams: ["Severnside", "Corsham", "Clevedon", "Bridgwater"] }
+                    { host: "Monnow SC", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Monnow SC", "Bath Dolphin", "Academy Swim Team", "Burnham-On-Sea"] },
+                    { host: "Forest of Dean", details: "GL1 Leisure Centre (GL1 1DT). Doors open 17.00.", teams: ["Forest of Dean", "COB (City of Bristol)", "Yeovil", "Wells"] },
+                    { host: "Bristol North", details: "Keynsham Leisure Centre, Temple Street, BS31 1HE. 12.30pm-15.30pm", teams: ["Bristol North", "Cwmbran", "Brockworth", "Southwold SC"] },
+                    { host: "Newport", details: "Newport Regional Pool (NP19 4RA). Doors 16:00. Cash Only. Free parking.", teams: ["Newport", "Backwell", "Swindon ASC", "Dursley"] },
+                    { host: "Severnside Tritons", details: "GL1 Leisure Centre (GL1 1DT). Doors open 17.00", teams: ["Severnside Tritons", "Corsham", "Clevedon", "Bridgwater"] }
                 ]
             }
         ];
@@ -200,19 +213,27 @@
             container.innerHTML = round.galas.map((gala, index) => `
                 <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
                     <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
-                        <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
+                            ${roundNum === 1 ? '<span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>' : ''}
+                        </div>
                         <span class="text-xs text-slate-500 font-medium">${round.date}</span>
                     </div>
                     <div class="p-5">
                         <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors">${gala.host}</h3>
                         <div class="space-y-2 mb-4">
-                            ${gala.teams.map(team => `
-                                <div class="flex items-center gap-3 text-sm py-2 border-b border-white/5 last:border-0">
-                                    <div class="w-1.5 h-1.5 rounded-full ${team === gala.host ? 'bg-sky-500' : 'bg-slate-600'}"></div>
-                                    <span class="${team === gala.host ? 'text-white font-bold' : 'text-slate-400'}">${team}</span>
-                                    ${team === gala.host ? '<span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>' : ''}
+                            ${gala.teams.map(team => {
+                                const points = (roundNum === 1 && round1Results && round1Results[team] !== undefined) ? round1Results[team] : null;
+                                return `
+                                <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                    <div class="flex items-center gap-3 text-sm">
+                                        <div class="w-1.5 h-1.5 rounded-full ${team === gala.host ? 'bg-sky-500' : 'bg-slate-600'}"></div>
+                                        <span class="${team === gala.host ? 'text-white font-bold' : 'text-slate-400'}">${team}</span>
+                                        ${team === gala.host ? '<span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>' : ''}
+                                    </div>
+                                    ${points !== null ? `<span class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">${points} pts</span>` : ''}
                                 </div>
-                            `).join('')}
+                            `}).join('')}
                         </div>
                         
                         <!-- VENUE DETAILS -->
