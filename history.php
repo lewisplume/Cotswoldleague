@@ -28,21 +28,30 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 flex-grow space-y-20">
         
-        <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-amber-500 flex flex-col md:flex-row items-center gap-4">
-            <div class="bg-amber-500/10 p-3 rounded-xl text-amber-500">
-                <i data-lucide="archive" class="w-6 h-6"></i>
+        <!-- CONTROLS -->
+        <div class="glass-panel p-4 rounded-xl flex flex-wrap justify-center gap-4 mb-12 sticky top-4 z-10 backdrop-blur-xl bg-slate-900/80 shadow-2xl border-white/10">
+            <div class="flex gap-2">
+                <button onclick="toggleAll(false)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-colors border border-slate-700">Collapse All</button>
+                <button onclick="toggleAll(true)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-colors border border-slate-700">Expand All</button>
             </div>
-            <div>
-                <h3 class="font-bold text-white">Missing Data?</h3>
-                <p class="text-sm text-slate-400">If you have records from previous years detailing scoring or finals results, please reach out so we can update this archive.</p>
+            <div class="w-px h-auto bg-white/10 mx-2 hidden sm:block"></div>
+            <div class="flex gap-2 flex-wrap justify-center">
+                <button onclick="jumpTo('2025')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2025</button>
+                <button onclick="jumpTo('2024')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2024</button>
+                <button onclick="jumpTo('2023')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2023</button>
             </div>
-            <a href="mailto:lewisplume@gmail.com" class="md:ml-auto bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors">Contact Secretary</a>
         </div>
 
-        <div class="space-y-8">
-            <h2 class="text-3xl font-bold flex items-center gap-3">
-                <span class="text-sky-500">2025</span> Season Results
-            </h2>
+        <div id="year-2025" class="space-y-8 scroll-mt-40">
+            <button onclick="toggleYear('2025')" class="w-full flex items-center justify-between group focus:outline-none text-left">
+                <h2 class="text-3xl font-bold flex items-center gap-3">
+                    <span class="text-sky-500">2025</span> Season Results
+                </h2>
+                <div class="bg-white/5 p-2 rounded-full group-hover:bg-white/10 transition-colors">
+                    <i id="icon-2025" data-lucide="chevron-down" class="w-6 h-6 text-slate-400 group-hover:text-white transition-transform duration-300" style="transform: rotate(180deg)"></i>
+                </div>
+            </button>
+            <div id="content-2025" class="space-y-8 transition-all duration-500 origin-top">
 
             <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
@@ -128,14 +137,21 @@
                     </ul>
                 </div>
             </div>
-        </div>
+                    </div>
+                </div>
+        
+                <div class="w-full h-px bg-white/5 my-12"></div>
 
-        <div class="w-full h-px bg-white/5 my-12"></div>
-
-        <div class="space-y-8">
-            <h2 class="text-3xl font-bold flex items-center gap-3">
-                <span class="text-sky-500">2024</span> Season Results
-            </h2>
+        <div id="year-2024" class="space-y-8 scroll-mt-40">
+            <button onclick="toggleYear('2024')" class="w-full flex items-center justify-between group focus:outline-none text-left">
+                <h2 class="text-3xl font-bold flex items-center gap-3">
+                    <span class="text-sky-500">2024</span> Season Results
+                </h2>
+                <div class="bg-white/5 p-2 rounded-full group-hover:bg-white/10 transition-colors">
+                    <i id="icon-2024" data-lucide="chevron-down" class="w-6 h-6 text-slate-400 group-hover:text-white transition-transform duration-300"></i>
+                </div>
+            </button>
+            <div id="content-2024" class="hidden space-y-8 transition-all duration-500 origin-top">
 
             <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
@@ -220,10 +236,16 @@
 
         <div class="w-full h-px bg-white/5 my-12"></div>
 
-        <div class="space-y-8">
-            <h2 class="text-3xl font-bold flex items-center gap-3">
-                <span class="text-sky-500">2023</span> Season Results
-            </h2>
+        <div id="year-2023" class="space-y-8 scroll-mt-40">
+            <button onclick="toggleYear('2023')" class="w-full flex items-center justify-between group focus:outline-none text-left">
+                <h2 class="text-3xl font-bold flex items-center gap-3">
+                    <span class="text-sky-500">2023</span> Season Results
+                </h2>
+                <div class="bg-white/5 p-2 rounded-full group-hover:bg-white/10 transition-colors">
+                    <i id="icon-2023" data-lucide="chevron-down" class="w-6 h-6 text-slate-400 group-hover:text-white transition-transform duration-300"></i>
+                </div>
+            </button>
+            <div id="content-2023" class="hidden space-y-8 transition-all duration-500 origin-top">
 
             <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
@@ -307,12 +329,57 @@
             </div>
         </div>
 
+        <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-amber-500 flex flex-col md:flex-row items-center gap-4">
+            <div class="bg-amber-500/10 p-3 rounded-xl text-amber-500">
+                <i data-lucide="archive" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white">Missing Data?</h3>
+                <p class="text-sm text-slate-400">If you have records from previous years detailing scoring or finals results, please reach out so we can update this archive.</p>
+            </div>
+            <a href="mailto:lewisplume@gmail.com" class="md:ml-auto bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors">Contact Secretary</a>
+        </div>
+
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em] py-8">
             &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
         </footer>
     </div>
 
     <script>
+        function toggleYear(year, forceState = null) {
+            const content = document.getElementById(`content-${year}`);
+            const icon = document.getElementById(`icon-${year}`);
+            
+            if (!content || !icon) return;
+
+            // Check if hidden (using Tailwind 'hidden' class or style)
+            const isHidden = content.classList.contains('hidden');
+            const shouldShow = forceState !== null ? forceState : isHidden;
+
+            if (shouldShow) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function toggleAll(expand) {
+            ['2025', '2024', '2023'].forEach(year => toggleYear(year, expand));
+        }
+
+        function jumpTo(year) {
+            // Expand the target year
+            toggleYear(year, true);
+            // Scroll to it
+            const element = document.getElementById(`year-${year}`);
+            if (element) {
+                // Determine offset for fixed header if needed, but scroll-mt handled in CSS
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         lucide.createIcons();
 
         // Nav JS logic (same as other files)
