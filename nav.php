@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center">
                 <a href="index">
-                    <img class="h-10 w-auto" src="images/league-logo.png" alt="Cotswold League">
+                    <img class="h-10 w-auto" src="images/league-logo.webp" alt="Cotswold League">
                 </a>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">

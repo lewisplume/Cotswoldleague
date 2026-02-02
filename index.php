@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Cotswold League | Official Site</title>
-    <link rel="icon" href="images/league-logo.png" type="image/png">
+    <link rel="icon" href="images/league-logo.webp" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
@@ -30,7 +30,7 @@
         <div class="max-w-4xl px-6 text-center py-12">
             
             <div class="mb-6">
-                <img src="images/league-logo.png" alt="The Cotswold League Logo" class="h-32 md:h-48 w-auto mx-auto drop-shadow-2xl">
+                <img src="images/league-logo.webp" alt="The Cotswold League Logo" class="h-32 md:h-48 w-auto mx-auto drop-shadow-2xl">
             </div>
 
             <div class="mb-10">
@@ -73,74 +73,78 @@
                 <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, February 14th, 2026</p>
             </div>
 
-            <!-- FACEBOOK FEED -->
-            <div class="mb-16 flex flex-col items-center">
-                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Latest News</h2>
-                <div class="bg-white rounded-xl overflow-hidden shadow-2xl w-full max-w-[500px]">
-                    <div class="fb-page" data-href="https://www.facebook.com/profile.php?id=100094686571540" data-tabs="timeline" data-width="500" data-height="600" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"><blockquote cite="https://www.facebook.com/profile.php?id=100094686571540" class="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/profile.php?id=100094686571540">Cotswolds Swimming Series</a></blockquote></div>
-                </div>
-            </div>
-
-            <!-- SPONSOR SECTION -->
-            <div class="border-t border-slate-800 pt-12">
-                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-6 font-bold tracking-widest">Main League Sponsor</p>
-                <div class="flex flex-col items-center">
-                    <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group transition-transform hover:scale-105 duration-300">
-                        <div class="bg-white px-8 py-4 rounded-lg shadow-xl border-4 border-transparent group-hover:border-sky-400">
-                            <span class="text-slate-900 font-black text-2xl tracking-tighter">WYVERN SWIMWEAR</span>
+                        <!-- MAIN GRID LAYOUT -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16 items-start">
+                            
+                            <!-- SPONSOR SECTION (LEFT COLUMN) -->
+                            <div class="flex flex-col items-center lg:items-start">
+                                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-6 font-bold tracking-widest text-center lg:text-left w-full">Main League Sponsor</p>
+                                <div class="flex flex-col items-center lg:items-start w-full">
+                                    <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group transition-transform hover:scale-105 duration-300 w-full lg:w-auto">
+                                        <div class="bg-white px-8 py-4 rounded-lg shadow-xl border-4 border-transparent group-hover:border-sky-400 text-center">
+                                            <span class="text-slate-900 font-black text-2xl tracking-tighter">WYVERN SWIMWEAR</span>
+                                        </div>
+                                    </a>
+                                    
+                                    <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="mt-4 text-sky-400 hover:text-sky-300 text-sm font-medium tracking-wide flex items-center justify-center lg:justify-start gap-2 w-full lg:w-auto">
+                                        Shop Official Merchandise 
+                                        <span aria-hidden="true">&rarr;</span>
+                                    </a>
+            
+                                    <!-- MERCHANDISE GALLERY -->
+                                    <div class="mt-8 w-full">
+                                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 text-center lg:text-left">2026 Collection</h3>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
+                                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
+                                                    <img src="images/Wyvern/Cotsworld%20swimming%20series%20hoody.jpeg" alt="Series Hoodie" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase text-center lg:text-left">Series Hoodie</p>
+                                            </a>
+                                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
+                                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
+                                                    <img src="images/Wyvern/Cotsworld%20swimming%20series%20t-shirt.jpeg" alt="Series T-Shirt" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase text-center lg:text-left">Series T-Shirt</p>
+                                            </a>
+                                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
+                                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
+                                                    <img src="images/Wyvern/Hat%20model.jpeg" alt="Swim Cap" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase text-center lg:text-left">Swim Cap</p>
+                                            </a>
+                                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
+                                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
+                                                    <img src="images/Wyvern/Hoodie%20front.jpg" alt="Hoodie Front" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase text-center lg:text-left">Hoodie (Front)</p>
+                                            </a>
+                                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
+                                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
+                                                    <img src="images/Wyvern/Hoodie%20back.jpg" alt="Hoodie Back" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase text-center lg:text-left">Hoodie (Back)</p>
+                                            </a>
+                                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
+                                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
+                                                    <img src="images/Wyvern/White%20tops.jpg" alt="Training Top" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase text-center lg:text-left">Training Top</p>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+            
+                            <!-- FACEBOOK FEED (RIGHT COLUMN) -->
+                            <div class="flex flex-col items-center lg:items-end w-full">
+                                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center lg:text-right w-full">Latest News</h2>
+                                <div class="bg-white rounded-xl overflow-hidden shadow-2xl w-full max-w-full lg:max-w-[500px]">
+                                    <div class="fb-page" data-href="https://www.facebook.com/profile.php?id=100094686571540" data-tabs="timeline" data-width="500" data-height="600" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"><blockquote cite="https://www.facebook.com/profile.php?id=100094686571540" class="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/profile.php?id=100094686571540">Cotswolds Swimming Series</a></blockquote></div>
+                                </div>
+                            </div>
+                        
                         </div>
-                    </a>
-                    
-                    <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="mt-4 text-sky-400 hover:text-sky-300 text-sm font-medium tracking-wide flex items-center gap-2">
-                        Shop Official Merchandise 
-                        <span aria-hidden="true">&rarr;</span>
-                    </a>
-
-                    <!-- MERCHANDISE GALLERY -->
-                    <div class="mt-12 w-full">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">2026 Collection</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
-                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                    <img src="images/Wyvern/Cotsworld%20swimming%20series%20hoody.jpeg" alt="Series Hoodie" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                                </div>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase">Series Hoodie</p>
-                            </a>
-                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
-                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                    <img src="images/Wyvern/Cotsworld%20swimming%20series%20t-shirt.jpeg" alt="Series T-Shirt" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                                </div>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase">Series T-Shirt</p>
-                            </a>
-                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
-                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                    <img src="images/Wyvern/Hat%20model.jpeg" alt="Swim Cap" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                                </div>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase">Swim Cap</p>
-                            </a>
-                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
-                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                    <img src="images/Wyvern/Hoodie%20front.jpg" alt="Hoodie Front" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                                </div>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase">Hoodie (Front)</p>
-                            </a>
-                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
-                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                    <img src="images/Wyvern/Hoodie%20back.jpg" alt="Hoodie Back" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                                </div>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase">Hoodie (Back)</p>
-                            </a>
-                            <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank" class="group block">
-                                <div class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                    <img src="images/Wyvern/White%20tops.jpg" alt="Training Top" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                                </div>
-                                <p class="text-[10px] md:text-xs font-bold text-slate-400 group-hover:text-sky-400 transition-colors uppercase">Training Top</p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <footer class="mt-20 text-slate-600 text-[10px] uppercase tracking-[0.3em]">
                 &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
             </footer>
