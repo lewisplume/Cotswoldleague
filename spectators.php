@@ -49,7 +49,7 @@ if ($result->num_rows > 0) {
                     <div class="glass-panel p-6 rounded-2xl">
                         <h3 class="font-bold text-sky-400 mb-2">Admission Pricing</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Host teams set their own entry prices for preliminary rounds. Most clubs charge around £5.00. Please check with your club representative for venue-specific pricing.
+                            Host teams set their own entry prices for preliminary rounds. Most clubs charge around £3.00. Please check with your club representative for venue-specific pricing.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
@@ -84,7 +84,7 @@ if ($result->num_rows > 0) {
                         </div>
                         <div class="flex-grow">
                             <p class="font-bold text-white">Spectator Programme</p>
-                            <p class="text-xs text-slate-500">Full Season Event List</p>
+                            <p class="text-xs text-slate-500">Save & Print Our Full Event List</p>
                         </div>
                         <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                     </a>
