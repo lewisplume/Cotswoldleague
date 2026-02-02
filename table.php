@@ -39,18 +39,6 @@ $result = $conn->query($sql);
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 flex-grow">
-        <div class="glass-panel backdrop-blur-md p-4 rounded-2xl mb-8 flex items-start gap-4 border-l-4 border-l-sky-500">
-            <div class="bg-sky-500/10 p-2 rounded-lg">
-                <i data-lucide="info" class="text-sky-500 w-5 h-5"></i>
-            </div>
-            <div>
-                <h3 class="font-bold text-white text-sm">Update Schedule</h3>
-                <p class="text-xs text-slate-400 leading-relaxed mt-1">
-                    The league table is updated following each of the four rounds. Standings refresh on the <span class="text-sky-400 font-semibold">Sunday following the Saturday galas</span>.
-                </p>
-            </div>
-        </div>
-
         <div class="glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -141,6 +129,18 @@ $result = $conn->query($sql);
                     </li>
                     <?php endforeach; ?>
                 </ul>
+            </div>
+        </div>
+
+        <div class="glass-panel backdrop-blur-md p-4 rounded-2xl mt-8 mb-8 flex items-start gap-4 border-l-4 border-l-sky-500">
+            <div class="bg-sky-500/10 p-2 rounded-lg">
+                <i data-lucide="info" class="text-sky-500 w-5 h-5"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-sm">Update Schedule</h3>
+                <p class="text-xs text-slate-400 leading-relaxed mt-1">
+                    The league table is updated following each of the four rounds. Standings refresh on the <span class="text-sky-400 font-semibold">Sunday following the Saturday galas</span>.
+                </p>
             </div>
         </div>
 
