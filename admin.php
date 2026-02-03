@@ -249,6 +249,16 @@
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
+                        <a href="https://docs.google.com/document/d/1T3Hc26p8ftaMS05G-lfinmExE_7UGnB3pG6UusN8xKA/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
+                                <i data-lucide="mic" class="text-amber-500 w-5 h-5"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-sm font-medium">Announcers Guide</p>
+                                <p class="text-xs text-slate-500">Script for first time volunteers</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                        </a>
                     </div>
                 </div>
             </div>
