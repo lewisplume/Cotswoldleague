@@ -1,3 +1,14 @@
+<?php
+include 'db.php';
+
+// Fetch Round 1 Scores for Ticker
+$news_sql = "SELECT c.name, c.logo, r.round_1 
+             FROM clubs c 
+             JOIN results r ON c.id = r.club_id 
+             WHERE r.round_1 > 0 
+             ORDER BY r.round_1 DESC";
+$news_result = $conn->query($news_sql);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +27,16 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-scroll {
+            animation: scroll 40s linear infinite;
+        }
+        .animate-scroll:hover {
+            animation-play-state: paused;
+        }
     </style>
 </head>
 <body class="text-white font-sans min-h-screen flex flex-col">
@@ -27,7 +48,7 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-grow flex items-center justify-center">
-        <div class="max-w-4xl px-6 text-center py-12">
+        <div class="w-full max-w-4xl px-6 text-center py-12">
             
             <div class="mb-6">
                 <img src="images/league-logo.webp" alt="The Cotswold League Logo" class="h-32 md:h-48 w-auto mx-auto drop-shadow-2xl">
@@ -48,6 +69,34 @@
                     </a>
                 </div>
             </div>
+
+            <!-- BREAKING NEWS TICKER -->
+            <?php if ($news_result && $news_result->num_rows > 0): ?>
+            <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 1 Results</h2>
+            <div class="mb-12 w-full max-w-3xl mx-auto overflow-hidden bg-sky-900/30 backdrop-blur-sm border-y border-sky-500/20 py-2 relative rounded-lg">
+                <div class="flex animate-scroll whitespace-nowrap w-max">
+                    <?php
+                    $ticker_items = [];
+                    while($row = $news_result->fetch_assoc()) {
+                        $ticker_items[] = $row;
+                    }
+                    // Duplicate for smooth infinite scroll
+                    $display_items = array_merge($ticker_items, $ticker_items);
+                    
+                    foreach($display_items as $item): ?>
+                        <div class="flex items-center gap-3 mx-6">
+                            <img src="images/Teams/<?php echo $item['logo']; ?>" alt="<?php echo $item['name']; ?>" class="h-6 w-6 object-contain rounded-full bg-white p-0.5">
+                            <span class="text-sky-400 font-bold text-sm uppercase"><?php echo $item['name']; ?></span>
+                            <span class="text-white font-mono font-bold"><?php echo $item['round_1']; ?></span>
+                        </div>
+                        <div class="text-slate-600 select-none">|</div>
+                    <?php endforeach; ?>
+                </div>
+                <!-- Gradient Fade Edges -->
+                <div class="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#0f172a] to-transparent pointer-events-none"></div>
+                <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#0f172a] to-transparent pointer-events-none"></div>
+            </div>
+            <?php endif; ?>
 
             <!-- COUNTDOWN SECTION -->
             <div class="mb-16">
