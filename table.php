@@ -1,5 +1,6 @@
 <?php
 include 'db.php';
+include 'season_data.php';
 
 // Fetch Results sorted by Total Points (Descending)
 // This SQL ensures the league table is already sorted by position before the page loads
@@ -9,6 +10,34 @@ $sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4,
        JOIN clubs c ON r.club_id = c.id 
        ORDER BY total DESC, c.name ASC";
 $result = $conn->query($sql);
+
+// Process Season Data for Table Context
+$team_next_gala = [];
+$team_hosting_rounds = [];
+$next_round_draw = null;
+
+// 1. Find the next round
+$today = date('Y-m-d');
+foreach ($season_draw as $round) {
+    $r_date = DateTime::createFromFormat('d/m/Y', $round['date']);
+    if ($r_date && $r_date->format('Y-m-d') >= $today) {
+        $next_round_draw = $round;
+        // 2. Map teams to their next venue
+        foreach ($round['galas'] as $gala) {
+            foreach ($gala['teams'] as $team) {
+                $team_next_gala[$team] = $gala['host'];
+            }
+        }
+        break; // Found the next round, stop looking
+    }
+}
+
+// 3. Map hosting duties
+foreach ($season_draw as $round) {
+    foreach ($round['galas'] as $gala) {
+        $team_hosting_rounds[$gala['host']][] = $round['round'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,51 +68,98 @@ $result = $conn->query($sql);
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 flex-grow">
-        <div class="glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-900/50 border-b border-white/5">
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500">Pos</th>
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500">Club Name</th>
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R1</th>
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R2</th>
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R3</th>
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R4</th>
-                            <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-sky-500 text-center">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5">
-                        <?php 
-                        $pos = 1;
-                        $a_final = [];
-                        $b_final = [];
-                        $c_final = [];
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            
+            <!-- Main League Table -->
+            <div class="xl:col-span-2 glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl h-fit">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/50 border-b border-white/5">
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500">Pos</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500">Club Name</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R1</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R2</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R3</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R4</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-sky-500 text-center">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <?php 
+                            $pos = 1;
+                            $a_final = [];
+                            $b_final = [];
+                            $c_final = [];
 
-                        if ($result->num_rows > 0) {
-                            while($row = $result->fetch_assoc()) {
-                                if ($pos <= 8) {
-                                    $a_final[] = $row;
-                                } elseif ($pos <= 14) {
-                                    $b_final[] = $row;
-                                } else {
-                                    $c_final[] = $row;
+                            if ($result->num_rows > 0) {
+                                while($row = $result->fetch_assoc()) {
+                                    if ($pos <= 8) {
+                                        $a_final[] = $row;
+                                    } elseif ($pos <= 14) {
+                                        $b_final[] = $row;
+                                    } else {
+                                        $c_final[] = $row;
+                                    }
+                                    
+                                    echo '<tr class="table-row-hover transition-colors">';
+                                    echo '<td class="px-6 py-4 text-sm font-medium text-slate-500 italic">' . $pos++ . '</td>';
+                                    echo '<td class="px-6 py-4 text-sm font-bold text-white">' . $row["name"] . '</td>';
+                                    echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_1"] > 0 ? $row["round_1"] : '-') . '</td>';
+                                    echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_2"] > 0 ? $row["round_2"] : '-') . '</td>';
+                                    echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_3"] > 0 ? $row["round_3"] : '-') . '</td>';
+                                    echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_4"] > 0 ? $row["round_4"] : '-') . '</td>';
+                                    echo '<td class="px-6 py-4 text-sm font-black text-sky-500 text-center count-up" data-target="' . $row["total"] . '">0</td>';
+                                    echo '</tr>';
                                 }
-                                echo '<tr class="table-row-hover transition-colors">';
-                                echo '<td class="px-6 py-4 text-sm font-medium text-slate-500 italic">' . $pos++ . '</td>';
-                                echo '<td class="px-6 py-4 text-sm font-bold text-white">' . $row["name"] . '</td>';
-                                echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_1"] > 0 ? $row["round_1"] : '-') . '</td>';
-                                echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_2"] > 0 ? $row["round_2"] : '-') . '</td>';
-                                echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_3"] > 0 ? $row["round_3"] : '-') . '</td>';
-                                echo '<td class="px-6 py-4 text-sm text-slate-600 text-center">' . ($row["round_4"] > 0 ? $row["round_4"] : '-') . '</td>';
-                                // MODIFIED LINE: Added count-up class, data-target, and set initial text to 0
-                                echo '<td class="px-6 py-4 text-sm font-black text-sky-500 text-center count-up" data-target="' . $row["total"] . '">0</td>';
-                                echo '</tr>';
                             }
-                        }
-                        ?>
-                    </tbody>
-                </table>
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Next Round Draw Table -->
+            <div class="xl:col-span-1">
+                <?php if ($next_round_draw): ?>
+                    <div class="glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl">
+                        <div class="bg-slate-900/50 border-b border-white/5 px-6 py-5 flex justify-between items-center">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-sky-500">Next Round Draw</h3>
+                            <span class="text-xs font-bold text-slate-500"><?php echo $next_round_draw['date']; ?></span>
+                        </div>
+                        <div class="divide-y divide-white/5">
+                            <?php foreach ($next_round_draw['galas'] as $gala): ?>
+                                <div class="p-5 hover:bg-white/5 transition-colors">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i data-lucide="map-pin" class="w-3 h-3 text-sky-500"></i>
+                                        <span class="text-sm font-bold text-white"><?php echo $gala['host']; ?></span>
+                                        <span class="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase tracking-wider">Host</span>
+                                    </div>
+                                    <div class="pl-5">
+                                        <p class="text-xs text-slate-400 leading-relaxed mb-2">
+                                            <?php echo explode('.', $gala['details'])[0]; ?>.
+                                        </p>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <?php foreach ($gala['teams'] as $team): ?>
+                                                <?php if ($team !== $gala['host']): ?>
+                                                    <span class="text-[10px] font-bold text-slate-400 bg-slate-800/50 border border-slate-700 px-2 py-1 rounded-full">
+                                                        <?php echo $team; ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="glass-panel p-8 rounded-3xl text-center">
+                        <i data-lucide="flag" class="w-12 h-12 text-slate-600 mx-auto mb-4"></i>
+                        <h3 class="text-lg font-bold text-white">Season Complete</h3>
+                        <p class="text-sm text-slate-400 mt-2">All preliminary rounds have been completed.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
         
