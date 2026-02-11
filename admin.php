@@ -129,12 +129,20 @@
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
 
-                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mt-2">Smart Programme</div>
+                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mt-2">Gala Programme</div>
                         <a href="smartprogramme.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="printer" class="text-emerald-500 w-5 h-5"></i></div>
                             <div class="flex-grow">
                                 <p class="text-sm font-medium">Smart Programme Tool</p>
                                 <p class="text-xs text-slate-500">Generate a printable programme for your TMs</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                        </a>
+                        <a href="https://docs.google.com/document/d/1yRye4lhpNyeKlhrQ2ZkzmcxEYqEBm52T/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-text" class="text-emerald-500 w-5 h-5"></i></div>
+                            <div class="flex-grow">
+                                <p class="text-sm font-medium">Coach/TM Programme - Manual</p>
+                                <p class="text-xs text-slate-500">Manual Version - For automated see Smart Programme Tool</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
@@ -189,16 +197,7 @@
                         <i data-lucide="files" class="w-5 h-5"></i> Helpful Documents
                     </h2>
                     <div class="glass-panel rounded-2xl overflow-hidden">
-                        <a href="https://docs.google.com/document/d/1yRye4lhpNyeKlhrQ2ZkzmcxEYqEBm52T/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Coach/TM Programme - Manual</p>
-                                <p class="text-xs text-slate-500">Manual Version - For automated see Smart Programme Tool</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+
                         <a href="https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
                             <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
                                 <i data-lucide="alert-triangle" class="text-amber-500 w-5 h-5"></i>
