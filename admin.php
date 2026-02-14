@@ -204,7 +204,7 @@
                             </div>
                             <div class="flex-grow">
                                 <p class="text-sm font-medium">Officials Sign-in</p>
-                                <p class="text-xs text-slate-500">Digital Sign-in Form</p>
+                                <p class="text-xs text-slate-500">Printable Sign-in Form</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
