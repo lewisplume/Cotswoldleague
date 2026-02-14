@@ -273,6 +273,67 @@
                 </div>
             </div>
 
+            <!-- Host Team Checklist -->
+            <div class="mt-12 glass-panel p-8 rounded-3xl border border-white/5">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-indigo-500/10 p-2 rounded-lg">
+                        <i data-lucide="list-checks" class="text-indigo-400 w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Host Team Checklist</h2>
+                        <p class="text-slate-400 text-sm">Essential items for gala day preparation. Your progress is saved automatically.</p>
+                    </div>
+                    <button onclick="resetChecklist()" class="ml-auto text-xs text-slate-500 hover:text-red-400 transition-colors">Reset</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="rules-printed">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Copy Of the Rules Printed</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="teamsheets-marked">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Any teamsheets you need to flag to the Ref</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="results-calc">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Results Calculator ready on Excel (Poolside Guide available for volunteers)</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="officials-signin">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Officials Sign-In List</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="dq-forms">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">DQ Report Forms</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="timekeeper-sheets">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">4x Timekeeper Sheets (Rounds) 6-8x (Finals)</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="chief-tk-slips">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Chief TK Slips 4 Lane (Rounds) 6-8 Lane (Finals)</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="blank-programmes">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Blank Programmes printed for officials & desk</span>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
+                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="announcers-guide">
+                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Announcers Guide (Available for Volunteers)</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="mt-12 glass-panel p-6 rounded-2xl text-center border border-white/5">
                 <p class="text-slate-400 text-sm leading-relaxed">
                     <i data-lucide="help-circle" class="w-4 h-4 inline mr-1 text-sky-500 relative -top-0.5"></i>
@@ -333,6 +394,32 @@
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('protectedContent').classList.remove('hidden');
                 lucide.createIcons();
+            }
+            initChecklist();
+        }
+
+        // Checklist Logic
+        function initChecklist() {
+            const checklistItems = document.querySelectorAll('.checklist-item');
+            checklistItems.forEach(item => {
+                const id = item.dataset.id;
+                const savedState = localStorage.getItem('checklist_' + id);
+                if (savedState === 'true') {
+                    item.checked = true;
+                }
+                item.addEventListener('change', (e) => {
+                    localStorage.setItem('checklist_' + id, e.target.checked);
+                });
+            });
+        }
+
+        function resetChecklist() {
+            if(confirm('Are you sure you want to clear all checkboxes?')) {
+                const checklistItems = document.querySelectorAll('.checklist-item');
+                checklistItems.forEach(item => {
+                    item.checked = false;
+                    localStorage.removeItem('checklist_' + item.dataset.id);
+                });
             }
         }
     </script>
