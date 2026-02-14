@@ -19,7 +19,7 @@ $season_draw = [
             ["host" => "Brockworth", "details" => "Leisure at Cheltenham (GL50 4RN). Doors 17:45.", "teams" => ["Brockworth", "COB (City of Bristol)", "Burnham-On-Sea", "Newport"]],
             ["host" => "Swindon ASC", "details" => "Health Hydro (SN1 5JA). Doors 1:15pm, W/U 1:30pm. Spectators £3. Parking nearby.", "teams" => ["Swindon ASC", "Cwmbran", "Wells", "Severnside Tritons"]],
             ["host" => "Clevedon", "details" => "Hutton Moor LC. Doors 18:15. Card preferred. Free parking (get permit from reception).", "teams" => ["Clevedon", "Backwell", "Southwold SC", "Monnow SC"]],
-            ["host" => "Academy Swim Team", "details" => "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", "teams" => ["Academy Swim Team", "Corsham", "Dursley", "Forest of Dean"], "embedUrl" => "https://1drv.ms/x/c/7c197ed7ec71ffca/IQS9Tesj4d9aQpR_yNS7S-xEAWiRlEIXnmRg-k9zpSfUlIU?em=2&wdAllowInteractivity=True&Item='NO-TEAMS%2004'!A1%3AL116&wdHideGridlines=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0"]
+            ["host" => "Academy Swim Team", "details" => "Burnham Swim & Sports Academy (Berrow Rd). Doors Open 3PM. Cash & Card accepted. Paid council car park on site.", "teams" => ["Academy Swim Team", "Corsham", "Dursley", "Forest of Dean"]]
         ]
     ],
     [

@@ -1,13 +1,14 @@
 <?php
 include 'db.php';
 include 'season_data.php';
-// Fetch Round 1 points for Spectators page
-$r1_points = [];
-$sql = "SELECT c.name, r.round_1 FROM results r JOIN clubs c ON r.club_id = c.id";
+// Fetch Round 1 and Round 2 points for Spectators page
+$completed_points = [];
+$sql = "SELECT c.name, r.round_1, r.round_2 FROM results r JOIN clubs c ON r.club_id = c.id";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
-        $r1_points[$row['name']] = $row['round_1'];
+        $completed_points[1][$row['name']] = $row['round_1'];
+        $completed_points[2][$row['name']] = $row['round_2'];
     }
 }
 ?>
@@ -119,7 +120,7 @@ if ($result->num_rows > 0) {
     </div>
 
     <script>
-        const round1Results = <?php echo json_encode($r1_points); ?>;
+        const completedResults = <?php echo json_encode($completed_points); ?>;
         lucide.createIcons();
         const drawData = <?php echo json_encode($season_draw); ?>;
 
@@ -143,13 +144,16 @@ if ($result->num_rows > 0) {
 
             const round = drawData.find(r => r.round === roundNum);
             
+            // Logic for Completed Tag (R1 and R2 are completed)
+            const isCompleted = roundNum <= 2;
+
             // Generate all cards at once
             container.innerHTML = round.galas.map((gala, index) => `
                 <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
                     <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
-                            ${roundNum === 1 ? '<span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>' : ''}
+                            ${isCompleted ? '<span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>' : ''}
                         </div>
                         <span class="text-xs text-slate-500 font-medium">${round.date}</span>
                     </div>
@@ -157,7 +161,7 @@ if ($result->num_rows > 0) {
                         <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors">${gala.host}</h3>
                         <div class="space-y-2 mb-4">
                             ${gala.teams.map(team => {
-                                const points = (roundNum === 1 && round1Results && round1Results[team] !== undefined) ? round1Results[team] : null;
+                                const points = (completedResults && completedResults[roundNum] && completedResults[roundNum][team] !== undefined) ? completedResults[roundNum][team] : null;
                                 return `
                                 <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                                     <div class="flex items-center gap-3 text-sm">
