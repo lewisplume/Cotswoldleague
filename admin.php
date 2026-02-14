@@ -204,7 +204,18 @@
                             </div>
                             <div class="flex-grow">
                                 <p class="text-sm font-medium">Officials Sign-in</p>
-                                <p class="text-xs text-slate-500">Printable Sign-in Form</p>
+                                <p class="text-xs text-slate-500">Digital Sign-in Form</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                        </a>
+
+                        <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
+                                <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-sm font-medium">Spectator Programme</p>
+                                <p class="text-xs text-slate-500">Printable Event List</p>
                             </div>
                             <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
                         </a>
