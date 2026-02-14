@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotswold League - Host Team Officials Sign-In</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #333;
+            background-color: #fff;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+        }
+        h1 {
+            margin: 0;
+            color: #0056b3;
+            text-transform: uppercase;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        h2 {
+            margin: 5px 0 0 0;
+            font-weight: 400;
+            font-size: 18px;
+            color: #555;
+        }
+        .gala-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .gala-info div {
+            border-bottom: 1px solid #999;
+            padding-bottom: 5px;
+            min-width: 150px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f0f4f8;
+            font-weight: bold;
+            color: #0056b3;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .role-col { width: 18%; font-weight: bold; }
+        .name-col { width: 26%; }
+        .se-col { width: 16%; } /* New column for SE Number */
+        .checkbox-col { width: 10%; text-align: center; font-size: 11px; color: #555; }
+        
+        .checkbox-box {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #333;
+            vertical-align: middle;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        .notes {
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        
+        /* Print Button Styles */
+        .print-btn-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .print-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s;
+        }
+        .print-btn:hover {
+            background-color: #004494;
+        }
+
+        @media print {
+            @page {
+                size: portrait;
+                margin: 0.5cm;
+            }
+            body { padding: 0; }
+            .container { width: 100%; max-width: none; }
+            th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            
+            /* Compact layout for single page */
+            h1 { font-size: 18px; }
+            h2 { font-size: 14px; }
+            header { margin-bottom: 10px; padding-bottom: 5px; }
+            .gala-info { margin-bottom: 10px; font-size: 12px; }
+            th, td { padding: 4px; font-size: 11px; height: 25px; }
+            .checkbox-col { font-size: 9px; }
+            .footer { margin-top: 10px; font-size: 10px;}
+            .notes { margin-top: 10px; font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="print-btn-container no-print">
+        <button onclick="window.print()" class="print-btn">🖨️ Print this Form</button>
+    </div>
+
+    <header>
+        <h1>Cotswold Swimming League 2026</h1>
+        <h2>Host Team Officials Sign-In List</h2>
+    </header>
+
+    <div class="gala-info">
+        <div>Round Number: </div>
+        <div>Host Team: </div>
+        <div>Date: </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="role-col">Role</th>
+                <th class="name-col">Name (Please Print)</th>
+                <th class="se-col">SE Number<br><span style="font-weight:normal; font-size: 0.8em">(If Qualified/Trainee)</span></th>
+                <th class="checkbox-col">Qualified</th>
+                <th class="checkbox-col">Trainee</th>
+                <th class="checkbox-col">Non Qual</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Key Officials -->
+            <tr>
+                <td>Referee</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Starter</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Chief Timekeeper</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            
+            <!-- Timekeepers -->
+            <tr>
+                <td>Timekeeper 1</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Timekeeper 2</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Timekeeper 3</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Timekeeper 4</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+
+            <!-- Stroke Judges -->
+            <tr>
+                <td>Stroke Judge 1</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Stroke Judge 2</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+
+            <!-- Turn Judges -->
+            <tr>
+                <td>Turn Judge 1</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Turn Judge 2</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Turn Judge 3</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Turn Judge 4</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+
+            <!-- Others -->
+            <tr>
+                <td>Other / Reserve 1</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Other / Reserve 2</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Other / Reserve 3</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+            <tr>
+                <td>Other / Reserve 4</td>
+                <td></td>
+                <td></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+                <td class="checkbox-col"><span class="checkbox-box"></span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="notes">
+        <strong>Note to Host Team:</strong> Please ensure all officials sign in before the start of the warm-up. This list must be retained by the Referee or Promoter for insurance purposes.
+    </div>
+
+    <div class="footer">
+        Thank you for volunteering! Your support makes the Cotswold League possible for our swimmers.
+    </div>
+</div>
+
+</body>
+</html>
