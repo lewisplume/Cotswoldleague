@@ -45,241 +45,277 @@
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- COLUMN 1: Governance & Planning -->
-                <div class="space-y-6">
+            <div class="space-y-12">
+                <!-- ROW 1: Governance & Planning -->
+                <div class="space-y-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-sky-400">
                         <i data-lucide="landmark" class="w-5 h-5"></i> Governance & Info
                     </h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden">
-                        <a href="https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                    <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
+                        <a href="https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                             <div class="bg-sky-500/10 p-2 rounded-lg mr-4 group-hover:bg-sky-500/20">
                                 <i data-lucide="gavel" class="text-sky-500 w-5 h-5"></i>
                             </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">League Rules 2026</p>
-                                <p class="text-xs text-slate-500">Official Constitution</p>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-medium truncate">League Rules 2026</p>
+                                <p class="text-xs text-slate-500 truncate">Official Constitution</p>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
                         </a>
                         
-                        <a href="https://docs.google.com/spreadsheets/d/1ihRDTmrKMc9VAsvqA3-TYJD53AARAJdT/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                        <a href="https://docs.google.com/spreadsheets/d/1ihRDTmrKMc9VAsvqA3-TYJD53AARAJdT/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                             <div class="bg-sky-500/10 p-2 rounded-lg mr-4 group-hover:bg-sky-500/20">
                                 <i data-lucide="map" class="text-sky-500 w-5 h-5"></i>
                             </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Host Venue List</p>
-                                <p class="text-xs text-slate-500">Teams to update details</p>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-medium truncate">Host Venue List</p>
+                                <p class="text-xs text-slate-500 truncate">Teams to update details</p>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
                         </a>
 
-                        <a href="https://docs.google.com/document/d/1-YlK_WXOpi_DG-KGR3JZTTTPxoGRW6rIB8ay4VKm1N0/edit?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
+                        <a href="https://docs.google.com/document/d/1-YlK_WXOpi_DG-KGR3JZTTTPxoGRW6rIB8ay4VKm1N0/edit?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                             <div class="bg-sky-500/10 p-2 rounded-lg mr-4 group-hover:bg-sky-500/20">
                                 <i data-lucide="help-circle" class="text-sky-500 w-5 h-5"></i>
                             </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">How-To Guide</p>
-                                <p class="text-xs text-slate-500">For new teams & volunteers</p>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-medium truncate">How-To Guide</p>
+                                <p class="text-xs text-slate-500 truncate">For new teams & volunteers</p>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
                         </a>
                     </div>
                 </div>
 
-                <!-- COLUMN 2: Teamsheets & Results -->
-                <div class="space-y-6">
+                <!-- ROW 2: Teamsheets & Results -->
+                <div class="space-y-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-emerald-400">
                         <i data-lucide="calculator" class="w-5 h-5"></i> Teamsheets & Results
                     </h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden">
-                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Teamsheets</div>
-                        <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-plus" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Google Sheets Version</p>
-                                <p class="text-xs text-slate-500">Full Featured Version</p>
+                    <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/5">
+                        
+                        <!-- Teamsheets Column -->
+                        <div class="flex flex-col">
+                            <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Teamsheets</div>
+                            <div class="flex-grow flex flex-col">
+                                <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-plus" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Google Sheets Version</p>
+                                        <p class="text-xs text-slate-500">Full Featured Version</p>
+                                    </div>
+                                </a>
+                                <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-down" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Excel Version</p>
+                                        <p class="text-xs text-slate-500">Reduced Functionality</p>
+                                    </div>
+                                </a>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-down" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Excel Version</p>
-                                <p class="text-xs text-slate-500">Reduced Functionality</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        </div>
 
-                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mt-2">Teamsheet Guides</div>
-                        <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="sheet" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Google Sheets Version Guide</p>
-                                <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
+                        <!-- Guides Column -->
+                        <div class="flex flex-col">
+                            <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Teamsheet Guides</div>
+                            <div class="flex-grow flex flex-col">
+                                <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="sheet" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Google Sheets Guide</p>
+                                        <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
+                                    </div>
+                                </a>
+                                <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-spreadsheet" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Excel Guide</p>
+                                        <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
+                                    </div>
+                                </a>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-spreadsheet" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Excel Guide Version Guide</p>
-                                <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        </div>
 
-                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mt-2">Gala Programme</div>
-                        <a href="smartprogramme.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="printer" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Smart Programme Tool</p>
-                                <p class="text-xs text-slate-500">Generate a printable programme for your TMs</p>
+                        <!-- Programme Column -->
+                        <div class="flex flex-col">
+                            <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Gala Programme</div>
+                            <div class="flex-grow flex flex-col">
+                                <a href="smartprogramme.html" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="printer" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Smart Programme Tool</p>
+                                        <p class="text-xs text-slate-500">Generate a printable programme with names for your TMs</p>
+                                    </div>
+                                </a>
+                                <a href="https://docs.google.com/document/d/1yRye4lhpNyeKlhrQ2ZkzmcxEYqEBm52T/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-text" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Manual Programme</p>
+                                        <p class="text-xs text-slate-500">Manual Version - For automated see Smart Programme Tool</p>
+                                    </div>
+                                </a>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://docs.google.com/document/d/1yRye4lhpNyeKlhrQ2ZkzmcxEYqEBm52T/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="file-text" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Coach/TM Programme - Manual</p>
-                                <p class="text-xs text-slate-500">Manual Version - For automated see Smart Programme Tool</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        </div>
 
-                        <div class="bg-emerald-900/20 px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider mt-2">Results Calculator</div>
-                        <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="download-cloud" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Results Calculator</p>
-                                <p class="text-xs text-slate-500">Main Software Download</p>
+                        <!-- Calculator Column -->
+                        <div class="flex flex-col">
+                            <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Results Calculator</div>
+                            <div class="flex-grow flex flex-col">
+                                <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="download-cloud" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Results Calculator</p>
+                                        <p class="text-xs text-slate-500">Main Software Download</p>
+                                    </div>
+                                </a>
+                                <a href="Results-matcher.html" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="users" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Results Matcher</p>
+                                        <p class="text-xs text-slate-500">Match Swimmers to Results automatically</p>
+                                    </div>
+                                </a>
+                                <a href="https://docs.google.com/document/d/10CvL07WJMVqDPZJU7LXIhFinBAcUarDiF7jNj03fdb4/edit?usp=sharing" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="book-open" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Full User Guide</p>
+                                        <p class="text-xs text-slate-500">Comprehensive instructions</p>
+                                    </div>
+                                </a>
+                                <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="zap" class="text-emerald-500 w-5 h-5"></i></div>
+                                    <div class="flex-grow min-w-0">
+                                        <p class="text-sm font-medium">Poolside Quick Guide</p>
+                                        <p class="text-xs text-slate-500">Essential cheat sheet</p>
+                                    </div>
+                                </a>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://docs.google.com/document/d/10CvL07WJMVqDPZJU7LXIhFinBAcUarDiF7jNj03fdb4/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="book-open" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Full User Guide</p>
-                                <p class="text-xs text-slate-500">Comprehensive instructions</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
-                            <div class="bg-emerald-500/10 p-2 rounded-lg mr-4"><i data-lucide="zap" class="text-emerald-500 w-5 h-5"></i></div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Poolside Quick Guide</p>
-                                <p class="text-xs text-slate-500">Essential cheat sheet</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        </div>
                     </div>
                 </div>
 
-                <!-- COLUMN 3: Gala Day Docs & Community -->
-                <div class="space-y-6">
+                <!-- ROW 3: Community & Support -->
+                <div class="space-y-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-amber-400">
                         <i data-lucide="users" class="w-5 h-5"></i> Community & Support
                     </h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden mb-6">
+                    <div class="glass-panel rounded-2xl overflow-hidden">
                         <a href="https://chat.whatsapp.com/KGftukKhKYHGWQgjsoemZz" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                             <div class="bg-emerald-500/10 p-2 rounded-lg mr-4 group-hover:bg-emerald-500/20">
                                 <i data-lucide="message-circle" class="text-emerald-500 w-5 h-5"></i>
                             </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">WhatsApp Community</p>
-                                <p class="text-xs text-slate-500">Join the representative group</p>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-medium truncate">WhatsApp Community</p>
+                                <p class="text-xs text-slate-500 truncate">Join the representative group</p>
                             </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
                         </a>
                     </div>
+                </div>
 
+                <!-- ROW 4: Helpful Documents -->
+                <div class="space-y-4">
                     <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-amber-400">
                         <i data-lucide="files" class="w-5 h-5"></i> Helpful Documents
                     </h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 gap-x-px gap-y-px bg-white/5">
+                        
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="Officials Sign-in.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="user-check" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Officials Sign-in</p>
+                                    <p class="text-xs text-slate-500 truncate">Printable Sign-in Form</p>
+                                </div>
+                            </a>
+                        </div>
 
-                        <a href="Officials Sign-in.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="user-check" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Officials Sign-in</p>
-                                <p class="text-xs text-slate-500">Printable Sign-in Form</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Spectator Programme</p>
+                                    <p class="text-xs text-slate-500 truncate">Printable Event List</p>
+                                </div>
+                            </a>
+                        </div>
 
-                        <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Spectator Programme</p>
-                                <p class="text-xs text-slate-500">Printable Event List</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="alert-triangle" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">DQ Report Form</p>
+                                    <p class="text-xs text-slate-500 truncate">PDF Printout</p>
+                                </div>
+                            </a>
+                        </div>
 
-                        <a href="https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="alert-triangle" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">DQ Report Form</p>
-                                <p class="text-xs text-slate-500">PDF Printout</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://drive.google.com/file/d/11rLnUl9JXNNNdJPYAGrBO9ikds5XRkFh/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="clock" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Timekeeper Sheet</p>
-                                <p class="text-xs text-slate-500">PDF Printout</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://drive.google.com/file/d/1-k3n51SVyMO6nYI0nIZUqs7j1e6CdZ45/view?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="clipboard" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Chief TK Slips (4 Lane)</p>
-                                <p class="text-xs text-slate-500">PDF Printout</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://drive.google.com/file/d/1kEluz8_lO-xkq9H3n3qViDtkbcoTQx2s/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Chief TK Slips (6 Lane)</p>
-                                <p class="text-xs text-slate-500">For larger pools</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://drive.google.com/file/d/1tzMRAYBajxg3LY1fIYavGTzFO3pq70wl/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Chief TK Slips (8 Lane)</p>
-                                <p class="text-xs text-slate-500">For 8 lane pools</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
-                        <a href="https://docs.google.com/document/d/1T3Hc26p8ftaMS05G-lfinmExE_7UGnB3pG6UusN8xKA/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 border-b border-white/5 transition-colors group">
-                            <div class="bg-amber-500/10 p-2 rounded-lg mr-4 group-hover:bg-amber-500/20">
-                                <i data-lucide="mic" class="text-amber-500 w-5 h-5"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <p class="text-sm font-medium">Announcers Guide</p>
-                                <p class="text-xs text-slate-500">Script for first time volunteers</p>
-                            </div>
-                            <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
-                        </a>
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://drive.google.com/file/d/11rLnUl9JXNNNdJPYAGrBO9ikds5XRkFh/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="clock" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Timekeeper Sheet</p>
+                                    <p class="text-xs text-slate-500 truncate">PDF Printout</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://drive.google.com/file/d/1-k3n51SVyMO6nYI0nIZUqs7j1e6CdZ45/view?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="clipboard" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Chief TK Slips (4)</p>
+                                    <p class="text-xs text-slate-500 truncate">PDF Printout</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://drive.google.com/file/d/1kEluz8_lO-xkq9H3n3qViDtkbcoTQx2s/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Chief TK Slips (6)</p>
+                                    <p class="text-xs text-slate-500 truncate">For larger pools</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://drive.google.com/file/d/1tzMRAYBajxg3LY1fIYavGTzFO3pq70wl/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Chief TK Slips (8)</p>
+                                    <p class="text-xs text-slate-500 truncate">For 8 lane pools</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
+                            <a href="https://docs.google.com/document/d/1T3Hc26p8ftaMS05G-lfinmExE_7UGnB3pG6UusN8xKA/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
+                                    <i data-lucide="mic" class="text-amber-500 w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Announcers Guide</p>
+                                    <p class="text-xs text-slate-500 truncate">Script for volunteers</p>
+                                </div>
+                            </a>
+                        </div>
+
                     </div>
                 </div>
             </div>
