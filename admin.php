@@ -355,51 +355,135 @@
                     <button onclick="resetChecklist()" class="ml-auto text-xs text-slate-500 hover:text-red-400 transition-colors">Reset</button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="rules-printed">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Copy Of the Rules Printed</span>
-                    </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Rules -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="rules-printed">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">League Rules</span>
+                                <span class="text-xs text-slate-500 block">Copy printed for referee</span>
+                            </div>
+                        </label>
+                        <a href="https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="external-link" class="w-3 h-3"></i> Print Rules
+                        </a>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="teamsheets-marked">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Any teamsheets you need to flag to the Ref</span>
-                    </label>
+                    <!-- Teamsheets -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="teamsheets-marked">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Teamsheets</span>
+                                <span class="text-xs text-slate-500 block">You will have received the teamsheets by email. Check and flag any time limit issues to the referee.</span>
+                            </div>
+                        </label>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="results-calc">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Results Calculator ready on Excel (Poolside Guide available for volunteers)</span>
-                    </label>
+                    <!-- Results Calculator -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="results-calc">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Results Calculator</span>
+                                <span class="text-xs text-slate-500 block">Ready on Excel + Guide</span>
+                            </div>
+                        </label>
+                        <div class="flex gap-2 mt-3">
+                            <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT" target="_blank" class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
+                                <i data-lucide="download" class="w-3 h-3"></i> Download
+                            </a>
+                            <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing" target="_blank" class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
+                                <i data-lucide="book" class="w-3 h-3"></i> Guide
+                            </a>
+                        </div>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="officials-signin">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Officials Sign-In List</span>
-                    </label>
+                    <!-- Officials Sign-In -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="officials-signin">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Officials Sign-In Sheet</span>
+                                <span class="text-xs text-slate-500 block">Printed for officials</span>
+                            </div>
+                        </label>
+                        <a href="Officials Sign-in.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="file-text" class="w-3 h-3"></i> Print Form
+                        </a>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="dq-forms">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">DQ Report Forms</span>
-                    </label>
+                    <!-- DQ Reports -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="dq-forms">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">DQ Report Forms</span>
+                                <span class="text-xs text-slate-500 block">Printed for officials</span>
+                            </div>
+                        </label>
+                        <a href="https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="file-warning" class="w-3 h-3"></i> Print Form
+                        </a>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="timekeeper-sheets">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">4x Timekeeper Sheets (Rounds) 6-8x (Finals)</span>
-                    </label>
+                    <!-- Timekeeper Sheets -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="timekeeper-sheets">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Timekeeper Sheets</span>
+                                <span class="text-xs text-slate-500 block">Print 4x(Rounds) or 6-8x(Finals)</span>
+                            </div>
+                        </label>
+                        <a href="Timekeeper-sheets.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="clock" class="w-3 h-3"></i> Generate Sheets
+                        </a>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="chief-tk-slips">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Chief TK Slips 4 Lane (Rounds) 6-8 Lane (Finals)</span>
-                    </label>
+                    <!-- Chief TK Slips -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="chief-tk-slips">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Chief Timekeeper Slips</span>
+                                <span class="text-xs text-slate-500 block">53 Required</span>
+                            </div>
+                        </label>
+                        <a href="ChiefTKSlips.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="clipboard-list" class="w-3 h-3"></i> Generate Slips
+                        </a>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="blank-programmes">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Blank Programmes printed for officials & desk</span>
-                    </label>
+                    <!-- Blank Programmes -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="blank-programmes">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Blank Programmes</span>
+                                <span class="text-xs text-slate-500 block">Printed for Ref/Judges</span>
+                            </div>
+                        </label>
+                        <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="printer" class="w-3 h-3"></i> Print Programme
+                        </a>
+                    </div>
 
-                    <label class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-white/5 group select-none bg-slate-900/30">
-                        <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="announcers-guide">
-                        <span class="text-slate-300 group-hover:text-white transition-colors text-sm">Announcers Guide (Available for Volunteers)</span>
-                    </label>
+                    <!-- Announcers Guide -->
+                    <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group relative">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500" data-id="announcers-guide">
+                            <div>
+                                <span class="text-slate-200 font-medium block mb-1">Announcers Guide</span>
+                                <span class="text-xs text-slate-500 block">Script for volunteers</span>
+                            </div>
+                        </label>
+                        <a href="https://docs.google.com/document/d/1T3Hc26p8ftaMS05G-lfinmExE_7UGnB3pG6UusN8xKA/edit?usp=sharing" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <i data-lucide="mic" class="w-3 h-3"></i> View Script
+                        </a>
+                    </div>
+
                 </div>
             </div>
 
