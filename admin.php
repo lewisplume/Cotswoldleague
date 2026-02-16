@@ -264,7 +264,7 @@
                     <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-amber-400">
                         <i data-lucide="files" class="w-5 h-5"></i> Helpful Documents
                     </h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 gap-x-px gap-y-px bg-white/5">
+                    <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 gap-x-px gap-y-px bg-white/5">
                         
                         <div class="bg-[#0f172a]/80 backdrop-blur-xl">
                             <a href="Officials Sign-in.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
@@ -315,37 +315,13 @@
                         </div>
 
                         <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                            <a href="https://drive.google.com/file/d/1-k3n51SVyMO6nYI0nIZUqs7j1e6CdZ45/view?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                            <a href="ChiefTKSlips.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                 <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                     <i data-lucide="clipboard" class="text-amber-500 w-5 h-5"></i>
                                 </div>
                                 <div class="flex-grow min-w-0">
-                                    <p class="text-sm font-medium truncate">Chief TK Slips (4)</p>
-                                    <p class="text-xs text-slate-500 truncate">PDF Printout</p>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                            <a href="https://drive.google.com/file/d/1kEluz8_lO-xkq9H3n3qViDtkbcoTQx2s/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
-                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
-                                    <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
-                                </div>
-                                <div class="flex-grow min-w-0">
-                                    <p class="text-sm font-medium truncate">Chief TK Slips (6)</p>
-                                    <p class="text-xs text-slate-500 truncate">For larger pools</p>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                            <a href="https://drive.google.com/file/d/1tzMRAYBajxg3LY1fIYavGTzFO3pq70wl/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
-                                <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
-                                    <i data-lucide="columns" class="text-amber-500 w-5 h-5"></i>
-                                </div>
-                                <div class="flex-grow min-w-0">
-                                    <p class="text-sm font-medium truncate">Chief TK Slips (8)</p>
-                                    <p class="text-xs text-slate-500 truncate">For 8 lane pools</p>
+                                    <p class="text-sm font-medium truncate">Chief Timekeeper Slips</p>
+                                    <p class="text-xs text-slate-500 truncate">Printable Slips for Rounds & Finals</p>
                                 </div>
                             </a>
                         </div>
