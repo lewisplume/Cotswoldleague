@@ -17,6 +17,7 @@
 <body class="text-white font-sans min-h-screen flex flex-col">
 
     <?php include 'nav.php'; ?>
+    <?php include 'db.php'; ?>
 
     <!-- CONTENT AREA -->
     <div class="flex-grow flex flex-col items-center justify-center p-4">
@@ -45,6 +46,51 @@
                 </button>
             </div>
             
+            
+            <!-- STATISTICS BAR -->
+            <?php
+            // Fetch stats
+            $prog_count = 0;
+            $rep_count = 0;
+            
+            $sql_stats = "SELECT action_name, count FROM tracking_stats";
+            $result_stats = $conn->query($sql_stats);
+            
+            if ($result_stats->num_rows > 0) {
+                while($row = $result_stats->fetch_assoc()) {
+                    if($row['action_name'] == 'programme_generated') $prog_count = $row['count'];
+                    if($row['action_name'] == 'report_generated') $rep_count = $row['count'];
+                }
+            }
+            ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="glass-panel p-4 rounded-xl flex items-center justify-between border border-white/5 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10 flex items-center gap-4">
+                        <div class="bg-emerald-500/20 p-3 rounded-lg">
+                            <i data-lucide="printer" class="w-6 h-6 text-emerald-400"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Programmes Generated</p>
+                            <p class="text-2xl font-bold text-white"><?php echo number_format($prog_count); ?></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl flex items-center justify-between border border-white/5 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10 flex items-center gap-4">
+                        <div class="bg-purple-500/20 p-3 rounded-lg">
+                            <i data-lucide="bar-chart-2" class="w-6 h-6 text-purple-400"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Reports Generated</p>
+                            <p class="text-2xl font-bold text-white"><?php echo number_format($rep_count); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="space-y-12">
                 <!-- ROW 1: Governance & Planning -->
                 <div class="space-y-4">
