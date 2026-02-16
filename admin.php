@@ -303,13 +303,13 @@
                         </div>
 
                         <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                            <a href="https://drive.google.com/file/d/11rLnUl9JXNNNdJPYAGrBO9ikds5XRkFh/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                            <a href="Timekeeper-sheets.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                 <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                     <i data-lucide="clock" class="text-amber-500 w-5 h-5"></i>
                                 </div>
                                 <div class="flex-grow min-w-0">
                                     <p class="text-sm font-medium truncate">Timekeeper Sheet</p>
-                                    <p class="text-xs text-slate-500 truncate">PDF Printout</p>
+                                    <p class="text-xs text-slate-500 truncate">Printable Form Tool</p>
                                 </div>
                             </a>
                         </div>
