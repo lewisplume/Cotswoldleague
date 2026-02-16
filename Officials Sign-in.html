@@ -5,18 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League - Host Team Officials Sign-In</title>
+    <link rel="icon" href="images/league-logo.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
+        /* Restored Original Styles */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 40px;
             color: #333;
-            background-color: #fff;
+            background-color: #f0f2f5;
+            /* Light grey background for screen */
+            padding-top: 90px;
+            /* Space for the fixed nav bar */
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
+            background-color: white;
+            /* White sheet effect */
+            padding: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         header {
@@ -124,157 +135,181 @@
             font-size: 12px;
         }
 
-        /* Print Button Styles */
-        .print-btn-container {
-            text-align: center;
-            margin-bottom: 20px;
+        .hidden-row {
+            display: none;
         }
 
-        .print-btn {
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background-color 0.2s;
-        }
-
-        .print-btn:hover {
-            background-color: #004494;
-        }
-
+        /* Print Styles - Crucial for fitting on one page */
         @media print {
             @page {
-                size: portrait;
+                size: A4 portrait;
                 margin: 0.5cm;
             }
 
             body {
                 padding: 0;
+                margin: 0;
+                background-color: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
 
             .container {
-                width: 100%;
-                max-width: none;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
             }
 
             th {
                 background-color: #eee !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
 
+            /* Hiding the Nav bar in print */
+            nav.no-print,
             .no-print {
                 display: none !important;
             }
 
-            /* Compact layout for single page */
+            /* Scale Header */
             h1 {
-                font-size: 18px;
+                font-size: 22pt;
+                margin-bottom: 5px;
             }
 
             h2 {
-                font-size: 14px;
+                font-size: 16pt;
+                margin-top: 0;
+                margin-bottom: 15px;
             }
 
             header {
-                margin-bottom: 10px;
-                padding-bottom: 5px;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
             }
 
             .gala-info {
-                margin-bottom: 10px;
-                font-size: 12px;
+                margin-bottom: 20px;
+                font-size: 12pt;
+            }
+
+            /* Scale Table */
+            table {
+                width: 100%;
+                font-size: 12pt;
+                /* Increased font size to fill width */
             }
 
             th,
             td {
-                padding: 4px;
-                font-size: 11px;
-                height: 25px;
+                padding: 6px 4px;
+                /* Slightly tighter padding horizontally to fit, but height is key */
+                height: 30px;
+                /* Force minimum height to stretch down page */
+                border: 1px solid #000;
             }
 
             .checkbox-col {
-                font-size: 9px;
+                font-size: 10pt;
+            }
+
+            .checkbox-box {
+                width: 16px;
+                height: 16px;
+                border: 1.5px solid #000;
             }
 
             .footer {
-                margin-top: 10px;
-                font-size: 10px;
+                margin-top: 20px;
+                font-size: 10pt;
+                position: fixed;
+                bottom: 10mm;
+                left: 0;
+                right: 0;
             }
 
             .notes {
-                margin-top: 10px;
-                font-size: 10px;
+                margin-top: 15px;
+                font-size: 11pt;
             }
+
+            /* Ensure columns sums to 100% */
+            .role-col {
+                width: 17%;
+            }
+
+            .name-col {
+                width: 23%;
+            }
+
+            .club-col {
+                width: 20%;
+            }
+
+            .se-col {
+                width: 15%;
+            }
+
+            /* Checkbox cols take remaining 25% */
         }
     </style>
 </head>
 
-<style>
-    /* ... existing styles ... */
-    .controls-container {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-    }
-
-    .controls-container label {
-        font-weight: bold;
-        margin-right: 5px;
-    }
-
-    .controls-container select {
-        padding: 5px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-    }
-
-    .hidden-row {
-        display: none;
-    }
-</style>
-</head>
-
 <body>
 
-    <div class="container">
-        <div class="no-print">
-            <div class="print-btn-container" style="margin-bottom: 10px;">
-                <button onclick="window.print()" class="print-btn">🖨️ Print this Form</button>
-            </div>
-
-            <div class="controls-container">
-                <div>
-                    <label for="galaType">Gala Type:</label>
-                    <select id="galaType" onchange="updateSheet()">
-                        <option value="round">League Round</option>
-                        <option value="final_a">A Final (8 Lanes)</option>
-                        <option value="final_b">B Final (6 Lanes)</option>
-                        <option value="final_c">C Final (6 Lanes)</option>
-                    </select>
+    <!-- New Navigation Bar (Tailwind Styled) -->
+    <nav
+        class="no-print border-b border-slate-800 bg-slate-900/95 backdrop-blur-md fixed top-0 left-0 right-0 z-50 h-[70px]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+            <div class="flex items-center justify-between h-full">
+                <!-- Left: Home Link and Title -->
+                <div class="flex items-center gap-4">
+                    <a href="admin.php" class="text-white hover:text-sky-400 transition-colors">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </a>
+                    <span class="text-white font-bold text-lg hidden md:block">Officials Sign-In</span>
                 </div>
 
-                <div id="roundSelectorContainer">
-                    <label for="roundNum">Round Number:</label>
-                    <select id="roundNum" onchange="updateSheet()">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
+                <!-- Center: Controls -->
+                <div
+                    class="controls-container flex items-center gap-2 bg-slate-800 rounded-lg p-1 border border-slate-700">
+                    <div class="flex items-center">
+                        <label for="galaType" class="text-slate-400 text-xs font-bold px-2 uppercase">Gala:</label>
+                        <select id="galaType" onchange="updateSheet()"
+                            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
+                            <option value="round">League Round</option>
+                            <option value="final_a">A Final (8 Lanes)</option>
+                            <option value="final_b">B Final (6 Lanes)</option>
+                            <option value="final_c">C Final (6 Lanes)</option>
+                        </select>
+                    </div>
+
+                    <div id="roundSelectorContainer" class="flex items-center border-l border-slate-600 ml-1 pl-1">
+                        <label for="roundNum" class="text-slate-400 text-xs font-bold px-2 uppercase">Round:</label>
+                        <select id="roundNum" onchange="updateSheet()"
+                            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer w-16">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
                 </div>
+
+                <!-- Right: Print Button -->
+                <button onclick="window.print()"
+                    class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-sky-500/30 flex items-center gap-2 transition-all">
+                    <i data-lucide="printer" class="w-4 h-4"></i> <span class="hidden sm:inline">Print Form</span>
+                </button>
             </div>
         </div>
+    </nav>
+
+    <!-- Restored Content Structure -->
+    <div class="container">
+        <!-- Original Controls Removed (Use Nav Bar above) -->
 
         <header>
             <h1>Cotswold Swimming League 2026</h1>
@@ -549,6 +584,8 @@
     </div>
 
     <script>
+        lucide.createIcons();
+
         function updateSheet() {
             const galaType = document.getElementById('galaType').value;
             const roundNum = document.getElementById('roundNum').value;
@@ -563,7 +600,7 @@
             let labelText = "Round Number: <span id='roundValue'>" + roundNum + "</span>";
 
             if (galaType === 'round') {
-                roundSelector.style.display = 'block';
+                roundSelector.style.display = 'flex'; // Adjusted to flex for Tailwind
                 tkCount = 4;
                 otherCount = 4;
                 labelText = "Round Number: <span id='roundValue'>" + roundNum + "</span>";
