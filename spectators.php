@@ -1,15 +1,49 @@
 <?php
 include 'db.php';
 include 'season_data.php';
+
 // Fetch Round 1 and Round 2 points for Spectators page
 $completed_points = [];
 $sql = "SELECT c.name, r.round_1, r.round_2 FROM results r JOIN clubs c ON r.club_id = c.id";
 $result = $conn->query($sql);
-if ($result->num_rows > 0) {
+if ($result && $result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
         $completed_points[1][$row['name']] = $row['round_1'];
         $completed_points[2][$row['name']] = $row['round_2'];
     }
+}
+
+// Name Mapping: Season Data Name => DB Host Name
+$host_map = [
+    "Bath Dolphin" => "Bath",
+    "COB (City of Bristol)" => "City Of Bristol",
+    "Swindon ASC" => "Swindon",
+    "Academy Swim Team" => "AST",
+    "Burnham-On-Sea" => "Burnham",
+    "Southwold SC" => "Southwold",
+    "Monnow SC" => "Monnow",
+    "Forest of Dean" => "FOD",
+    "Severnside Tritons" => "Severnside"
+];
+
+// Fetch Venue Details from DB
+$venue_db = [];
+$v_sql = "SELECT * FROM venue_details"; 
+$v_res = $conn->query($v_sql);
+if ($v_res && $v_res->num_rows > 0) {
+    while($row = $v_res->fetch_assoc()) {
+        // Key by round and host for lookup
+        $key = $row['host_club'] . '_' . $row['round_number'];
+        $venue_db[$key] = $row;
+    }
+}
+
+// Helper to get points
+function getPoints($round, $team, $completed_points) {
+    if (isset($completed_points[$round][$team])) {
+        return $completed_points[$round][$team];
+    }
+    return null;
 }
 ?>
 <!DOCTYPE html>
@@ -107,7 +141,107 @@ if ($result->num_rows > 0) {
                     <button onclick="filterDraw(4)" id="btnR4" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R4</button>
                 </div>
             </div>
-            <div id="drawContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- DRAW CONTAINER -->
+            <div id="drawWrapper">
+                <?php foreach ($season_draw as $round_data): 
+                    $round_num = $round_data['round'];
+                    $is_completed = $round_num <= 2; 
+                ?>
+                <div id="round-<?php echo $round_num; ?>" class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 <?php echo $round_num !== 1 ? 'hidden' : ''; ?>">
+                    
+                    <?php foreach ($round_data['galas'] as $index => $gala): 
+                        $host = $gala['host'];
+                        $teams = $gala['teams'];
+                        
+                        // Use Mapping or fallback to original name
+                        $db_host_name = $host_map[$host] ?? $host;
+                        $lookup_key = $db_host_name . '_' . $round_num;
+                        
+                        $venue_info = $venue_db[$lookup_key] ?? null;
+
+                        // Construct display Details
+                        if ($venue_info) {
+                            $display_details = "";
+                            if (!empty($venue_info['venue_name'])) $display_details .= "<strong>" . htmlspecialchars($venue_info['venue_name']) . "</strong>. ";
+                            if (!empty($venue_info['address'])) $display_details .= htmlspecialchars($venue_info['address']) . ". ";
+                            if (!empty($venue_info['warm_up_time'])) $display_details .= "W/U: " . htmlspecialchars($venue_info['warm_up_time']) . ". ";
+                            if (!empty($venue_info['start_time'])) $display_details .= "Start: " . htmlspecialchars($venue_info['start_time']) . ". ";
+                            if (!empty($venue_info['payment_info'])) $display_details .= htmlspecialchars($venue_info['payment_info']) . ". ";
+                             if (!empty($venue_info['parking_info'])) $display_details .= htmlspecialchars($venue_info['parking_info']) . ".";
+                            
+                            $payment_info_raw = $venue_info['payment_info'] ?? '';
+                        } else {
+                            $display_details = $gala['details']; // Fallback
+                             $payment_info_raw = $gala['details']; 
+                        }
+                        
+                        $has_card = stripos($payment_info_raw, 'Card') !== false;
+                        $embedUrl = $gala['embedUrl'] ?? '';
+                    ?>
+                    
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
+                                <?php if ($is_completed): ?>
+                                    <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo $round_data['date']; ?></span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                                <?php echo htmlspecialchars($host); ?>
+                            </h3>
+                            
+                            <div class="space-y-2 mb-4">
+                                <?php foreach ($teams as $team): 
+                                    $pts = getPoints($round_num, $team, $completed_points);
+                                    $is_host = ($team === $host);
+                                ?>
+                                <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                    <div class="flex items-center gap-3 text-sm">
+                                        <div class="w-1.5 h-1.5 rounded-full <?php echo $is_host ? 'bg-sky-500' : 'bg-slate-600'; ?>"></div>
+                                        <span class="<?php echo $is_host ? 'text-white font-bold' : 'text-slate-400'; ?>"><?php echo htmlspecialchars($team); ?></span>
+                                        <?php if ($is_host): ?>
+                                            <span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php if ($pts !== null): ?>
+                                        <span class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded"><?php echo $pts; ?> pts</span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            
+                            <!-- VENUE DETAILS -->
+                            <div class="mt-4 pt-3 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    <?php echo $display_details; ?>
+                                    <?php if ($has_card): ?>
+                                        <span class="inline-flex items-center gap-1 ml-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">
+                                            <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
+                                        </span>
+                                    <?php endif; ?>
+                                </p>
+                            </div>
+
+                            <?php if ($embedUrl): ?>
+                                <div class="mt-4 pt-4 border-t border-white/5">
+                                    <button onclick="toggleLive(<?php echo $round_num; ?>, <?php echo $index; ?>)" class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
+                                        <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endforeach; ?>
             </div>
             
             <!-- LIVE RESULTS VIEWER (Full Width) -->
@@ -120,7 +254,6 @@ if ($result->num_rows > 0) {
     </div>
 
     <script>
-        const completedResults = <?php echo json_encode($completed_points); ?>;
         lucide.createIcons();
         const drawData = <?php echo json_encode($season_draw); ?>;
 
@@ -128,74 +261,20 @@ if ($result->num_rows > 0) {
         let liveRefreshInterval = null;
 
         function filterDraw(roundNum) {
-            const container = document.getElementById('drawContainer');
-            
-            // Update buttons
             for (let i = 1; i <= 4; i++) {
                 const btn = document.getElementById(`btnR${i}`);
+                const section = document.getElementById(`round-${i}`);
+                
                 if (i === roundNum) {
                     btn.classList.add('bg-sky-600', 'text-white');
                     btn.classList.remove('text-slate-400');
+                    if(section) section.classList.remove('hidden');
                 } else {
                     btn.classList.remove('bg-sky-600', 'text-white');
                     btn.classList.add('text-slate-400');
+                    if(section) section.classList.add('hidden');
                 }
             }
-
-            const round = drawData.find(r => r.round === roundNum);
-            
-            // Logic for Completed Tag (R1 and R2 are completed)
-            const isCompleted = roundNum <= 2;
-
-            // Generate all cards at once
-            container.innerHTML = round.galas.map((gala, index) => `
-                <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
-                    <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
-                            ${isCompleted ? '<span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>' : ''}
-                        </div>
-                        <span class="text-xs text-slate-500 font-medium">${round.date}</span>
-                    </div>
-                    <div class="p-5">
-                        <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors">${gala.host}</h3>
-                        <div class="space-y-2 mb-4">
-                            ${gala.teams.map(team => {
-                                const points = (completedResults && completedResults[roundNum] && completedResults[roundNum][team] !== undefined) ? completedResults[roundNum][team] : null;
-                                return `
-                                <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                                    <div class="flex items-center gap-3 text-sm">
-                                        <div class="w-1.5 h-1.5 rounded-full ${team === gala.host ? 'bg-sky-500' : 'bg-slate-600'}"></div>
-                                        <span class="${team === gala.host ? 'text-white font-bold' : 'text-slate-400'}">${team}</span>
-                                        ${team === gala.host ? '<span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>' : ''}
-                                    </div>
-                                    ${points !== null ? `<span class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">${points} pts</span>` : ''}
-                                </div>
-                            `}).join('')}
-                        </div>
-                        
-                        <!-- VENUE DETAILS -->
-                        <div class="mt-4 pt-3 border-t border-white/10">
-                            <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1 flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
-                            </p>
-                            <p class="text-xs text-slate-300 leading-relaxed">${gala.details}</p>
-                        </div>
-
-                        ${gala.embedUrl ? `
-                            <div class="mt-4 pt-4 border-t border-white/5">
-                                <button onclick="toggleLive(${roundNum}, ${index})" class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
-                                    <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-
-            lucide.createIcons();
-            
-            // Close live viewer when switching rounds
             closeLive();
         }
 
@@ -205,7 +284,6 @@ if ($result->num_rows > 0) {
             const gala = round.galas[galaIndex];
             const galaId = `${roundNum}-${galaIndex}`;
 
-            // If clicking the same active button, close it
             if (currentActiveGala === galaId && !viewer.classList.contains('hidden')) {
                 closeLive();
                 return;
@@ -214,7 +292,6 @@ if ($result->num_rows > 0) {
             currentActiveGala = galaId;
             viewer.classList.remove('hidden');
             
-            // Inject content
             viewer.innerHTML = `
                 <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <div class="flex items-center gap-4">
@@ -239,16 +316,14 @@ if ($result->num_rows > 0) {
             
             lucide.createIcons();
 
-            // Set up auto-refresh
             if (liveRefreshInterval) clearInterval(liveRefreshInterval);
             liveRefreshInterval = setInterval(() => {
                 const iframe = document.getElementById('live-iframe');
                 if (iframe) {
                     iframe.src = iframe.src;
                 }
-            }, 60000); // 60 seconds
+            }, 60000); 
             
-            // Smooth scroll to the viewer with a slight delay to ensure rendering
             setTimeout(() => {
                 viewer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 50);
