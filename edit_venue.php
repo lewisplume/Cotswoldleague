@@ -11,30 +11,56 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $success_msg = "";
 $error_msg = "";
 
-// Fetch distinct Host Clubs for the selection dropdown
-$host_clubs = [];
-$h_sql = "SELECT DISTINCT host_club FROM venue_details ORDER BY host_club ASC";
-$h_res = $conn->query($h_sql);
-if ($h_res) {
-    while($row = $h_res->fetch_assoc()) {
-        $host_clubs[] = $row['host_club'];
+// 1. Define Mapping: Full Club Name (from `clubs` table) => DB Host Name (in `venue_details`)
+$club_map = [
+    "Academy Swim Team" => "AST",
+    "Bath Dolphin" => "Bath",
+    "COB (City of Bristol)" => "City Of Bristol",
+    "Burnham-On-Sea" => "Burnham",
+    "Forest of Dean" => "FOD",
+    "Monnow SC" => "Monnow",
+    "Severnside Tritons" => "Severnside",
+    "Southwold SC" => "Southwold",
+    "Swindon ASC" => "Swindon"
+];
+
+// 2. Fetch All Clubs for Dropdown (Sorted)
+$all_club_names = [];
+$c_sql = "SELECT name FROM clubs ORDER BY name ASC";
+$c_res = $conn->query($c_sql);
+if ($c_res) {
+    while($row = $c_res->fetch_assoc()) {
+        $all_club_names[] = $row['name'];
     }
+} else {
+    // Fallback if clubs table fails
+    $all_club_names = ["Backwell", "Brockworth", "Bridgwater", "Cheltenham", "Cirencester", "Dursley", "Gloucester", "Newport", "Tewkesbury", "Wells", "Yeovil"];
 }
 
-// Handle Club Selection
-$selected_club = $_GET['club'] ?? null;
+// 3. Handle Club Selection
+$selected_club_full = $_GET['club'] ?? null; // The "Pretty" name
+$selected_db_host = null; // The short code for DB
 
-// Handle Update
+if ($selected_club_full) {
+    // Map full name to short name, or use full name if no mapping exists
+    $selected_db_host = $club_map[$selected_club_full] ?? $selected_club_full;
+}
+
+// 4. Handle Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_venue'])) {
     $id = $_POST['venue_id'];
     $venue_name = $_POST['venue_name'];
     $address = $_POST['address'];
-    $warm_up = $_POST['warm_up_time'];
+    $warm_up = $_POST['warmup_time'];
     $start_time = $_POST['start_time'];
     $payment = $_POST['payment_info'];
     $parking = $_POST['parking_info'];
     $rep_name = $_POST['club_rep'];
-    $selected_club = $_POST['original_host']; // Keep the view on this club
+    
+    // Maintain selection state
+    $selected_club_full = $_POST['original_club_full'];
+    $selected_db_host = $club_map[$selected_club_full] ?? $selected_club_full;
+    $target_host_name = $_POST['target_host_name']; // For audit log clarity
 
     // Get old values for audit log
     $old_sql = "SELECT * FROM venue_details WHERE id = ?";
@@ -48,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_venue'])) {
     $changes = [];
     if ($old_row['venue_name'] != $venue_name) $changes[] = "Name: '{$old_row['venue_name']}' -> '$venue_name'";
     if ($old_row['address'] != $address) $changes[] = "Address: '{$old_row['address']}' -> '$address'";
-    if ($old_row['warm_up_time'] != $warm_up) $changes[] = "WarmUp: '{$old_row['warm_up_time']}' -> '$warm_up'";
+    if ($old_row['warmup_time'] != $warm_up) $changes[] = "WarmUp: '{$old_row['warmup_time']}' -> '$warm_up'";
     if ($old_row['start_time'] != $start_time) $changes[] = "Start: '{$old_row['start_time']}' -> '$start_time'";
     if ($old_row['payment_info'] != $payment) $changes[] = "Payment: '{$old_row['payment_info']}' -> '$payment'";
     if ($old_row['parking_info'] != $parking) $changes[] = "Parking: '{$old_row['parking_info']}' -> '$parking'";
@@ -57,16 +83,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_venue'])) {
         $error_msg = "No changes detected.";
     } else {
         // Update DB
-        $update_sql = "UPDATE venue_details SET venue_name=?, address=?, warm_up_time=?, start_time=?, payment_info=?, parking_info=? WHERE id=?";
+        $update_sql = "UPDATE venue_details SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=? WHERE id=?";
         $stmt = $conn->prepare($update_sql);
         $stmt->bind_param("ssssssi", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $id);
         
         if ($stmt->execute()) {
             $success_msg = "Venue details updated successfully.";
             
-            // Audit Log
-            $change_str = implode(", ", $changes);
-            $log_sql = "INSERT INTO audit_log (user, action, details, created_at) VALUES (?, 'Venue Update', ?, NOW())";
+            // Audit Log - Prefix with Target Club Name
+            $change_str = "[$target_host_name] " . implode(", ", $changes);
+            
+            $log_sql = "INSERT INTO audit_log (club_name, action, change_details, timestamp) VALUES (?, 'Venue Update', ?, NOW())";
             $log_stmt = $conn->prepare($log_sql);
             if ($log_stmt) {
                 $log_stmt->bind_param("ss", $rep_name, $change_str);
@@ -78,12 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_venue'])) {
     }
 }
 
-// Fetch Venues for Selected Club
+// 5. Fetch Venues for Selected Club (Using DB Host Name)
 $venues = [];
-if ($selected_club) {
+if ($selected_db_host) {
     $sql = "SELECT * FROM venue_details WHERE host_club = ? ORDER BY round_number ASC";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $selected_club);
+    $stmt->bind_param("s", $selected_db_host);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
@@ -91,18 +118,6 @@ if ($selected_club) {
             $venues[] = $row;
         }
     }
-}
-
-// Fetch Clubs for "On Behalf Of" Dropdown (All clubs, not just hosts)
-$all_clubs = [];
-$c_sql = "SELECT name FROM clubs ORDER BY name ASC";
-$c_res = $conn->query($c_sql);
-if ($c_res) {
-    while($c = $c_res->fetch_assoc()) {
-        $all_clubs[] = $c['name'];
-    }
-} else {
-    $all_clubs = ["Cheltenham", "Gloucester", "Bristol", "Southwold", "Cirencester", "Brockworth", "Tewkesbury", "Dursley"];
 }
 ?>
 <!DOCTYPE html>
@@ -157,9 +172,9 @@ if ($c_res) {
             <form method="GET" class="flex flex-col sm:flex-row gap-4">
                 <div class="flex-grow">
                      <select name="club" onchange="this.form.submit()" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-4 py-3 focus:ring-sky-500 focus:border-sky-500 transition-colors cursor-pointer">
-                        <option value="" disabled <?php echo !$selected_club ? 'selected' : ''; ?>>-- Choose a Club --</option>
-                        <?php foreach ($host_clubs as $club): ?>
-                            <option value="<?php echo htmlspecialchars($club); ?>" <?php echo $selected_club === $club ? 'selected' : ''; ?>>
+                        <option value="" disabled <?php echo !$selected_club_full ? 'selected' : ''; ?>>-- Choose a Club --</option>
+                        <?php foreach ($all_club_names as $club): ?>
+                            <option value="<?php echo htmlspecialchars($club); ?>" <?php echo $selected_club_full === $club ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($club); ?>
                             </option>
                         <?php endforeach; ?>
@@ -167,7 +182,7 @@ if ($c_res) {
                 </div>
                 <noscript><button type="submit" class="bg-sky-600 px-6 py-2 rounded-lg font-bold">Go</button></noscript>
             </form>
-            <?php if (!$selected_club): ?>
+            <?php if (!$selected_club_full): ?>
                 <p class="text-slate-400 text-sm mt-3 flex items-center gap-2">
                     <i data-lucide="info" class="w-4 h-4"></i> Please select the club you wish to update venues for.
                 </p>
@@ -175,7 +190,7 @@ if ($c_res) {
         </div>
 
         <!-- STEP 2: EDIT VENUES -->
-        <?php if ($selected_club && !empty($venues)): ?>
+        <?php if ($selected_club_full && !empty($venues)): ?>
             <div class="space-y-6">
                 <?php foreach ($venues as $venue): ?>
                     <div class="glass-panel p-6 rounded-2xl border border-white/5 relative overflow-hidden">
@@ -191,7 +206,8 @@ if ($c_res) {
 
                         <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="hidden" name="venue_id" value="<?php echo $venue['id']; ?>">
-                            <input type="hidden" name="original_host" value="<?php echo htmlspecialchars($selected_club); ?>">
+                            <input type="hidden" name="original_club_full" value="<?php echo htmlspecialchars($selected_club_full); ?>">
+                            <input type="hidden" name="target_host_name" value="<?php echo htmlspecialchars($venue['host_club']); ?>">
                             
                             <!-- Col 1 -->
                             <div class="space-y-4">
@@ -219,7 +235,7 @@ if ($c_res) {
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Warm Up</label>
                                         <div class="relative">
                                             <i data-lucide="clock" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
-                                            <input type="text" name="warm_up_time" value="<?php echo htmlspecialchars($venue['warm_up_time'] ?? ''); ?>" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors" placeholder="18:00">
+                                            <input type="text" name="warmup_time" value="<?php echo htmlspecialchars($venue['warmup_time'] ?? ''); ?>" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors" placeholder="18:00">
                                         </div>
                                     </div>
                                     <div>
@@ -240,10 +256,10 @@ if ($c_res) {
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Parking Info</label>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Parking & Other Info</label>
                                     <div class="relative">
                                         <i data-lucide="car" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
-                                        <input type="text" name="parking_info" value="<?php echo htmlspecialchars($venue['parking_info'] ?? ''); ?>" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors" placeholder="Free 3hrs / Pay & Display">
+                                        <input type="text" name="parking_info" value="<?php echo htmlspecialchars($venue['parking_info'] ?? ''); ?>" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors" placeholder="Free 3hrs / Pay & Display / Other notes">
                                     </div>
                                 </div>
                             </div>
@@ -254,8 +270,8 @@ if ($c_res) {
                                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Updating on behalf of:</label>
                                     <select name="club_rep" class="bg-slate-900 border border-slate-700 text-white text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full p-2.5">
                                         <option value="League Admin">League Admin</option>
-                                        <?php foreach ($all_clubs as $c_name): ?>
-                                            <option value="<?php echo htmlspecialchars($c_name); ?>" <?php echo $selected_club === $c_name ? 'selected' : ''; ?>>
+                                        <?php foreach ($all_club_names as $c_name): ?>
+                                            <option value="<?php echo htmlspecialchars($c_name); ?>" <?php echo $selected_club_full === $c_name ? 'selected' : ''; ?>>
                                                 <?php echo htmlspecialchars($c_name); ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -269,7 +285,7 @@ if ($c_res) {
                     </div>
                 <?php endforeach; ?>
             </div>
-        <?php elseif ($selected_club): ?>
+        <?php elseif ($selected_club_full): ?>
              <div class="text-center py-12">
                 <div class="bg-slate-800/50 rounded-full p-4 inline-block mb-4">
                     <i data-lucide="folder-open" class="w-8 h-8 text-slate-500"></i>

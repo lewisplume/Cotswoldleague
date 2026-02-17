@@ -165,7 +165,7 @@ function getPoints($round, $team, $completed_points) {
                             $display_details = "";
                             if (!empty($venue_info['venue_name'])) $display_details .= "<strong>" . htmlspecialchars($venue_info['venue_name']) . "</strong>. ";
                             if (!empty($venue_info['address'])) $display_details .= htmlspecialchars($venue_info['address']) . ". ";
-                            if (!empty($venue_info['warm_up_time'])) $display_details .= "W/U: " . htmlspecialchars($venue_info['warm_up_time']) . ". ";
+                            if (!empty($venue_info['warmup_time'])) $display_details .= "W/U: " . htmlspecialchars($venue_info['warmup_time']) . ". ";
                             if (!empty($venue_info['start_time'])) $display_details .= "Start: " . htmlspecialchars($venue_info['start_time']) . ". ";
                             if (!empty($venue_info['payment_info'])) $display_details .= htmlspecialchars($venue_info['payment_info']) . ". ";
                              if (!empty($venue_info['parking_info'])) $display_details .= htmlspecialchars($venue_info['parking_info']) . ".";

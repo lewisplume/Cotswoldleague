@@ -214,27 +214,7 @@ foreach ($season_draw as $round) {
     <script>
         lucide.createIcons();
         
-        // Navigation Menu Logic
-        const menuBtn = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const menuIcon = document.getElementById('menu-icon');
-        const closeIcon = document.getElementById('close-icon');
 
-        // Check if elements exist before adding event listener to avoid errors
-        if (menuBtn && mobileMenu) {
-            menuBtn.addEventListener('click', () => {
-                const isHidden = mobileMenu.classList.contains('hidden');
-                if (isHidden) {
-                    mobileMenu.classList.remove('hidden');
-                    if(menuIcon) menuIcon.classList.add('hidden');
-                    if(closeIcon) closeIcon.classList.remove('hidden');
-                } else {
-                    mobileMenu.classList.add('hidden');
-                    if(menuIcon) menuIcon.classList.remove('hidden');
-                    if(closeIcon) closeIcon.classList.add('hidden');
-                }
-            });
-        }
 
         // NEW: Number Count-Up Animation
         document.addEventListener('DOMContentLoaded', () => {

@@ -88,6 +88,47 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                      </a>
                 </div>
 
+                <!-- NEW: Audit Log Summary -->
+                <?php
+                // Fetch recent logs
+                $recent_logs = [];
+                $log_sql = "SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 3";
+                $log_res = $conn->query($log_sql);
+                if ($log_res && $log_res->num_rows > 0) {
+                    while($l = $log_res->fetch_assoc()) {
+                        $recent_logs[] = $l;
+                    }
+                }
+                ?>
+                <?php if (!empty($recent_logs)): ?>
+                    <div class="mb-8 p-6 glass-panel rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold flex items-center gap-2">
+                                <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i> Recent Venue Updates
+                            </h3>
+                            <a href="audit_log.php" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                                View Full Log <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </a>
+                        </div>
+                        <div class="space-y-3">
+                            <?php foreach ($recent_logs as $log): ?>
+                                <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div class="bg-emerald-500/10 p-2 rounded-lg mt-0.5">
+                                        <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i>
+                                    </div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="flex justify-between items-start">
+                                            <p class="text-sm font-bold text-white"><?php echo htmlspecialchars($log['club_name']); ?></p>
+                                            <span class="text-[10px] text-slate-500 font-mono"><?php echo date('d M H:i', strtotime($log['timestamp'])); ?></span>
+                                        </div>
+                                        <p class="text-xs text-slate-400 truncate mt-1"><?php echo htmlspecialchars($log['change_details']); ?></p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <!-- STATISTICS BAR -->
                 <?php
                 // Fetch stats
@@ -545,26 +586,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     <script>
         lucide.createIcons();
 
-        // Mobile Menu Toggle Logic
-        const menuBtn = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const menuIcon = document.getElementById('menu-icon');
-        const closeIcon = document.getElementById('close-icon');
 
-        if (menuBtn) {
-            menuBtn.addEventListener('click', () => {
-                const isHidden = mobileMenu.classList.contains('hidden');
-                if (isHidden) {
-                    mobileMenu.classList.remove('hidden');
-                    menuIcon.classList.add('hidden');
-                    closeIcon.classList.remove('hidden');
-                } else {
-                    mobileMenu.classList.add('hidden');
-                    menuIcon.classList.remove('hidden');
-                    closeIcon.classList.add('hidden');
-                }
-            });
-        }
         
         <?php if (isset($_SESSION['logged_in'])): ?>
         // Checklist Logic
