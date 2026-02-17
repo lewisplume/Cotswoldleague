@@ -161,14 +161,18 @@ function getPoints($round, $team, $completed_points) {
                         $venue_info = $venue_db[$lookup_key] ?? null;
 
                         // Construct display Details
+                        $payment_info_raw = '';
+                        $v_name = ''; $v_addr = ''; $v_wu = ''; $v_st = ''; $v_pay = ''; $v_park = '';
+                        $is_db_venue = false; // Flag to track if we have DB data
+                        
                         if ($venue_info) {
-                            $display_details = "";
-                            if (!empty($venue_info['venue_name'])) $display_details .= "<strong>" . htmlspecialchars($venue_info['venue_name']) . "</strong>. ";
-                            if (!empty($venue_info['address'])) $display_details .= htmlspecialchars($venue_info['address']) . ". ";
-                            if (!empty($venue_info['warmup_time'])) $display_details .= "W/U: " . htmlspecialchars($venue_info['warmup_time']) . ". ";
-                            if (!empty($venue_info['start_time'])) $display_details .= "Start: " . htmlspecialchars($venue_info['start_time']) . ". ";
-                            if (!empty($venue_info['payment_info'])) $display_details .= htmlspecialchars($venue_info['payment_info']) . ". ";
-                             if (!empty($venue_info['parking_info'])) $display_details .= htmlspecialchars($venue_info['parking_info']) . ".";
+                            $is_db_venue = true;
+                            $v_name = $venue_info['venue_name'] ?? '';
+                            $v_addr = $venue_info['address'] ?? '';
+                            $v_wu = !empty($venue_info['warmup_time']) ? $venue_info['warmup_time'] : "Check with host";
+                            $v_st = !empty($venue_info['start_time']) ? $venue_info['start_time'] : "Check with host";
+                            $v_pay = !empty($venue_info['payment_info']) ? $venue_info['payment_info'] : "Check with host";
+                            $v_park = !empty($venue_info['parking_info']) ? $venue_info['parking_info'] : "Check with host";
                             
                             $payment_info_raw = $venue_info['payment_info'] ?? '';
                         } else {
@@ -216,18 +220,56 @@ function getPoints($round, $team, $completed_points) {
                             </div>
                             
                             <!-- VENUE DETAILS -->
-                            <div class="mt-4 pt-3 border-t border-white/10">
-                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1 flex items-center gap-1">
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
                                     <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
                                 </p>
-                                <p class="text-xs text-slate-300 leading-relaxed">
-                                    <?php echo $display_details; ?>
-                                    <?php if ($has_card): ?>
-                                        <span class="inline-flex items-center gap-1 ml-2 text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">
-                                            <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
-                                        </span>
-                                    <?php endif; ?>
-                                </p>
+                                
+                                <?php if ($is_db_venue): ?>
+                                    <!-- Structured Grid View -->
+                                    <div class="text-xs text-slate-300">
+                                        <?php if($v_name || $v_addr): ?>
+                                            <div class="mb-3">
+                                                <?php if($v_name): ?><div class="font-bold text-white text-sm mb-0.5"><?php echo htmlspecialchars($v_name); ?></div><?php endif; ?>
+                                                <?php if($v_addr): ?><div class="text-slate-400 leading-snug"><?php echo htmlspecialchars($v_addr); ?></div><?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                            <div>
+                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
+                                                <span class="font-medium text-white"><?php echo htmlspecialchars($v_wu); ?></span>
+                                            </div>
+                                            <div>
+                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Start Time</span>
+                                                <span class="font-medium text-white"><?php echo htmlspecialchars($v_st); ?></span>
+                                            </div>
+                                            <div>
+                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Payment</span>
+                                                <span class="font-medium text-white flex items-center gap-2">
+                                                    <?php echo htmlspecialchars($v_pay); ?>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking & Other Info</span>
+                                                <span class="font-medium text-white"><?php echo htmlspecialchars($v_park); ?></span>
+                                            </div>
+                                        </div>
+
+                                        <?php if ($has_card): ?>
+                                            <div class="mt-2">
+                                                <span class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-bold">
+                                                    <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Fallback View (Raw Text) -->
+                                    <p class="text-xs text-slate-300 leading-relaxed">
+                                        <?php echo $display_details; ?>
+                                    </p>
+                                <?php endif; ?>
                             </div>
 
                             <?php if ($embedUrl): ?>
