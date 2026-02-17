@@ -349,16 +349,30 @@
             resultsData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
             let laneRowIndex = -1;
+            // Search first 20 rows for the lane headers
             for (let i = 0; i < Math.min(20, resultsData.length); i++) {
-                const rowStr = resultsData[i].join(" ").toLowerCase();
-                if (rowStr.includes("lane 1") && rowStr.includes("lane 2")) {
+                const row = resultsData[i];
+                let laneCount = 0;
+
+                // Count how many cells in this row start with "Lane"
+                if (Array.isArray(row)) {
+                    row.forEach(cell => {
+                        if (cell && String(cell).toLowerCase().trim().startsWith("lane")) {
+                            laneCount++;
+                        }
+                    });
+                }
+
+                // If we found at least 2 "Lane" cells, assume this is the header row
+                // This allows for "Lane 3, Lane 4, Lane 5, Lane 6" configurations
+                if (laneCount >= 2) {
                     laneRowIndex = i;
                     break;
                 }
             }
 
             if (laneRowIndex === -1) {
-                alert("Could not find 'Lane 1', 'Lane 2' headers in the results file. Please check the file.");
+                alert("Could not find a row with multiple 'Lane' headers (e.g. Lane 1, Lane 2, or Lane 3, Lane 4 etc.) in the results file. Please check the file.");
                 return;
             }
 
