@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spectator Programme | Cotswold League</title>
     <link rel="icon" href="images/league-logo.png" type="image/png">
-    
+
     <!-- Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap');
@@ -27,7 +29,8 @@
                 margin: 5mm;
             }
 
-            html, body {
+            html,
+            body {
                 height: initial !important;
                 background: white !important;
                 margin: 0 !important;
@@ -36,7 +39,10 @@
             }
 
             /* Hide UI elements */
-            .no-print, nav, button, .controls-container {
+            .no-print,
+            nav,
+            button,
+            .controls-container {
                 display: none !important;
             }
 
@@ -51,13 +57,30 @@
             }
 
             /* Ensure background colors print */
-            .print-bg-slate-50 { background-color: #f8fafc !important; }
-            .print-bg-slate-100 { background-color: #f1f5f9 !important; }
-            .print-bg-slate-200 { background-color: #e2e8f0 !important; }
-            .print-bg-sky-50 { background-color: #f0f9ff !important; }
-            .print-bg-sky-100 { background-color: #e0f2fe !important; }
-            .print-text-sky-800 { color: #075985 !important; }
-            
+            .print-bg-slate-50 {
+                background-color: #f8fafc !important;
+            }
+
+            .print-bg-slate-100 {
+                background-color: #f1f5f9 !important;
+            }
+
+            .print-bg-slate-200 {
+                background-color: #e2e8f0 !important;
+            }
+
+            .print-bg-sky-50 {
+                background-color: #f0f9ff !important;
+            }
+
+            .print-bg-sky-100 {
+                background-color: #e0f2fe !important;
+            }
+
+            .print-text-sky-800 {
+                color: #075985 !important;
+            }
+
             .page-break {
                 clear: both;
                 page-break-before: always;
@@ -66,7 +89,8 @@
         }
 
         /* Prevent rows and specific blocks from splitting across pages */
-        tr, .avoid-break {
+        tr,
+        .avoid-break {
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -75,29 +99,42 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8.5pt; /* Reduced slightly to ensure 30 rows fit A4 */
+            font-size: 8.5pt;
+            /* Reduced slightly to ensure 30 rows fit A4 */
         }
 
-        th, td {
-            border: 1px solid #cbd5e1; 
-            padding: 2px 4px; /* Tighter padding to save vertical space */
+        th,
+        td {
+            border: 1px solid #cbd5e1;
+            padding: 2px 4px;
+            /* Tighter padding to save vertical space */
             text-align: left;
             vertical-align: middle;
         }
-        
+
         th {
-            background-color: #f1f5f9; 
-            color: #475569; 
+            background-color: #f1f5f9;
+            color: #475569;
             font-weight: 800;
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        .text-center { text-align: center; }
-        .font-bold { font-weight: bold; }
-        .limit-col { color: #dc2626; font-weight: 700; text-align: center; }
-        
+        .text-center {
+            text-align: center;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        .limit-col {
+            color: #dc2626;
+            font-weight: 700;
+            text-align: center;
+        }
+
         /* Write-in lines for parents */
         .write-in-col {
             border-bottom: 1px dashed #cbd5e1 !important;
@@ -105,10 +142,11 @@
         }
 
         .block-divider {
-            border-bottom: 2px solid #94a3b8; 
+            border-bottom: 2px solid #94a3b8;
         }
     </style>
 </head>
+
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
 
     <!-- NAVIGATION & CONTROLS (Hidden on Print/PDF) -->
@@ -116,16 +154,18 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row items-center justify-between py-4 gap-4">
                 <div class="flex items-center gap-4 w-full md:w-auto">
-                    <a href="admin.php" class="text-white hover:text-sky-400 transition-colors">
+                    <a href="spectators.php" class="text-white hover:text-sky-400 transition-colors">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </a>
                     <span class="text-white font-bold text-lg hidden md:block">Spectator Programme</span>
                 </div>
 
-                <div class="controls-container flex flex-wrap items-center justify-center gap-4 bg-slate-800 rounded-lg p-2 px-4 border border-slate-700 w-full md:w-auto">
+                <div
+                    class="controls-container flex flex-wrap items-center justify-center gap-4 bg-slate-800 rounded-lg p-2 px-4 border border-slate-700 w-full md:w-auto">
                     <div class="flex items-center gap-3">
                         <label class="text-slate-400 text-xs font-bold uppercase tracking-wider">Programme Type:</label>
-                        <select id="galaType" onchange="generateProgramme()" class="bg-slate-900 text-white text-base font-bold py-2 px-3 rounded-md border border-slate-600 focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
+                        <select id="galaType" onchange="generateProgramme()"
+                            class="bg-slate-900 text-white text-base font-bold py-2 px-3 rounded-md border border-slate-600 focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
                             <option value="round">Rounds Programme</option>
                             <option value="final_c">C Final Programme</option>
                             <option value="final_b">B Final Programme</option>
@@ -135,10 +175,12 @@
                 </div>
 
                 <div class="flex items-center gap-2 w-full md:w-auto">
-                    <button onclick="downloadPDF()" id="downloadBtn" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-full font-bold flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
+                    <button onclick="downloadPDF()" id="downloadBtn"
+                        class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-full font-bold flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
                         <i data-lucide="download" class="w-4 h-4"></i> Download PDF
                     </button>
-                    <button onclick="window.print()" class="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-sky-500/30 flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
+                    <button onclick="window.print()"
+                        class="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-sky-500/30 flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
                         <i data-lucide="printer" class="w-4 h-4"></i> Print
                     </button>
                 </div>
@@ -149,13 +191,16 @@
     <!-- PRINTABLE SHEET -->
     <main class="flex justify-center p-4 md:p-8 transition-all print:block print:p-0 print:m-0">
         <!-- Added wrapper to isolate PDF sizing from screen padding -->
-        <div id="programmeSheet" class="sheet-container bg-white w-[210mm] p-[10mm] print:p-0 shadow-2xl rounded-sm mx-auto overflow-hidden">
-            
+        <div id="programmeSheet"
+            class="sheet-container bg-white w-[210mm] p-[10mm] print:p-0 shadow-2xl rounded-sm mx-auto overflow-hidden">
+
             <!-- Header -->
             <div class="text-center mb-2 block-divider pb-2 relative">
                 <h1 class="text-3xl font-black uppercase tracking-tight text-slate-800">The Cotswold League</h1>
-                <h2 id="programmeSubtitle" class="text-lg font-bold text-slate-500 mt-0.5 uppercase tracking-widest">Rounds Programme - 2026</h2>
-                <div class="mt-1.5 inline-block bg-sky-50 print-bg-sky-50 text-sky-800 print-text-sky-800 font-bold px-4 py-1 rounded-full text-xs border border-sky-200">
+                <h2 id="programmeSubtitle" class="text-lg font-bold text-slate-500 mt-0.5 uppercase tracking-widest">
+                    Rounds Programme - 2026</h2>
+                <div
+                    class="mt-1.5 inline-block bg-sky-50 print-bg-sky-50 text-sky-800 print-text-sky-800 font-bold px-4 py-1 rounded-full text-xs border border-sky-200">
                     Official Programme Sponsored by Wyvern Swimwear
                 </div>
             </div>
@@ -164,7 +209,7 @@
             <div id="programmePage1"></div>
 
             <div class="text-center text-[10px] text-slate-400 mt-1 print:mt-auto pb-1">--- PAGE 1 ---</div>
-            
+
             <!-- IMPORTANT: html2pdf__page-break is required for the html2pdf library to respect breaks -->
             <div class="html2pdf__page-break page-break"></div>
 
@@ -178,25 +223,38 @@
             <div id="programmePage2"></div>
 
             <!-- Spectator Guide Footer -->
-            <div class="mt-2 border border-slate-300 print-bg-slate-50 rounded-xl overflow-hidden bg-slate-50 avoid-break">
+            <div
+                class="mt-2 border border-slate-300 print-bg-slate-50 rounded-xl overflow-hidden bg-slate-50 avoid-break">
                 <div class="bg-slate-200 border-b border-slate-300 p-1">
-                    <h3 class="font-bold text-slate-700 text-center uppercase tracking-widest text-[11px] flex items-center justify-center gap-2">
+                    <h3
+                        class="font-bold text-slate-700 text-center uppercase tracking-widest text-[11px] flex items-center justify-center gap-2">
                         <i data-lucide="info" class="w-3.5 h-3.5"></i> Spectator Information Guide
                     </h3>
                 </div>
                 <div class="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px] leading-tight">
                     <div>
-                        <h4 class="font-bold text-slate-800 border-b border-slate-300 pb-0.5 mb-1">Relay Events Explained</h4>
-                        <p class="mb-1"><strong class="text-sky-700">The Medley Relay:</strong> Four swimmers each swim a different stroke in a specific order: Backstroke &rarr; Breaststroke &rarr; Butterfly &rarr; Freestyle.</p>
-                        <p><strong class="text-sky-700">The Cannon:</strong> The loudest event of the night! Event 53 is a mixed 8-person freestyle relay featuring one boy and one girl from each age group (11/u, 13/u, 15/u, Open).</p>
+                        <h4 class="font-bold text-slate-800 border-b border-slate-300 pb-0.5 mb-1">Relay Events
+                            Explained</h4>
+                        <p class="mb-1"><strong class="text-sky-700">The Medley Relay:</strong> Four swimmers each swim
+                            a different stroke in a specific order: Backstroke &rarr; Breaststroke &rarr; Butterfly
+                            &rarr; Freestyle.</p>
+                        <p><strong class="text-sky-700">The Cannon:</strong> The loudest event of the night! Event 53 is
+                            a mixed 8-person freestyle relay featuring one boy and one girl from each age group (11/u,
+                            13/u, 15/u, Open).</p>
                     </div>
                     <div>
                         <h4 class="font-bold text-slate-800 border-b border-slate-300 pb-0.5 mb-1">Rules & Scoring</h4>
-                        <p class="mb-1"><strong class="text-red-600">Speeding Tickets (Time Limits):</strong> In this league, swimming too fast can actually disqualify you! If a swimmer beats the "Time Limit" shown, they receive no points.</p>
-                        <p><strong class="text-sky-700">Race Distances:</strong> 25m = 1 Length | 50m = 2 Lengths | 100m = 4 Lengths</p>
+                        <p class="mb-1"><strong class="text-red-600">Speeding Tickets (Time Limits):</strong> In this
+                            league, swimming too fast can actually disqualify you! If a swimmer beats the "Time Limit"
+                            shown, they receive no points.</p>
+                        <p><strong class="text-sky-700">Race Distances:</strong> 25m = 1 Length | 50m = 2 Lengths | 100m
+                            = 4 Lengths</p>
                     </div>
-                    <div class="md:col-span-2 border-t border-slate-300 pt-1 mt-0.5 text-center bg-white print-bg-white p-1 rounded shadow-sm">
-                        <p class="font-bold text-slate-700 text-[11px]">Join the community on Facebook! Search <span class="text-sky-600">"Cotswold Swimming League"</span> to share your gala photos and celebrate our swimmers. 📸🏊‍♂️</p>
+                    <div
+                        class="md:col-span-2 border-t border-slate-300 pt-1 mt-0.5 text-center bg-white print-bg-white p-1 rounded shadow-sm">
+                        <p class="font-bold text-slate-700 text-[11px]">Join the community on Facebook! Search <span
+                                class="text-sky-600">"Cotswold Swimming League"</span> to share your gala photos and
+                            celebrate our swimmers. 📸🏊‍♂️</p>
                     </div>
                 </div>
             </div>
@@ -221,7 +279,7 @@
             { id: 8, desc: "Boys 13/u 50m Breaststroke", limit: "41.80" },
             { id: 9, desc: "Girls 15/u 50m Backstroke", limit: "33.80" },
             { id: 10, desc: "Boys 15/u 50m Backstroke", limit: "33.10" },
-            
+
             { id: 11, desc: "Girls Open 100m Butterfly", limit: "1.11.70" },
             { id: 12, desc: "Boys Open 100m Butterfly", limit: "1.01.90" },
             { id: 13, desc: "Girls 11/u 4x1 Medley Relay", limit: "1.09.33" },
@@ -272,7 +330,7 @@
 
         function generateProgramme() {
             const type = document.getElementById('galaType').value;
-            
+
             let subtitle = "";
             let dist11u = "25m";
             let teamCount = 4; // Default to Rounds
@@ -303,7 +361,7 @@
                 baseEvents.slice(10, 20),
                 baseEvents.slice(20, 30)
             ];
-            
+
             const chunksPage2 = [
                 baseEvents.slice(30, 40),
                 baseEvents.slice(40, 53) // Last block has 13 events
@@ -317,7 +375,7 @@
             let html = '';
 
             chunks.forEach((chunk) => {
-                if(chunk.length === 0) return;
+                if (chunk.length === 0) return;
 
                 const firstEvt = chunk[0].id;
                 const lastEvt = chunk[chunk.length - 1].id;
@@ -354,7 +412,7 @@
 
                 // Add the Score Update Box specific to this chunk
                 let scoreBoxes = '';
-                for(let i = 1; i <= teamCount; i++) {
+                for (let i = 1; i <= teamCount; i++) {
                     scoreBoxes += `
                         <div class="flex items-center gap-0.5">
                             <span class="text-[8px] text-slate-500 font-bold uppercase">T${i}</span>
@@ -386,26 +444,26 @@
         function downloadPDF() {
             const btn = document.getElementById('downloadBtn');
             const originalContent = btn.innerHTML;
-            
+
             // Show loading state
             btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Generating...';
             lucide.createIcons();
 
             const element = document.getElementById('programmeSheet');
             const mainContainer = document.querySelector('main');
-            
+
             // Fix for html2pdf offset bug: temporarily remove the flexbox centering 
             // and margin/padding so it captures securely from the (0,0) coordinate.
             mainContainer.classList.remove('flex', 'justify-center', 'p-4', 'md:p-8');
             element.classList.remove('mx-auto', 'shadow-2xl');
-            
+
             const opt = {
-                margin:       0, 
-                filename:     'Cotswold_League_Spectator_Programme.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
+                margin: 0,
+                filename: 'Cotswold_League_Spectator_Programme.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             // Generate and Download
@@ -413,7 +471,7 @@
                 // Restore styling back to normal after generation
                 mainContainer.classList.add('flex', 'justify-center', 'p-4', 'md:p-8');
                 element.classList.add('mx-auto', 'shadow-2xl');
-                
+
                 // Restore button state
                 btn.innerHTML = originalContent;
                 lucide.createIcons();
@@ -425,4 +483,5 @@
 
     </script>
 </body>
+
 </html>
