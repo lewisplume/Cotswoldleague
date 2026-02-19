@@ -71,21 +71,43 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                     </a>
                 </div>
                 
-                <!-- NEW: Host Venue Management Card -->
-                <div class="mb-8 p-6 bg-sky-900/20 border border-sky-500/30 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-                     <div class="absolute inset-0 bg-gradient-to-r from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                     <div class="flex items-center gap-4 relative z-10">
-                         <div class="p-3 bg-sky-500/20 rounded-xl">
-                             <i data-lucide="map-pin" class="w-8 h-8 text-sky-400"></i>
+                <!-- TOP ACTIONS GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    
+                    <!-- Venue Management Card -->
+                    <div class="p-6 bg-sky-900/20 border border-sky-500/30 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                         <div class="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                         <div class="flex items-start gap-4 relative z-10 mb-4">
+                             <div class="p-3 bg-sky-500/20 rounded-xl flex-shrink-0">
+                                 <i data-lucide="map-pin" class="w-8 h-8 text-sky-400"></i>
+                             </div>
+                             <div>
+                                 <h2 class="text-xl font-bold text-white">Manage Venues</h2>
+                                 <p class="text-slate-300 text-sm mt-1">Update venue details, warm-up times, and parking info.</p>
+                             </div>
                          </div>
-                         <div class="text-left">
-                             <h2 class="text-xl font-bold text-white">Host Venue Management</h2>
-                             <p class="text-slate-300 text-sm">Update venue details, warm-up times, and parking info.</p>
+                         <a href="edit_venue.php" class="relative z-10 w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-900/20 flex items-center justify-center gap-2">
+                             Manage Venues <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                         </a>
+                    </div>
+
+                    <!-- Contact Details Card -->
+                    <div class="p-6 bg-emerald-900/20 border border-emerald-500/30 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                         <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                         <div class="flex items-start gap-4 relative z-10 mb-4">
+                             <div class="p-3 bg-emerald-500/20 rounded-xl flex-shrink-0">
+                                 <i data-lucide="users" class="w-8 h-8 text-emerald-400"></i>
+                             </div>
+                             <div>
+                                 <h2 class="text-xl font-bold text-white">Team Contacts</h2>
+                                 <p class="text-slate-300 text-sm mt-1">Update your club's contact details and view the directory.</p>
+                             </div>
                          </div>
-                     </div>
-                     <a href="edit_venue.php" class="relative z-10 px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-900/20 flex items-center gap-2">
-                         Manage Venues <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                     </a>
+                         <a href="contacts.php" class="relative z-10 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
+                             Manage Contacts <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                         </a>
+                    </div>
+
                 </div>
 
                 <!-- NEW: Audit Log Summary -->

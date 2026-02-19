@@ -43,6 +43,40 @@ INSERT INTO `audit_log` VALUES (1,'League Admin','Venue Update','Parking: \'Onsi
 UNLOCK TABLES;
 
 --
+-- Table structure for table `club_contacts`
+--
+
+DROP TABLE IF EXISTS `club_contacts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `club_contacts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `club_id` int(11) NOT NULL,
+  `club_name` varchar(100) NOT NULL,
+  `access_pin` varchar(4) NOT NULL DEFAULT '0000',
+  `contact1_name` varchar(100) DEFAULT NULL,
+  `contact1_email` varchar(150) DEFAULT NULL,
+  `contact2_name` varchar(100) DEFAULT NULL,
+  `contact2_email` varchar(150) DEFAULT NULL,
+  `contact3_name` varchar(100) DEFAULT NULL,
+  `contact3_email` varchar(150) DEFAULT NULL,
+  `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `club_id` (`club_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `club_contacts`
+--
+
+LOCK TABLES `club_contacts` WRITE;
+/*!40000 ALTER TABLE `club_contacts` DISABLE KEYS */;
+INSERT INTO `club_contacts` VALUES (1,1,'Academy Swim Team','0000','Nic Hazelton','nic.hazelton@astbos.co.uk',NULL,NULL,NULL,NULL,'2026-02-18 17:32:32'),(2,2,'Backwell','0000','Sue Rodgers','suemerv@outlook.com','Colin Jackson-','colinjackson1972@gmail.com',NULL,NULL,'2026-02-18 17:32:32'),(3,3,'Bath Dolphin','0000','Tegan Carpenter','tegan.carpenter@hotmail.com','Comp Sec','bdsccompetitionsec@gmail.com',NULL,NULL,'2026-02-18 17:32:32'),(4,4,'Bridgwater','0000','Tia Hayes','yuletia@talktalk.net','Ricky Hayes','headcoach@bridgwaterswim.co.uk',NULL,NULL,'2026-02-18 17:32:32'),(5,5,'Bristol North','0000','Dan Bradshaw','chair@bristolnorthsc.org.uk','Petrina Casey','headcoach@bristolnorthsc.org.uk','Keri Vickery','clubsecretary@bristolnorthsc.org.uk','2026-02-18 17:32:32'),(6,6,'Brockworth','0000','Carrie','brockworthsc20@outlook.com','Phil Lane Chair','phil.brockworthsc@gmail.com',NULL,'membership_brockworthsc20@outlook.com','2026-02-18 17:32:32'),(7,7,'Burnham-On-Sea','0000','Kelly Podbury',NULL,'Mark Podbury-','m_podbury@yahoo.co.uk','Burnham club','burnham@swimclubmanager.co.uk','2026-02-18 17:32:32'),(8,8,'Clevedon','0000','Sarah Boyle','Team_clevedon@clevedonasc.org.uk','Emma Wells','team_clevedon@clevedonasc.org.uk',NULL,NULL,'2026-02-18 17:32:32'),(9,9,'COB (City of Bristol)','0000','Marc Williams','cobassistheadcoach@gmail.com',NULL,NULL,NULL,NULL,'2026-02-18 17:32:32'),(10,10,'Corsham','0000','Zahid Mahmood','zahid.h.mahmood@gmail.com',NULL,NULL,NULL,NULL,'2026-02-18 17:32:32'),(11,11,'Cwmbran','0000','Lee-Anthony Carpenter','c15rpy@googlemail.com','Head Coach','Headcoach.cwmbranottersasc@outlook.com','Gerald Sims','geraldsims@hotmail.co.uk','2026-02-18 17:32:32'),(12,12,'Dursley','0000','Adam','chair@dursleydolphins.org.uk',NULL,NULL,NULL,'jonfalco@hotmail.com','2026-02-18 17:32:32'),(13,13,'Forest of Dean','0000','Craig','headcoach.fodsc@gmail.com','Lorna','secretary@fodsc.com',NULL,NULL,'2026-02-18 17:32:32'),(14,14,'Monnow SC','0000','Alun Parker - Chair','chairman@monnowsc.co.uk','Angela McGrath','competitions@monnowsc.co.uk','Richard Glyn-Jones','treasurer@monnowsc.co.uk','2026-02-18 17:32:32'),(15,15,'Newport','0000','Barrie Roberts','meetmanager.newportswimming@gmail.com',NULL,NULL,NULL,NULL,'2026-02-18 17:32:32'),(16,16,'Severnside Tritons','0000','Becky Antliff','leagues@severnsidetritons.org.uk','Keith Smith','keith.smith@severnsidetritons.org.uk',NULL,NULL,'2026-02-18 17:32:32'),(17,17,'Southwold SC','0000','Neil Holloway','neihol@live.com','Simon Wilkins','simonwilkins556@gmail.com',NULL,NULL,'2026-02-18 17:32:32'),(18,18,'Swindon ASC','0000','Sarah Bailey','swindonascsbailey@gmail.com','Louise Cotton','garycotton@ntlworld.com',NULL,NULL,'2026-02-18 17:32:32'),(19,19,'Wells','0000','Lee Chard','wellsswimmingclub@live.co.uk','Paul Perry','wellssc.headcoach@gmail.com','Danielle Dodge','wellssc.competition.secretary@gmail.com','2026-02-18 17:32:32'),(20,20,'Yeovil','0000','Judi Swan','ydsc.committee@gmail.com','Clare','ydsc.competitions@gmail.com','Ian','ydsc.headcoachian@gmail.com','2026-02-18 17:32:32');
+/*!40000 ALTER TABLE `club_contacts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `clubs`
 --
 
@@ -169,4 +203,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-18 16:22:53
+-- Dump completed on 2026-02-18 23:30:07
