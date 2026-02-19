@@ -139,8 +139,8 @@ if ($is_logged_in) {
             -webkit-backdrop-filter: blur(12px); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
         }
-        .form-input { @apply w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600; }
-        .form-label { @apply block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1; }
+
+        .form-label { display: block; font-size: 0.75rem; line-height: 1rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -255,11 +255,11 @@ if ($is_logged_in) {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="form-label">Contact 1 Name</label>
-                                        <input type="text" name="c1_name" value="<?php echo htmlspecialchars($my_club_data['contact1_name']); ?>" class="form-input">
+                                        <input type="text" name="c1_name" value="<?php echo htmlspecialchars($my_club_data['contact1_name']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600">
                                     </div>
                                     <div>
                                         <label class="form-label">Contact 1 Email</label>
-                                        <input type="email" name="c1_email" value="<?php echo htmlspecialchars($my_club_data['contact1_email']); ?>" class="form-input">
+                                        <input type="email" name="c1_email" value="<?php echo htmlspecialchars($my_club_data['contact1_email']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600">
                                     </div>
                                 </div>
                                 <hr class="border-white/5">
@@ -267,11 +267,11 @@ if ($is_logged_in) {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="form-label">Contact 2 Name</label>
-                                        <input type="text" name="c2_name" value="<?php echo htmlspecialchars($my_club_data['contact2_name']); ?>" class="form-input">
+                                        <input type="text" name="c2_name" value="<?php echo htmlspecialchars($my_club_data['contact2_name']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600">
                                     </div>
                                     <div>
                                         <label class="form-label">Contact 2 Email</label>
-                                        <input type="email" name="c2_email" value="<?php echo htmlspecialchars($my_club_data['contact2_email']); ?>" class="form-input">
+                                        <input type="email" name="c2_email" value="<?php echo htmlspecialchars($my_club_data['contact2_email']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600">
                                     </div>
                                 </div>
                                 <hr class="border-white/5">
@@ -279,11 +279,11 @@ if ($is_logged_in) {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="form-label">Contact 3 Name</label>
-                                        <input type="text" name="c3_name" value="<?php echo htmlspecialchars($my_club_data['contact3_name']); ?>" class="form-input">
+                                        <input type="text" name="c3_name" value="<?php echo htmlspecialchars($my_club_data['contact3_name']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600">
                                     </div>
                                     <div>
                                         <label class="form-label">Contact 3 Email</label>
-                                        <input type="email" name="c3_email" value="<?php echo htmlspecialchars($my_club_data['contact3_email']); ?>" class="form-input">
+                                        <input type="email" name="c3_email" value="<?php echo htmlspecialchars($my_club_data['contact3_email']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600">
                                     </div>
                                 </div>
                             </div>
@@ -308,7 +308,7 @@ if ($is_logged_in) {
                             
                             <div class="mb-4">
                                 <label class="form-label">New PIN</label>
-                                <input type="text" name="new_pin" placeholder="0000" maxlength="4" pattern="\d{4}" class="form-input text-center tracking-[0.3em] font-mono" required>
+                                <input type="text" name="new_pin" placeholder="0000" maxlength="4" pattern="\d{4}" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-sky-500 transition-all placeholder-slate-600 text-center tracking-[0.3em] font-mono" required>
                             </div>
                             <button type="submit" class="w-full bg-orange-600/80 hover:bg-orange-500 text-white font-bold py-2 rounded-xl transition-all">
                                 Update PIN
@@ -363,14 +363,7 @@ if ($is_logged_in) {
                                 <?php foreach ($directory_data as $row): ?>
                                     <tr class="hover:bg-white/5 transition-colors group">
                                         <td class="p-4 text-center">
-                                            <input type="checkbox" class="email-checkbox rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-0 focus:ring-offset-0 cursor-pointer w-4 h-4" 
-                                                value="<?php 
-                                                    $emails = [];
-                                                    if($row['contact1_email']) $emails[] = $row['contact1_email'];
-                                                    if($row['contact2_email']) $emails[] = $row['contact2_email'];
-                                                    if($row['contact3_email']) $emails[] = $row['contact3_email'];
-                                                    echo implode(';', $emails);
-                                                ?>">
+                                            <input type="checkbox" onchange="toggleRow(this)" class="row-checkbox rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-0 focus:ring-offset-0 cursor-pointer w-4 h-4">
                                         </td>
                                         <td class="p-4">
                                             <div class="flex items-center gap-3">
@@ -387,7 +380,12 @@ if ($is_logged_in) {
                                         <td class="p-4">
                                             <?php if($row['contact1_name']): ?>
                                                 <div class="font-medium text-slate-200"><?php echo htmlspecialchars($row['contact1_name']); ?></div>
-                                                <a href="mailto:<?php echo htmlspecialchars($row['contact1_email']); ?>" class="text-sky-400 text-xs hover:underline"><?php echo htmlspecialchars($row['contact1_email']); ?></a>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <?php if($row['contact1_email']): ?>
+                                                        <input type="checkbox" class="email-checkbox rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5" value="<?php echo htmlspecialchars($row['contact1_email']); ?>">
+                                                        <a href="mailto:<?php echo htmlspecialchars($row['contact1_email']); ?>" class="text-sky-400 text-xs hover:underline"><?php echo htmlspecialchars($row['contact1_email']); ?></a>
+                                                    <?php endif; ?>
+                                                </div>
                                             <?php else: ?>
                                                 <span class="text-slate-600">-</span>
                                             <?php endif; ?>
@@ -395,7 +393,12 @@ if ($is_logged_in) {
                                         <td class="p-4">
                                             <?php if($row['contact2_name']): ?>
                                                 <div class="font-medium text-slate-200"><?php echo htmlspecialchars($row['contact2_name']); ?></div>
-                                                <a href="mailto:<?php echo htmlspecialchars($row['contact2_email']); ?>" class="text-sky-400 text-xs hover:underline"><?php echo htmlspecialchars($row['contact2_email']); ?></a>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <?php if($row['contact2_email']): ?>
+                                                        <input type="checkbox" class="email-checkbox rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5" value="<?php echo htmlspecialchars($row['contact2_email']); ?>">
+                                                        <a href="mailto:<?php echo htmlspecialchars($row['contact2_email']); ?>" class="text-sky-400 text-xs hover:underline"><?php echo htmlspecialchars($row['contact2_email']); ?></a>
+                                                    <?php endif; ?>
+                                                </div>
                                             <?php else: ?>
                                                 <span class="text-slate-600">-</span>
                                             <?php endif; ?>
@@ -403,7 +406,12 @@ if ($is_logged_in) {
                                         <td class="p-4">
                                             <?php if($row['contact3_name']): ?>
                                                 <div class="font-medium text-slate-200"><?php echo htmlspecialchars($row['contact3_name']); ?></div>
-                                                <a href="mailto:<?php echo htmlspecialchars($row['contact3_email']); ?>" class="text-sky-400 text-xs hover:underline"><?php echo htmlspecialchars($row['contact3_email']); ?></a>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <?php if($row['contact3_email']): ?>
+                                                        <input type="checkbox" class="email-checkbox rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer w-3.5 h-3.5" value="<?php echo htmlspecialchars($row['contact3_email']); ?>">
+                                                        <a href="mailto:<?php echo htmlspecialchars($row['contact3_email']); ?>" class="text-sky-400 text-xs hover:underline"><?php echo htmlspecialchars($row['contact3_email']); ?></a>
+                                                    <?php endif; ?>
+                                                </div>
                                             <?php else: ?>
                                                 <span class="text-slate-600">-</span>
                                             <?php endif; ?>
@@ -424,24 +432,44 @@ if ($is_logged_in) {
         lucide.createIcons();
 
         // Checkbox Logic
-        const selectAll = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('.email-checkbox');
+        function toggleAll(source) {
+            // Toggle all row checkboxes
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            rowCheckboxes.forEach(cb => cb.checked = source.checked);
+            
+            // Toggle all email checkboxes
+            const emailCheckboxes = document.querySelectorAll('.email-checkbox');
+            emailCheckboxes.forEach(cb => cb.checked = source.checked);
+        }
 
+        function toggleRow(source) {
+            // Find the parent tr
+            const row = source.closest('tr');
+            // Find all email checkboxes within this row
+            const emailCheckboxes = row.querySelectorAll('.email-checkbox');
+            emailCheckboxes.forEach(cb => cb.checked = source.checked);
+            
+            updateMasterCheckbox();
+        }
+
+        // Add event listener to selectAll independently
+        const selectAll = document.getElementById('selectAll');
         if(selectAll) {
-            selectAll.addEventListener('change', (e) => {
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
-            });
+            selectAll.addEventListener('change', (e) => toggleAll(e.target));
+        }
+
+        // Update master checkbox based on sub-checkboxes (optional polish)
+        function updateMasterCheckbox() {
+            // Logic to uncheck master if not all are checked could go here
+            // simplified: if any row is unchecked, uncheck master
         }
 
         function getSelectedEmails() {
             let emails = [];
+            const checkboxes = document.querySelectorAll('.email-checkbox');
             checkboxes.forEach(cb => {
                 if(cb.checked && cb.value) {
-                    // Split value by semicolon in case row has multiple emails, but then re-join later
-                    const rowEmails = cb.value.split(';');
-                    rowEmails.forEach(email => {
-                        if(email.trim()) emails.push(email.trim());
-                    });
+                    if(cb.value.trim()) emails.push(cb.value.trim());
                 }
             });
             // Remove duplicates
