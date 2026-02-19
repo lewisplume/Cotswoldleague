@@ -188,7 +188,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                 <i data-lucide="bar-chart-2" class="w-6 h-6 text-purple-400"></i>
                             </div>
                             <div>
-                                <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Results Reports Generated</p>
+                                <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Results Matcher Reports Generated</p>
                                 <p class="text-2xl font-bold text-white"><?php echo number_format($rep_count); ?></p>
                             </div>
                         </div>
