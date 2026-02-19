@@ -114,7 +114,7 @@ function getPoints($round, $team, $completed_points) {
                     <i data-lucide="download" class="text-sky-500"></i> Downloads
                 </h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
-                    <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="flex items-center p-5 hover:bg-white/5 transition-colors group">
+                    <a href="spectator-programme.html" target="_blank" class="flex items-center p-5 hover:bg-white/5 transition-colors group">
                         <div class="bg-sky-500/10 p-3 rounded-xl mr-4 group-hover:bg-sky-500/20">
                             <i data-lucide="file-text" class="text-sky-500 w-6 h-6"></i>
                         </div>

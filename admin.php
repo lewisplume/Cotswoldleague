@@ -383,7 +383,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             </div>
 
                             <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                                <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <a href="spectator-programme.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                     <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                         <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
                                     </div>
@@ -569,7 +569,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     <span class="text-xs text-slate-500 block">Printed for Ref/Judges</span>
                                 </div>
                             </label>
-                            <a href="https://drive.google.com/file/d/15OL3Wlb26Tiyqic2AJjeMAlh0e_LVwT8/view?usp=drive_link" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <a href="spectator-programme.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
                                 <i data-lucide="printer" class="w-3 h-3"></i> Print Programme
                             </a>
                         </div>
