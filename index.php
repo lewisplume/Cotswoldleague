@@ -128,10 +128,14 @@ $news_result = $conn->query($news_sql);
                 <p class="text-slate-300 leading-relaxed mb-8 text-lg">
                     The Cotswold League stands as a beacon of competitive swimming excellence, uniting clubs from across the region in a display of skill, determination, and sportsmanship. Since its inception, the league has provided a platform for swimmers to challenge themselves, break records, and forge lasting friendships.
                 </p>
-                <div class="flex justify-center">
+                <div class="flex flex-wrap justify-center gap-4">
                     <a href="https://www.facebook.com/profile.php?id=100094686571540" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 border border-[#1877F2] text-[#1877F2] hover:bg-[#1877F2] hover:text-white rounded-full transition-all duration-300 font-medium group">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:stroke-white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                        Follow Us on Facebook for Latest News
+                        Follow Us on Facebook
+                    </a>
+                    <a href="https://www.instagram.com/thecotswoldleague/" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 border border-[#E1306C] text-[#E1306C] hover:bg-[#E1306C] hover:text-white rounded-full transition-all duration-300 font-medium group">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:stroke-white"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                        Follow Us on Instagram
                     </a>
                 </div>
             </div>
