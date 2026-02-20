@@ -209,6 +209,7 @@
 </head>
 
 <body>
+    <?php include 'nav.php'; ?>
 
     <div class="no-print max-w-4xl mx-auto mt-8 p-4">
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Cotswold League Result Matcher</h1>

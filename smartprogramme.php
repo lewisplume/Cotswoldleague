@@ -211,6 +211,7 @@
 </head>
 
 <body>
+    <?php include 'nav.php'; ?>
 
     <div id="controlPanel"
         class="no-print bg-yellow-50 border-b border-yellow-200 p-6 flex flex-col items-center justify-center gap-4 shadow-sm">

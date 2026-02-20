@@ -121,6 +121,7 @@
 </head>
 
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
+    <?php include 'nav.php'; ?>
 
     <nav class="no-print border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

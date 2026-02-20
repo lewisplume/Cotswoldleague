@@ -1,9 +1,26 @@
+<?php
+require_once 'db.php';
+$clubs = [];
+$c_res = $conn->query("SELECT name FROM clubs ORDER BY name ASC");
+if ($c_res) {
+    while ($row = $c_res->fetch_assoc()) {
+        $clubs[] = htmlspecialchars($row['name']);
+    }
+}
+$clubOptions = '<option value="">[Select Club]</option>';
+foreach ($clubs as $c) {
+    $clubOptions .= '<option value="' . $c . '">' . $c . '</option>';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League - Announcer Script Generator</title>
+    <link rel="icon" href="images/league-logo.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
         :root {
             --primary-color: #005f73;
@@ -17,11 +34,11 @@
             color: var(--text-color);
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;
             background: #fff;
             padding: 30px;
             border-radius: 8px;
@@ -120,6 +137,7 @@
     </style>
 </head>
 <body>
+    <?php include 'nav.php'; ?>
 
 <div class="container">
     <h1 class="page-title">Cotswold League Announcer Script Generator 🏊‍♂️</h1>
@@ -133,7 +151,7 @@
         </div>
         <div class="form-group">
             <label for="roundNum">Round Number:</label>
-            <select id="roundNum">
+            <select id="roundNum" onchange="updateFormDisplay()">
                 <option value="Round 1">Round 1</option>
                 <option value="Round 2">Round 2</option>
                 <option value="Round 3">Round 3</option>
@@ -147,21 +165,41 @@
             <label for="announcerName">Announcer's Name:</label>
             <input type="text" id="announcerName" placeholder="e.g., John Smith">
         </div>
-        <div class="form-group">
-            <label for="hostClub">Host Club Name:</label>
-            <input type="text" id="hostClub" placeholder="e.g., Dursley Dolphins">
+        <div class="form-group" id="group-host1">
+            <label for="hostClub">Host Club 1:</label>
+            <select id="hostClub">
+                <?php echo $clubOptions; ?>
+            </select>
+        </div>
+        <div class="form-group" id="group-host2" style="display: none;">
+            <label for="hostClub2">Host Club 2:</label>
+            <select id="hostClub2">
+                <?php echo $clubOptions; ?>
+            </select>
         </div>
         <div class="form-group">
             <label for="visitingClub1">Visiting Club 1:</label>
-            <input type="text" id="visitingClub1" placeholder="e.g., Cirencester SC">
+            <select id="visitingClub1"><?php echo $clubOptions; ?></select>
         </div>
         <div class="form-group">
             <label for="visitingClub2">Visiting Club 2:</label>
-            <input type="text" id="visitingClub2" placeholder="e.g., Brockworth SC">
+            <select id="visitingClub2"><?php echo $clubOptions; ?></select>
         </div>
         <div class="form-group">
             <label for="visitingClub3">Visiting Club 3:</label>
-            <input type="text" id="visitingClub3" placeholder="e.g., Southwold SC">
+            <select id="visitingClub3"><?php echo $clubOptions; ?></select>
+        </div>
+        <div class="form-group" id="group-vis4" style="display: none;">
+            <label for="visitingClub4">Visiting Club 4:</label>
+            <select id="visitingClub4"><?php echo $clubOptions; ?></select>
+        </div>
+        <div class="form-group" id="group-vis5" style="display: none;">
+            <label for="visitingClub5">Visiting Club 5:</label>
+            <select id="visitingClub5"><?php echo $clubOptions; ?></select>
+        </div>
+        <div class="form-group" id="group-vis6" style="display: none;">
+            <label for="visitingClub6">Visiting Club 6:</label>
+            <select id="visitingClub6"><?php echo $clubOptions; ?></select>
         </div>
         <div class="form-group">
             <label for="refereeName">Referee's Name:</label>
@@ -182,16 +220,57 @@
 </div>
 
 <script>
+    function updateFormDisplay() {
+        const round = document.getElementById('roundNum').value;
+        const hosts = (round === 'A Final' || round === 'B Final' || round === 'C Final') ? 2 : 1;
+        const visitors = (round === 'A Final') ? 6 : (round === 'B Final' || round === 'C Final') ? 4 : 3;
+
+        document.getElementById('group-host2').style.display = hosts >= 2 ? 'block' : 'none';
+        document.getElementById('group-vis4').style.display = visitors >= 4 ? 'block' : 'none';
+        document.getElementById('group-vis5').style.display = visitors >= 6 ? 'block' : 'none';
+        document.getElementById('group-vis6').style.display = visitors >= 6 ? 'block' : 'none';
+    }
+
+    // Call once on load
+    document.addEventListener('DOMContentLoaded', updateFormDisplay);
+
     function generateScript() {
         // Get values
         const pool = document.getElementById('poolName').value || '[Name of Pool]';
         const round = document.getElementById('roundNum').value || '[Round]';
         const announcer = document.getElementById('announcerName').value || '[Your Name]';
-        const host = document.getElementById('hostClub').value || '[Host Club]';
-        const visit1 = document.getElementById('visitingClub1').value || '[Visiting Club 1]';
-        const visit2 = document.getElementById('visitingClub2').value || '[Visiting Club 2]';
-        const visit3 = document.getElementById('visitingClub3').value || '[Visiting Club 3]';
         const referee = document.getElementById('refereeName').value || '[Referee Name]';
+
+        let maxLanes = 4;
+        if (round === 'A Final') maxLanes = 8;
+        else if (round === 'B Final' || round === 'C Final') maxLanes = 6;
+
+        let activeClubs = [];
+        const h1 = document.getElementById('hostClub').value;
+        if (h1) activeClubs.push(h1);
+        if (maxLanes >= 6) {
+            const h2 = document.getElementById('hostClub2').value;
+            if (h2) activeClubs.push(h2);
+        }
+        for (let i = 1; i <= 6; i++) {
+            if (i <= 3 || (maxLanes >= 6 && i === 4) || (maxLanes === 8 && i >= 5)) {
+                let v = document.getElementById('visitingClub' + i).value;
+                if (v) activeClubs.push(v);
+            }
+        }
+        
+        let clubsLi = '';
+        activeClubs.forEach(c => {
+            clubsLi += `<li><strong>${c}</strong></li>\n`;
+        });
+        if (clubsLi === '') clubsLi = '<li><strong>[Clubs list will appear here]</strong></li>';
+        
+        const numClubsStr = activeClubs.length > 0 ? activeClubs.length.toString() : "[number of]";
+
+        let lanesLi = '';
+        for (let i = 1; i <= maxLanes; i++) {
+            lanesLi += `<li>Lane ${i}: _________________________________</li>\n`;
+        }
 
         // Build HTML Script
         const scriptHTML = `
@@ -199,12 +278,9 @@
                 <h3>1. Pre-Gala Welcomes</h3>
                 <p class="script-notes">(Announce 10-15 minutes before warm-up starts)</p>
                 <p>"Good afternoon/evening everyone, and a very warm welcome to <strong>${pool}</strong> for <strong>${round}</strong> of the 2026 Cotswold Swimming League.</p>
-                <p>We are delighted to host tonight’s gala. I am <strong>${announcer}</strong>, and I’ll be your announcer for the evening. We have four fantastic clubs competing today. Please give a warm welcome to:</p>
+                <p>We are delighted to host tonight’s gala. I am <strong>${announcer}</strong>, and I’ll be your announcer for the evening. We have ${numClubsStr} fantastic clubs competing today. Please give a warm welcome to:</p>
                 <ul>
-                    <li><strong>${host}</strong></li>
-                    <li><strong>${visit1}</strong></li>
-                    <li><strong>${visit2}</strong></li>
-                    <li><strong>${visit3}</strong></li>
+                    ${clubsLi}
                 </ul>
                 <p>The Cotswold League is all about fun, sportsmanship, and giving our younger and less experienced swimmers a chance to shine. Let’s make sure we cheer loudly for every single swimmer in the water tonight!"</p>
             </div>
@@ -214,10 +290,7 @@
                 <p class="script-notes">(Fill in the blanks below after the random lane draw is conducted on the night!)</p>
                 <p>"We are about to begin the warm-up. Following the random lane draw conducted earlier, the lane assignments for the evening are as follows:</p>
                 <ul>
-                    <li>Lane 1: _________________________________</li>
-                    <li>Lane 2: _________________________________</li>
-                    <li>Lane 3: _________________________________</li>
-                    <li>Lane 4: _________________________________</li>
+                    ${lanesLi}
                 </ul>
                 <p>Warm-up will last for 30 minutes. Coaches, please ensure your swimmers are aware that diving is only permitted in designated sprint lanes. Over to the coaches for the warm-up."</p>
                 <p class="script-notes">Coaches control their own lanes during warm-up, nothing further to do for 30 minutes.</p>

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spectator Programme | Cotswold League</title>
-    <link rel="icon" href="images/league-logo.png" type="image/png">
+    <link rel="icon" href="images/league-logo.webp" type="image/webp">
 
     <!-- Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -148,6 +148,7 @@
 </head>
 
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
+    <?php include 'nav.php'; ?>
 
     <!-- NAVIGATION & CONTROLS (Hidden on Print/PDF) -->
     <nav class="no-print border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">

@@ -13,17 +13,14 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 40px;
+            padding: 0;
             color: #333;
             background-color: #f0f2f5;
-            /* Light grey background for screen */
-            padding-top: 90px;
-            /* Space for the fixed nav bar */
         }
 
         .container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 40px auto;
             background-color: white;
             /* White sheet effect */
             padding: 40px;
@@ -257,10 +254,11 @@
 </head>
 
 <body>
+    <?php include 'nav.php'; ?>
 
     <!-- New Navigation Bar (Tailwind Styled) -->
     <nav
-        class="no-print border-b border-slate-800 bg-slate-900/95 backdrop-blur-md fixed top-0 left-0 right-0 z-50 h-[70px]">
+        class="no-print border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-0 left-0 right-0 z-50 h-[70px]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
             <div class="flex items-center justify-between h-full">
                 <!-- Left: Home Link and Title -->

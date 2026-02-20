@@ -290,7 +290,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             <div class="flex flex-col">
                                 <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Gala Programme</div>
                                 <div class="flex-grow flex flex-col">
-                                    <a href="smartprogramme.html" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <a href="smartprogramme.php" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="printer" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Smart Programme Tool</p>
@@ -318,7 +318,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                             <p class="text-xs text-slate-500">Main Software Download</p>
                                         </div>
                                     </a>
-                                    <a href="Results-matcher.html" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <a href="Results-matcher.php" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="users" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Results Matcher</p>
@@ -371,7 +371,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                         <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 gap-x-px gap-y-px bg-white/5">
                             
                             <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                                <a href="Officials Sign-in.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <a href="Officials Sign-in.php" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                     <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                         <i data-lucide="user-check" class="text-amber-500 w-5 h-5"></i>
                                     </div>
@@ -383,7 +383,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             </div>
 
                             <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                                <a href="spectator-programme.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <a href="spectator-programme.php" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                     <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                         <i data-lucide="file-text" class="text-amber-500 w-5 h-5"></i>
                                     </div>
@@ -407,7 +407,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             </div>
 
                             <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                                <a href="Timekeeper-sheets.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <a href="Timekeeper-sheets.php" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                     <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                         <i data-lucide="clock" class="text-amber-500 w-5 h-5"></i>
                                     </div>
@@ -419,7 +419,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             </div>
 
                             <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                                <a href="ChiefTKSlips.html" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <a href="ChiefTKSlips.php" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                     <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                         <i data-lucide="clipboard" class="text-amber-500 w-5 h-5"></i>
                                     </div>
@@ -431,7 +431,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             </div>
 
                             <div class="bg-[#0f172a]/80 backdrop-blur-xl">
-                                <a href="https://docs.google.com/document/d/1T3Hc26p8ftaMS05G-lfinmExE_7UGnB3pG6UusN8xKA/edit?usp=sharing" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <a href="Announcers-guide.php" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                     <div class="bg-amber-500/10 p-2 rounded-lg mr-3 group-hover:bg-amber-500/20 flex-shrink-0">
                                         <i data-lucide="mic" class="text-amber-500 w-5 h-5"></i>
                                     </div>
@@ -513,7 +513,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     <span class="text-xs text-slate-500 block">Printed for officials</span>
                                 </div>
                             </label>
-                            <a href="Officials Sign-in.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <a href="Officials Sign-in.php" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
                                 <i data-lucide="file-text" class="w-3 h-3"></i> Print Form
                             </a>
                         </div>
@@ -541,7 +541,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     <span class="text-xs text-slate-500 block">Print 4x(Rounds) or 6-8x(Finals)</span>
                                 </div>
                             </label>
-                            <a href="Timekeeper-sheets.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <a href="Timekeeper-sheets.php" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
                                 <i data-lucide="clock" class="w-3 h-3"></i> Generate Sheets
                             </a>
                         </div>
@@ -555,7 +555,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     <span class="text-xs text-slate-500 block">53 Required</span>
                                 </div>
                             </label>
-                            <a href="ChiefTKSlips.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <a href="ChiefTKSlips.php" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
                                 <i data-lucide="clipboard-list" class="w-3 h-3"></i> Generate Slips
                             </a>
                         </div>
@@ -569,7 +569,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     <span class="text-xs text-slate-500 block">Printed for Ref/Judges</span>
                                 </div>
                             </label>
-                            <a href="spectator-programme.html" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <a href="spectator-programme.php" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
                                 <i data-lucide="printer" class="w-3 h-3"></i> Print Programme
                             </a>
                         </div>
@@ -583,7 +583,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     <span class="text-xs text-slate-500 block">Script for volunteers</span>
                                 </div>
                             </label>
-                            <a href="https://docs.google.com/document/d/1T3Hc26p8ftaMS05G-lfinmExE_7UGnB3pG6UusN8xKA/edit?usp=sharing" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                            <a href="Announcers-guide.php" target="_blank" class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
                                 <i data-lucide="mic" class="w-3 h-3"></i> View Script
                             </a>
                         </div>
