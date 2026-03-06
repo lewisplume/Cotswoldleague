@@ -294,7 +294,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="printer" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Smart Programme Tool</p>
-                                            <p class="text-xs text-slate-500">Generate a printable programme with names for your TMs</p>
+                                            <p class="text-xs text-slate-500">Use your existing teamsheets to generate a printable programme with names for your TMs</p>
                                         </div>
                                     </a>
                                     <a href="https://docs.google.com/document/d/1yRye4lhpNyeKlhrQ2ZkzmcxEYqEBm52T/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
