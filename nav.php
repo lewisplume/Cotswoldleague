@@ -1,4 +1,4 @@
-<nav class="border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-0 z-50">
+<nav class="border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-0 z-50 print:hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center">
