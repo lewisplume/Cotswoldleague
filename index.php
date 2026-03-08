@@ -1,12 +1,12 @@
 <?php
 include 'db.php';
 
-// Fetch Round 2 Scores for Ticker
-$news_sql = "SELECT c.name, c.logo, r.round_2 
+// Fetch Round 3 Scores for Ticker
+$news_sql = "SELECT c.name, c.logo, r.round_3 
              FROM clubs c 
              JOIN results r ON c.id = r.club_id 
-             WHERE r.round_2 > 0 
-             ORDER BY r.round_2 DESC";
+             WHERE r.round_3 > 0 
+             ORDER BY r.round_3 DESC";
 $news_result = $conn->query($news_sql);
 ?>
 <!DOCTYPE html>
@@ -72,7 +72,7 @@ $news_result = $conn->query($news_sql);
 
             <!-- BREAKING NEWS TICKER -->
             <?php if ($news_result && $news_result->num_rows > 0): ?>
-            <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 2 Results</h2>
+            <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 3 Results</h2>
             <div class="mb-12 w-full max-w-3xl mx-auto overflow-hidden bg-sky-900/30 backdrop-blur-sm border-y border-sky-500/20 py-2 relative rounded-lg">
                 <div class="flex animate-scroll whitespace-nowrap w-max">
                     <?php
@@ -87,7 +87,7 @@ $news_result = $conn->query($news_sql);
                         <div class="flex items-center gap-3 mx-6">
                             <img src="images/Teams/<?php echo $item['logo']; ?>" alt="<?php echo $item['name']; ?>" class="h-6 w-6 object-contain rounded-full bg-white p-0.5">
                             <span class="text-sky-400 font-bold text-sm uppercase"><?php echo $item['name']; ?></span>
-                            <span class="text-white font-mono font-bold"><?php echo $item['round_2']; ?></span>
+                            <span class="text-white font-mono font-bold"><?php echo $item['round_3']; ?></span>
                         </div>
                         <div class="text-slate-600 select-none">|</div>
                     <?php endforeach; ?>
@@ -100,7 +100,7 @@ $news_result = $conn->query($news_sql);
 
             <!-- COUNTDOWN SECTION -->
             <div class="mb-16">
-                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 3 Begins In:</h2>
+                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 4 Begins In:</h2>
                 <div class="grid grid-cols-4 gap-2 md:gap-4 max-w-md mx-auto">
                     <div class="timer-box p-3 rounded-xl">
                         <div id="days" class="text-3xl md:text-4xl font-black text-white">00</div>
@@ -119,7 +119,7 @@ $news_result = $conn->query($news_sql);
                         <div class="text-[10px] uppercase tracking-widest text-slate-500">Sec</div>
                     </div>
                 </div>
-                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, March 7th, 2026</p>
+                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, March 28th, 2026</p>
             </div>
 
             <!-- ABOUT SECTION -->
@@ -208,7 +208,7 @@ $news_result = $conn->query($news_sql);
         lucide.createIcons();
 
         // Mobile Menu Toggle Logic is now handled in nav.php but added here as fallback/init
-        const targetDate = new Date("March 07, 2026 00:00:00").getTime();
+        const targetDate = new Date("March 28, 2026 00:00:00").getTime();
 
         const countdown = setInterval(function() {
             const now = new Date().getTime();
@@ -226,7 +226,7 @@ $news_result = $conn->query($news_sql);
 
             if (distance < 0) {
                 clearInterval(countdown);
-                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Round 3 Underway!</div>";
+                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Round 4 Underway!</div>";
             }
         }, 1000);
         

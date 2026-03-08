@@ -2,14 +2,15 @@
 include 'db.php';
 include 'season_data.php';
 
-// Fetch Round 1 and Round 2 points for Spectators page
+// Fetch Round 1, Round 2, and Round 3 points for Spectators page
 $completed_points = [];
-$sql = "SELECT c.name, r.round_1, r.round_2 FROM results r JOIN clubs c ON r.club_id = c.id";
+$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3 FROM results r JOIN clubs c ON r.club_id = c.id";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
     while($row = $result->fetch_assoc()) {
         $completed_points[1][$row['name']] = $row['round_1'];
         $completed_points[2][$row['name']] = $row['round_2'];
+        $completed_points[3][$row['name']] = $row['round_3'];
     }
 }
 
@@ -146,7 +147,7 @@ function getPoints($round, $team, $completed_points) {
             <div id="drawWrapper">
                 <?php foreach ($season_draw as $round_data): 
                     $round_num = $round_data['round'];
-                    $is_completed = $round_num <= 2; 
+                    $is_completed = $round_num <= 3; 
                 ?>
                 <div id="round-<?php echo $round_num; ?>" class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 <?php echo $round_num !== 1 ? 'hidden' : ''; ?>">
                     
@@ -384,7 +385,7 @@ function getPoints($round, $team, $completed_points) {
              }
         }
 
-        filterDraw(1);
+        filterDraw(4);
     </script>
 </body>
 </html>
