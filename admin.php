@@ -8,7 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
         $_SESSION['logged_in'] = true;
         header("Location: admin.php");
         exit;
-    } else {
+    }
+    else {
         $login_error = true;
     }
 }
@@ -54,11 +55,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                         <button type="submit" class="w-full swim-gradient text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg">Login</button>
                         <?php if (isset($login_error)): ?>
                             <p class="text-red-400 text-xs font-medium">Incorrect password. Please try again.</p>
-                        <?php endif; ?>
+                        <?php
+    endif; ?>
                     </form>
                 </div>
             </div>
-        <?php else: ?>
+        <?php
+else: ?>
             <!-- PROTECTED CONTENT -->
             <div id="protectedContent" class="w-full max-w-7xl my-8 px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 text-center md:text-left">
@@ -112,16 +115,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 
                 <!-- NEW: Audit Log Summary -->
                 <?php
-                // Fetch recent logs
-                $recent_logs = [];
-                $log_sql = "SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 3";
-                $log_res = $conn->query($log_sql);
-                if ($log_res && $log_res->num_rows > 0) {
-                    while($l = $log_res->fetch_assoc()) {
-                        $recent_logs[] = $l;
-                    }
-                }
-                ?>
+    // Fetch recent logs
+    $recent_logs = [];
+    $log_sql = "SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 3";
+    $log_res = $conn->query($log_sql);
+    if ($log_res && $log_res->num_rows > 0) {
+        while ($l = $log_res->fetch_assoc()) {
+            $recent_logs[] = $l;
+        }
+    }
+?>
                 <?php if (!empty($recent_logs)): ?>
                     <div class="mb-8 p-6 glass-panel rounded-2xl border border-white/5">
                         <div class="flex items-center justify-between mb-4">
@@ -146,27 +149,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                         <p class="text-xs text-slate-400 truncate mt-1"><?php echo htmlspecialchars($log['change_details']); ?></p>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
+                            <?php
+        endforeach; ?>
                         </div>
                     </div>
-                <?php endif; ?>
+                <?php
+    endif; ?>
 
                 <!-- STATISTICS BAR -->
                 <?php
-                // Fetch stats
-                $prog_count = 0;
-                $rep_count = 0;
-                
-                $sql_stats = "SELECT action_name, count FROM tracking_stats";
-                $result_stats = $conn->query($sql_stats);
-                
-                if ($result_stats && $result_stats->num_rows > 0) {
-                    while($row = $result_stats->fetch_assoc()) {
-                        if($row['action_name'] == 'programme_generated') $prog_count = $row['count'];
-                        if($row['action_name'] == 'report_generated') $rep_count = $row['count'];
-                    }
-                }
-                ?>
+    // Fetch stats
+    $prog_count = 0;
+    $rep_count = 0;
+
+    $sql_stats = "SELECT action_name, count FROM tracking_stats";
+    $result_stats = $conn->query($sql_stats);
+
+    if ($result_stats && $result_stats->num_rows > 0) {
+        while ($row = $result_stats->fetch_assoc()) {
+            if ($row['action_name'] == 'programme_generated')
+                $prog_count = $row['count'];
+            if ($row['action_name'] == 'report_generated')
+                $rep_count = $row['count'];
+        }
+    }
+?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <div class="glass-panel p-4 rounded-xl flex items-center justify-between border border-white/5 relative overflow-hidden group">
                         <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -598,7 +605,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                     </p>
                 </div>
             </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
         
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
             &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
@@ -639,7 +647,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         window.onload = function() {
             initChecklist();
         }
-        <?php endif; ?>
+        <?php
+endif; ?>
     </script>
 </body>
 </html>

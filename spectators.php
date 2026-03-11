@@ -7,7 +7,7 @@ $completed_points = [];
 $sql = "SELECT c.name, r.round_1, r.round_2, r.round_3 FROM results r JOIN clubs c ON r.club_id = c.id";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
+    while ($row = $result->fetch_assoc()) {
         $completed_points[1][$row['name']] = $row['round_1'];
         $completed_points[2][$row['name']] = $row['round_2'];
         $completed_points[3][$row['name']] = $row['round_3'];
@@ -29,10 +29,10 @@ $host_map = [
 
 // Fetch Venue Details from DB
 $venue_db = [];
-$v_sql = "SELECT * FROM venue_details"; 
+$v_sql = "SELECT * FROM venue_details";
 $v_res = $conn->query($v_sql);
 if ($v_res && $v_res->num_rows > 0) {
-    while($row = $v_res->fetch_assoc()) {
+    while ($row = $v_res->fetch_assoc()) {
         // Key by round and host for lookup
         $key = $row['host_club'] . '_' . $row['round_number'];
         $venue_db[$key] = $row;
@@ -40,7 +40,8 @@ if ($v_res && $v_res->num_rows > 0) {
 }
 
 // Helper to get points
-function getPoints($round, $team, $completed_points) {
+function getPoints($round, $team, $completed_points)
+{
     if (isset($completed_points[$round][$team])) {
         return $completed_points[$round][$team];
     }
@@ -49,6 +50,7 @@ function getPoints($round, $team, $completed_points) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,11 +59,22 @@ function getPoints($round, $team, $completed_points) {
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
-        body { background-color: #0f172a; }
-        .card-gradient { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        body {
+            background-color: #0f172a;
+        }
+
+        .card-gradient {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
+
 <body class="text-white font-sans min-h-screen">
 
     <?php include 'nav.php'; ?>
@@ -86,25 +99,29 @@ function getPoints($round, $team, $completed_points) {
                     <div class="glass-panel p-6 rounded-2xl">
                         <h3 class="font-bold text-sky-400 mb-2">Admission Pricing</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Host teams set their own entry prices for preliminary rounds. Most clubs charge around £3.00. Please check with your club representative for venue-specific pricing.
+                            Host teams set their own entry prices for preliminary rounds. Most clubs charge around
+                            £3.00. Please check with your club representative for venue-specific pricing.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
                         <h3 class="font-bold text-sky-400 mb-2">Raffles & Fundraising</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Many host clubs organize raffles during the rounds. These are optional, and proceeds support the hosting club's fundraising efforts.
+                            Many host clubs organize raffles during the rounds. These are optional, and proceeds support
+                            the hosting club's fundraising efforts.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
                         <h3 class="font-bold text-sky-400 mb-2">Warm-Up Times</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Warm-ups typically last 30 minutes. Please refer to your club's coach or TM for the specific arrival time for your swimmer.
+                            Warm-ups typically last 30 minutes. Please refer to your club's coach or TM for the specific
+                            arrival time for your swimmer.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
                         <h3 class="font-bold text-sky-400 mb-2">Photography & Conduct</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            The League adopts the Swim England Child Protection Policy. Please follow venue-specific rules regarding photography and video recording.
+                            The League adopts the Swim England Child Protection Policy. Please follow venue-specific
+                            rules regarding photography and video recording.
                         </p>
                     </div>
                 </div>
@@ -115,7 +132,8 @@ function getPoints($round, $team, $completed_points) {
                     <i data-lucide="download" class="text-sky-500"></i> Downloads
                 </h2>
                 <div class="glass-panel rounded-2xl overflow-hidden">
-                    <a href="spectator-programme.php" target="_blank" class="flex items-center p-5 hover:bg-white/5 transition-colors group">
+                    <a href="spectator-programme.php" target="_blank"
+                        class="flex items-center p-5 hover:bg-white/5 transition-colors group">
                         <div class="bg-sky-500/10 p-3 rounded-xl mr-4 group-hover:bg-sky-500/20">
                             <i data-lucide="file-text" class="text-sky-500 w-6 h-6"></i>
                         </div>
@@ -136,159 +154,226 @@ function getPoints($round, $team, $completed_points) {
                     <p class="text-slate-400">All preliminary rounds for the 2026 season.</p>
                 </div>
                 <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl border border-slate-700">
-                    <button onclick="filterDraw(1)" id="btnR1" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-sky-600 text-white">R1</button>
-                    <button onclick="filterDraw(2)" id="btnR2" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R2</button>
-                    <button onclick="filterDraw(3)" id="btnR3" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R3</button>
-                    <button onclick="filterDraw(4)" id="btnR4" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R4</button>
+                    <button onclick="filterDraw(1)" id="btnR1"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-sky-600 text-white">R1</button>
+                    <button onclick="filterDraw(2)" id="btnR2"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R2</button>
+                    <button onclick="filterDraw(3)" id="btnR3"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R3</button>
+                    <button onclick="filterDraw(4)" id="btnR4"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R4</button>
                 </div>
             </div>
-            
+
             <!-- DRAW CONTAINER -->
             <div id="drawWrapper">
-                <?php foreach ($season_draw as $round_data): 
-                    $round_num = $round_data['round'];
-                    $is_completed = $round_num <= 3; 
-                ?>
-                <div id="round-<?php echo $round_num; ?>" class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 <?php echo $round_num !== 1 ? 'hidden' : ''; ?>">
-                    
-                    <?php foreach ($round_data['galas'] as $index => $gala): 
-                        $host = $gala['host'];
-                        $teams = $gala['teams'];
-                        
-                        // Use Mapping or fallback to original name
-                        $db_host_name = $host_map[$host] ?? $host;
-                        $lookup_key = $db_host_name . '_' . $round_num;
-                        
-                        $venue_info = $venue_db[$lookup_key] ?? null;
+                <?php foreach ($season_draw as $round_data):
+    $round_num = $round_data['round'];
+    $is_completed = $round_num <= 3;
+?>
+                <div id="round-<?php echo $round_num; ?>"
+                    class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 <?php echo $round_num !== 1 ? 'hidden' : ''; ?>">
 
-                        // Construct display Details
-                        $payment_info_raw = '';
-                        $v_name = ''; $v_addr = ''; $v_wu = ''; $v_st = ''; $v_pay = ''; $v_park = '';
-                        $is_db_venue = false; // Flag to track if we have DB data
-                        
-                        if ($venue_info) {
-                            $is_db_venue = true;
-                            $v_name = $venue_info['venue_name'] ?? '';
-                            $v_addr = $venue_info['address'] ?? '';
-                            $v_wu = !empty($venue_info['warmup_time']) ? $venue_info['warmup_time'] : "Check with host";
-                            $v_st = !empty($venue_info['start_time']) ? $venue_info['start_time'] : "Check with host";
-                            $v_pay = !empty($venue_info['payment_info']) ? $venue_info['payment_info'] : "Check with host";
-                            $v_park = !empty($venue_info['parking_info']) ? $venue_info['parking_info'] : "Check with host";
-                            
-                            $payment_info_raw = $venue_info['payment_info'] ?? '';
-                        } else {
-                            $display_details = $gala['details']; // Fallback
-                             $payment_info_raw = $gala['details']; 
-                        }
-                        
-                        $has_card = stripos($payment_info_raw, 'Card') !== false;
-                        $embedUrl = $gala['embedUrl'] ?? '';
-                    ?>
-                    
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                    <?php foreach ($round_data['galas'] as $index => $gala):
+        $host = $gala['host'];
+        $teams = $gala['teams'];
+
+        // Use Mapping or fallback to original name
+        $db_host_name = $host_map[$host] ?? $host;
+        $lookup_key = $db_host_name . '_' . $round_num;
+
+        $venue_info = $venue_db[$lookup_key] ?? null;
+
+        // Construct display Details
+        $payment_info_raw = '';
+        $v_name = '';
+        $v_addr = '';
+        $v_wu = '';
+        $v_st = '';
+        $v_pay = '';
+        $v_park = '';
+        $is_db_venue = false; // Flag to track if we have DB data
+
+        if ($venue_info) {
+            $is_db_venue = true;
+            $v_name = $venue_info['venue_name'] ?? '';
+            $v_addr = $venue_info['address'] ?? '';
+            $v_wu = !empty($venue_info['warmup_time']) ? $venue_info['warmup_time'] : "Check with host";
+            $v_st = !empty($venue_info['start_time']) ? $venue_info['start_time'] : "Check with host";
+            $v_pay = !empty($venue_info['payment_info']) ? $venue_info['payment_info'] : "Check with host";
+            $v_park = !empty($venue_info['parking_info']) ? $venue_info['parking_info'] : "Check with host";
+
+            $payment_info_raw = $venue_info['payment_info'] ?? '';
+        }
+        else {
+            $display_details = $gala['details']; // Fallback
+            $payment_info_raw = $gala['details'];
+        }
+
+        $has_card = stripos($payment_info_raw, 'Card') !== false;
+        $embedUrl = $gala['embedUrl'] ?? '';
+?>
+
+                    <div
+                        class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
                         <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host Club</span>
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host
+                                    Club</span>
                                 <?php if ($is_completed): ?>
-                                    <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>
-                                <?php endif; ?>
+                                <span
+                                    class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>
+                                <?php
+        endif; ?>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium"><?php echo $round_data['date']; ?></span>
+                            <span class="text-xs text-slate-500 font-medium">
+                                <?php echo $round_data['date']; ?>
+                            </span>
                         </div>
                         <div class="p-5">
-                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                            <h3
+                                class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
                                 <?php echo htmlspecialchars($host); ?>
                             </h3>
-                            
+
                             <div class="space-y-2 mb-4">
-                                <?php foreach ($teams as $team): 
-                                    $pts = getPoints($round_num, $team, $completed_points);
-                                    $is_host = ($team === $host);
-                                ?>
-                                <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                <?php foreach ($teams as $team):
+            $pts = getPoints($round_num, $team, $completed_points);
+            $is_host = ($team === $host);
+?>
+                                <div
+                                    class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                                     <div class="flex items-center gap-3 text-sm">
-                                        <div class="w-1.5 h-1.5 rounded-full <?php echo $is_host ? 'bg-sky-500' : 'bg-slate-600'; ?>"></div>
-                                        <span class="<?php echo $is_host ? 'text-white font-bold' : 'text-slate-400'; ?>"><?php echo htmlspecialchars($team); ?></span>
+                                        <div
+                                            class="w-1.5 h-1.5 rounded-full <?php echo $is_host ? 'bg-sky-500' : 'bg-slate-600'; ?>">
+                                        </div>
+                                        <span
+                                            class="<?php echo $is_host ? 'text-white font-bold' : 'text-slate-400'; ?>">
+                                            <?php echo htmlspecialchars($team); ?>
+                                        </span>
                                         <?php if ($is_host): ?>
-                                            <span class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>
-                                        <?php endif; ?>
+                                        <span
+                                            class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>
+                                        <?php
+            endif; ?>
                                     </div>
                                     <?php if ($pts !== null): ?>
-                                        <span class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded"><?php echo $pts; ?> pts</span>
-                                    <?php endif; ?>
+                                    <span
+                                        class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                                        <?php echo $pts; ?> pts
+                                    </span>
+                                    <?php
+            endif; ?>
                                 </div>
-                                <?php endforeach; ?>
+                                <?php
+        endforeach; ?>
                             </div>
-                            
+
                             <!-- VENUE DETAILS -->
                             <div class="mt-4 pt-4 border-t border-white/10">
-                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
+                                <p
+                                    class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
                                     <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
                                 </p>
-                                
-                                <?php if ($is_db_venue): ?>
-                                    <!-- Structured Grid View -->
-                                    <div class="text-xs text-slate-300">
-                                        <?php if($v_name || $v_addr): ?>
-                                            <div class="mb-3">
-                                                <?php if($v_name): ?><div class="font-bold text-white text-sm mb-0.5"><?php echo htmlspecialchars($v_name); ?></div><?php endif; ?>
-                                                <?php if($v_addr): ?><div class="text-slate-400 leading-snug"><?php echo htmlspecialchars($v_addr); ?></div><?php endif; ?>
-                                            </div>
-                                        <?php endif; ?>
-                                        
-                                        <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
-                                            <div>
-                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
-                                                <span class="font-medium text-white"><?php echo htmlspecialchars($v_wu); ?></span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Start Time</span>
-                                                <span class="font-medium text-white"><?php echo htmlspecialchars($v_st); ?></span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Payment</span>
-                                                <span class="font-medium text-white flex items-center gap-2">
-                                                    <?php echo htmlspecialchars($v_pay); ?>
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking & Other Info</span>
-                                                <span class="font-medium text-white"><?php echo htmlspecialchars($v_park); ?></span>
-                                            </div>
-                                        </div>
 
-                                        <?php if ($has_card): ?>
-                                            <div class="mt-2">
-                                                <span class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-bold">
-                                                    <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
-                                                </span>
-                                            </div>
-                                        <?php endif; ?>
+                                <?php if ($is_db_venue): ?>
+                                <!-- Structured Grid View -->
+                                <div class="text-xs text-slate-300">
+                                    <?php if ($v_name || $v_addr): ?>
+                                    <div class="mb-3">
+                                        <?php if ($v_name): ?>
+                                        <div class="font-bold text-white text-sm mb-0.5">
+                                            <?php echo htmlspecialchars($v_name); ?>
+                                        </div>
+                                        <?php
+                endif; ?>
+                                        <?php if ($v_addr): ?>
+                                        <div class="text-slate-400 leading-snug">
+                                            <?php echo htmlspecialchars($v_addr); ?>
+                                        </div>
+                                        <?php
+                endif; ?>
                                     </div>
-                                <?php else: ?>
-                                    <!-- Fallback View (Raw Text) -->
-                                    <p class="text-xs text-slate-300 leading-relaxed">
-                                        <?php echo $display_details; ?>
-                                    </p>
-                                <?php endif; ?>
+                                    <?php
+            endif; ?>
+
+                                    <div
+                                        class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm
+                                                Up</span>
+                                            <span class="font-medium text-white">
+                                                <?php echo htmlspecialchars($v_wu); ?>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Start
+                                                Time</span>
+                                            <span class="font-medium text-white">
+                                                <?php echo htmlspecialchars($v_st); ?>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Payment</span>
+                                            <span class="font-medium text-white flex items-center gap-2">
+                                                <?php echo htmlspecialchars($v_pay); ?>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking
+                                                & Other Info</span>
+                                            <span class="font-medium text-white">
+                                                <?php echo htmlspecialchars($v_park); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <?php if ($has_card): ?>
+                                    <div class="mt-2">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-bold">
+                                            <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
+                                        </span>
+                                    </div>
+                                    <?php
+            endif; ?>
+                                </div>
+                                <?php
+        else: ?>
+                                <!-- Fallback View (Raw Text) -->
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    <?php echo $display_details; ?>
+                                </p>
+                                <?php
+        endif; ?>
                             </div>
 
                             <?php if ($embedUrl): ?>
-                                <div class="mt-4 pt-4 border-t border-white/5">
-                                    <button onclick="toggleLive(<?php echo $round_num; ?>, <?php echo $index; ?>)" class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
-                                        <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
-                                    </button>
-                                </div>
-                            <?php endif; ?>
+                            <div class="mt-4 pt-4 border-t border-white/5">
+                                <button onclick="toggleLive(<?php echo $round_num; ?>, <?php echo $index; ?>)"
+                                    class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
+                                    <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
+                                </button>
+                            </div>
+                            <?php
+        endif; ?>
                         </div>
                     </div>
-                    <?php endforeach; ?>
+                    <?php
+    endforeach; ?>
                 </div>
-                <?php endforeach; ?>
+                <?php
+endforeach; ?>
             </div>
-            
+
             <!-- LIVE RESULTS VIEWER (Full Width) -->
-            <div id="liveViewer" class="hidden mt-8 glass-panel overflow-hidden rounded-2xl border border-sky-500/30 shadow-[0_0_50px_rgba(14,165,233,0.15)] transition-all duration-500"></div>
+            <div id="liveViewer"
+                class="hidden mt-8 glass-panel overflow-hidden rounded-2xl border border-sky-500/30 shadow-[0_0_50px_rgba(14,165,233,0.15)] transition-all duration-500">
+            </div>
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
@@ -307,15 +392,15 @@ function getPoints($round, $team, $completed_points) {
             for (let i = 1; i <= 4; i++) {
                 const btn = document.getElementById(`btnR${i}`);
                 const section = document.getElementById(`round-${i}`);
-                
+
                 if (i === roundNum) {
                     btn.classList.add('bg-sky-600', 'text-white');
                     btn.classList.remove('text-slate-400');
-                    if(section) section.classList.remove('hidden');
+                    if (section) section.classList.remove('hidden');
                 } else {
                     btn.classList.remove('bg-sky-600', 'text-white');
                     btn.classList.add('text-slate-400');
-                    if(section) section.classList.add('hidden');
+                    if (section) section.classList.add('hidden');
                 }
             }
             closeLive();
@@ -334,7 +419,7 @@ function getPoints($round, $team, $completed_points) {
 
             currentActiveGala = galaId;
             viewer.classList.remove('hidden');
-            
+
             viewer.innerHTML = `
                 <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <div class="flex items-center gap-4">
@@ -356,7 +441,7 @@ function getPoints($round, $team, $completed_points) {
                      <iframe id="live-iframe" width="100%" height="100%" frameborder="0" scrolling="no" src="${gala.embedUrl}" class="absolute inset-0"></iframe>
                 </div>
             `;
-            
+
             lucide.createIcons();
 
             if (liveRefreshInterval) clearInterval(liveRefreshInterval);
@@ -365,27 +450,28 @@ function getPoints($round, $team, $completed_points) {
                 if (iframe) {
                     iframe.src = iframe.src;
                 }
-            }, 60000); 
-            
+            }, 60000);
+
             setTimeout(() => {
                 viewer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 50);
         }
 
         function closeLive() {
-             const viewer = document.getElementById('liveViewer');
-             if (viewer) {
+            const viewer = document.getElementById('liveViewer');
+            if (viewer) {
                 viewer.classList.add('hidden');
                 viewer.innerHTML = '';
-             }
-             currentActiveGala = null;
-             if (liveRefreshInterval) {
-                 clearInterval(liveRefreshInterval);
-                 liveRefreshInterval = null;
-             }
+            }
+            currentActiveGala = null;
+            if (liveRefreshInterval) {
+                clearInterval(liveRefreshInterval);
+                liveRefreshInterval = null;
+            }
         }
 
         filterDraw(4);
     </script>
 </body>
+
 </html>
