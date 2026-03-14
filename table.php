@@ -41,6 +41,7 @@ foreach ($season_draw as $round) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,11 +50,21 @@ foreach ($season_draw as $round) {
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
-        body { background-color: #0f172a; }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .table-row-hover:hover { background-color: rgba(255, 255, 255, 0.03); }
+        body {
+            background-color: #0f172a;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .table-row-hover:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
     </style>
 </head>
+
 <body class="text-white font-sans min-h-screen flex flex-col">
 
     <?php include 'nav.php'; ?>
@@ -68,7 +79,7 @@ foreach ($season_draw as $round) {
     </div>
 
     <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 flex-grow">
-        
+
         <!-- Main League Table -->
         <div class="glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl h-fit mb-12">
             <div class="overflow-x-auto">
@@ -76,61 +87,85 @@ foreach ($season_draw as $round) {
                     <thead>
                         <tr class="bg-slate-900/50 border-b border-white/5">
                             <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500">Pos</th>
-                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500">Club Name</th>
-                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R1</th>
-                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R2</th>
-                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R3</th>
-                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R4</th>
-                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-sky-500 text-center">Total</th>
+                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500">Club Name
+                            </th>
+                            <th
+                                class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">
+                                R1</th>
+                            <th
+                                class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">
+                                R2</th>
+                            <th
+                                class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">
+                                R3</th>
+                            <th
+                                class="px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-500 text-center">
+                                R4</th>
+                            <th class="px-4 py-3 text-xs font-black uppercase tracking-widest text-sky-500 text-center">
+                                Total</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
-                        <?php 
-                        $pos = 1;
-                        $a_final = [];
-                        $b_final = [];
-                        $c_final = [];
+                        <?php
+$pos = 1;
+$a_final = [];
+$b_final = [];
+$c_final = [];
 
-                        if ($result->num_rows > 0) {
-                            while($row = $result->fetch_assoc()) {
-                                if ($pos <= 8) {
-                                    $a_final[] = $row;
-                                } elseif ($pos <= 14) {
-                                    $b_final[] = $row;
-                                } else {
-                                    $c_final[] = $row;
-                                }
-                                
-                                echo '<tr class="table-row-hover transition-colors">';
-                                echo '<td class="px-4 py-3 text-sm font-medium text-slate-500 italic">' . $pos++ . '</td>';
-                                echo '<td class="px-4 py-3 text-sm font-bold text-white">' . $row["name"] . '</td>';
-                                echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_1"] > 0 ? $row["round_1"] : '-') . '</td>';
-                                echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_2"] > 0 ? $row["round_2"] : '-') . '</td>';
-                                echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_3"] > 0 ? $row["round_3"] : '-') . '</td>';
-                                echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_4"] > 0 ? $row["round_4"] : '-') . '</td>';
-                                echo '<td class="px-4 py-3 text-sm font-black text-sky-500 text-center count-up" data-target="' . $row["total"] . '">0</td>';
-                                echo '</tr>';
-                            }
-                        }
-                        ?>
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        if ($pos <= 8) {
+            $a_final[] = $row;
+        }
+        elseif ($pos <= 14) {
+            $b_final[] = $row;
+        }
+        else {
+            $c_final[] = $row;
+        }
+
+        echo '<tr class="table-row-hover transition-colors">';
+        echo '<td class="px-4 py-3 text-sm font-medium text-slate-500 italic">' . $pos++ . '</td>';
+        echo '<td class="px-4 py-3 text-sm font-bold text-white">' . $row["name"] . '</td>';
+        echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_1"] > 0 ? $row["round_1"] : '-') . '</td>';
+        echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_2"] > 0 ? $row["round_2"] : '-') . '</td>';
+        echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_3"] > 0 ? $row["round_3"] : '-') . '</td>';
+        echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_4"] > 0 ? $row["round_4"] : '-') . '</td>';
+        echo '<td class="px-4 py-3 text-sm font-black text-sky-500 text-center count-up" data-target="' . $row["total"] . '">0</td>';
+        echo '</tr>';
+    }
+}
+?>
                     </tbody>
                 </table>
             </div>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div class="glass-panel p-6 rounded-2xl">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-                    <h4 class="font-bold text-sm">A Final</h4>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
+                        <h4 class="font-bold text-sm">A Final</h4>
+                    </div>
+                    <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413"
+                        target="_blank"
+                        class="text-[9px] font-black uppercase tracking-wider bg-[#cfb53b]/20 text-[#cfb53b] hover:bg-[#cfb53b]/30 px-2 py-1 rounded-md transition-colors border border-[#cfb53b]/30 shadow-[0_0_10px_rgba(207,181,59,0.1)]">
+                        Hat Preorder Now
+                    </a>
                 </div>
                 <ul class="space-y-2 mt-4">
-                    <?php foreach($a_final as $t): ?>
+                    <?php foreach ($a_final as $t): ?>
                     <li class="flex justify-between text-xs text-slate-300 border-b border-white/5 pb-1 last:border-0">
-                        <span><?php echo $t['name']; ?></span>
-                        <span class="font-bold text-emerald-400"><?php echo $t['total']; ?></span>
+                        <span>
+                            <?php echo $t['name']; ?>
+                        </span>
+                        <span class="font-bold text-emerald-400">
+                            <?php echo $t['total']; ?>
+                        </span>
                     </li>
-                    <?php endforeach; ?>
+                    <?php
+endforeach; ?>
                 </ul>
             </div>
             <div class="glass-panel p-6 rounded-2xl">
@@ -139,12 +174,17 @@ foreach ($season_draw as $round) {
                     <h4 class="font-bold text-sm">B Final</h4>
                 </div>
                 <ul class="space-y-2 mt-4">
-                    <?php foreach($b_final as $t): ?>
+                    <?php foreach ($b_final as $t): ?>
                     <li class="flex justify-between text-xs text-slate-300 border-b border-white/5 pb-1 last:border-0">
-                        <span><?php echo $t['name']; ?></span>
-                        <span class="font-bold text-amber-400"><?php echo $t['total']; ?></span>
+                        <span>
+                            <?php echo $t['name']; ?>
+                        </span>
+                        <span class="font-bold text-amber-400">
+                            <?php echo $t['total']; ?>
+                        </span>
                     </li>
-                    <?php endforeach; ?>
+                    <?php
+endforeach; ?>
                 </ul>
             </div>
             <div class="glass-panel p-6 rounded-2xl">
@@ -153,12 +193,17 @@ foreach ($season_draw as $round) {
                     <h4 class="font-bold text-sm">C Final</h4>
                 </div>
                 <ul class="space-y-2 mt-4">
-                    <?php foreach($c_final as $t): ?>
+                    <?php foreach ($c_final as $t): ?>
                     <li class="flex justify-between text-xs text-slate-300 border-b border-white/5 pb-1 last:border-0">
-                        <span><?php echo $t['name']; ?></span>
-                        <span class="font-bold text-rose-400"><?php echo $t['total']; ?></span>
+                        <span>
+                            <?php echo $t['name']; ?>
+                        </span>
+                        <span class="font-bold text-rose-400">
+                            <?php echo $t['total']; ?>
+                        </span>
                     </li>
-                    <?php endforeach; ?>
+                    <?php
+endforeach; ?>
                 </ul>
             </div>
         </div>
@@ -166,44 +211,55 @@ foreach ($season_draw as $round) {
         <!-- Next Round Draw Table -->
         <div class="w-full max-w-4xl mx-auto">
             <?php if ($next_round_draw): ?>
-                <div class="glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl">
-                    <div class="bg-slate-900/50 border-b border-white/5 px-6 py-5 flex justify-between items-center">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-sky-500">Next Round Draw</h3>
-                        <span class="text-xs font-bold text-slate-500"><?php echo $next_round_draw['date']; ?></span>
-                    </div>
-                    <div class="divide-y divide-white/5">
-                        <?php foreach ($next_round_draw['galas'] as $gala): ?>
-                            <div class="p-5 hover:bg-white/5 transition-colors">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <i data-lucide="map-pin" class="w-3 h-3 text-sky-500"></i>
-                                    <span class="text-sm font-bold text-white"><?php echo $gala['host']; ?></span>
-                                    <span class="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase tracking-wider">Host</span>
-                                </div>
-                                <div class="pl-5">
-                                    <p class="text-xs text-slate-400 leading-relaxed mb-2">
-                                        <?php echo explode('.', $gala['details'])[0]; ?>.
-                                    </p>
-                                    <div class="flex flex-wrap gap-1.5">
-                                        <?php foreach ($gala['teams'] as $team): ?>
-                                            <?php if ($team !== $gala['host']): ?>
-                                                <span class="text-[10px] font-bold text-slate-400 bg-slate-800/50 border border-slate-700 px-2 py-1 rounded-full">
-                                                    <?php echo $team; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
+            <div class="glass-panel backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl">
+                <div class="bg-slate-900/50 border-b border-white/5 px-6 py-5 flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-sky-500">Next Round Draw</h3>
+                    <span class="text-xs font-bold text-slate-500">
+                        <?php echo $next_round_draw['date']; ?>
+                    </span>
+                </div>
+                <div class="divide-y divide-white/5">
+                    <?php foreach ($next_round_draw['galas'] as $gala): ?>
+                    <div class="p-5 hover:bg-white/5 transition-colors">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="map-pin" class="w-3 h-3 text-sky-500"></i>
+                            <span class="text-sm font-bold text-white">
+                                <?php echo $gala['host']; ?>
+                            </span>
+                            <span
+                                class="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase tracking-wider">Host</span>
+                        </div>
+                        <div class="pl-5">
+                            <p class="text-xs text-slate-400 leading-relaxed mb-2">
+                                <?php echo explode('.', $gala['details'])[0]; ?>.
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <?php foreach ($gala['teams'] as $team): ?>
+                                <?php if ($team !== $gala['host']): ?>
+                                <span
+                                    class="text-[10px] font-bold text-slate-400 bg-slate-800/50 border border-slate-700 px-2 py-1 rounded-full">
+                                    <?php echo $team; ?>
+                                </span>
+                                <?php
+            endif; ?>
+                                <?php
+        endforeach; ?>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
                     </div>
+                    <?php
+    endforeach; ?>
                 </div>
-            <?php else: ?>
-                <div class="glass-panel p-8 rounded-3xl text-center">
-                    <i data-lucide="flag" class="w-12 h-12 text-slate-600 mx-auto mb-4"></i>
-                    <h3 class="text-lg font-bold text-white">Season Complete</h3>
-                    <p class="text-sm text-slate-400 mt-2">All preliminary rounds have been completed.</p>
-                </div>
-            <?php endif; ?>
+            </div>
+            <?php
+else: ?>
+            <div class="glass-panel p-8 rounded-3xl text-center">
+                <i data-lucide="flag" class="w-12 h-12 text-slate-600 mx-auto mb-4"></i>
+                <h3 class="text-lg font-bold text-white">Season Complete</h3>
+                <p class="text-sm text-slate-400 mt-2">All preliminary rounds have been completed.</p>
+            </div>
+            <?php
+endif; ?>
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em] py-8">
@@ -213,23 +269,23 @@ foreach ($season_draw as $round) {
 
     <script>
         lucide.createIcons();
-        
+
 
 
         // NEW: Number Count-Up Animation
         document.addEventListener('DOMContentLoaded', () => {
             const counters = document.querySelectorAll('.count-up');
             // speed determines how fast the count happens (lower = faster)
-            const speed = 200; 
+            const speed = 200;
 
             counters.forEach(counter => {
                 const updateCount = () => {
                     // Get the target number from data attribute
                     const target = +counter.getAttribute('data-target');
                     const count = +counter.innerText;
-                    
+
                     // Calculate increment 
-                    const inc = Math.max(1, Math.ceil(target / speed)); 
+                    const inc = Math.max(1, Math.ceil(target / speed));
 
                     if (count < target) {
                         // Add increment and run function again
@@ -244,4 +300,5 @@ foreach ($season_draw as $round) {
         });
     </script>
 </body>
+
 </html>

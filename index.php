@@ -207,11 +207,47 @@ endif; ?>
                     <span aria-hidden="true">&rarr;</span>
                 </a>
 
+                <!-- A FINAL ANNOUNCEMENT -->
+                <div class="mt-8 mb-4 max-w-3xl bg-[#cfb53b]/10 border border-[#cfb53b]/30 rounded-xl p-6 text-center transition-all mx-auto w-full">
+                    <h3 class="text-[#cfb53b] font-bold uppercase tracking-widest mb-3 flex items-center justify-center gap-2 text-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                        Exciting Announcement!
+                    </h3>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                        To celebrate the incredible efforts of our swimmers this season, we have created a special, one-of-a-kind <strong>"A Final" Gold Swimming Hat!</strong> Available to pre-order right now for individuals, or in bulk by team reps.
+                    </p>
+                    <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413" target="_blank" class="inline-block px-6 py-2 bg-[#cfb53b] hover:bg-[#b09825] text-slate-900 font-bold rounded-full text-sm transition-colors shadow-lg shadow-[#cfb53b]/20">
+                        Pre-Order A Final Gold Hat
+                    </a>
+                </div>
+
                 <!-- MERCHANDISE GALLERY -->
-                <div class="mt-10 w-full max-w-4xl">
+                <div class="mt-6 w-full max-w-4xl">
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6 text-center">2026
                         Collection</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413" target="_blank"
+                            class="group block">
+                            <div
+                                class="aspect-square rounded-xl bg-slate-800 border border-[#cfb53b]/50 overflow-hidden mb-2 shadow-[0_0_15px_rgba(207,181,59,0.2)] group-hover:border-[#cfb53b] transition-colors relative">
+                                <img src="images/Wyvern/A%20Final%20Hat_result.webp" alt="A Final Hat"
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-100">
+                            </div>
+                            <p
+                                class="text-[10px] font-bold text-[#cfb53b] group-hover:text-[#e5d064] transition-colors uppercase text-center">
+                                A Final Hat</p>
+                        </a>
+                        <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413" target="_blank"
+                            class="group block">
+                            <div
+                                class="aspect-square rounded-xl bg-slate-800 border border-[#cfb53b]/50 overflow-hidden mb-2 shadow-[0_0_15px_rgba(207,181,59,0.2)] group-hover:border-[#cfb53b] transition-colors relative">
+                                <img src="images/Wyvern/A%20fInal%20hat%20mockup_result.webp" alt="A Final Hat Mockup"
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-100">
+                            </div>
+                            <p
+                                class="text-[10px] font-bold text-[#cfb53b] group-hover:text-[#e5d064] transition-colors uppercase text-center">
+                                A Final Hat</p>
+                        </a>
                         <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank"
                             class="group block">
                             <div
