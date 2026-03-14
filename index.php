@@ -252,7 +252,7 @@ endif; ?>
                             class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                <img src="images/Wyvern/Cotsworld%20swimming%20series%20hoody.jpeg" alt="Series Hoodie"
+                                <img src="images/Wyvern/Cotsworld%20swimming%20series%20hoody.webp" alt="Series Hoodie"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                             </div>
                             <p
@@ -263,7 +263,7 @@ endif; ?>
                             class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                <img src="images/Wyvern/Cotsworld%20swimming%20series%20t-shirt.jpeg"
+                                <img src="images/Wyvern/Cotsworld%20swimming%20series%20t-shirt.webp"
                                     alt="Series T-Shirt"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                             </div>
@@ -275,7 +275,7 @@ endif; ?>
                             class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                <img src="images/Wyvern/Hat%20model.jpeg" alt="Swim Cap"
+                                <img src="images/Wyvern/Hat%20model.webp" alt="Swim Cap"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                             </div>
                             <p
@@ -286,7 +286,7 @@ endif; ?>
                             class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                <img src="images/Wyvern/Hoodie%20front.jpg" alt="Hoodie Front"
+                                <img src="images/Wyvern/Hoodie%20front.webp" alt="Hoodie Front"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                             </div>
                             <p
@@ -297,7 +297,7 @@ endif; ?>
                             class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                <img src="images/Wyvern/Hoodie%20back.jpg" alt="Hoodie Back"
+                                <img src="images/Wyvern/Hoodie%20back.webp" alt="Hoodie Back"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                             </div>
                             <p
@@ -308,7 +308,7 @@ endif; ?>
                             class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-slate-700 overflow-hidden mb-2 group-hover:border-sky-500 transition-colors relative">
-                                <img src="images/Wyvern/White%20tops.jpg" alt="Training Top"
+                                <img src="images/Wyvern/White%20tops.webp" alt="Training Top"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                             </div>
                             <p
