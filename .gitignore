@@ -5,3 +5,7 @@
 # Ignore local server logs or large zip files
 *.log
 *.zip
+
+# Ignore macOS system files
+.DS_Store
+.DS_Store*
