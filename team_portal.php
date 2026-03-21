@@ -378,8 +378,9 @@ if ($is_logged_in) {
                                         <i data-lucide="file-spreadsheet" class="w-8 h-8 text-emerald-400"></i>
                                     </div>
                                     <div>
-                                        <h2 class="text-2xl font-bold text-white mb-1">Live Teamsheet Portal</h2>
-                                        <p class="text-slate-300 text-sm max-w-md leading-relaxed">Access your official 2027 club teamsheet. This is a live Google Sheet — no login or saving required. All changes are tracked automatically.</p>
+                                        <h2 class="text-2xl font-bold text-white mb-1">Club Teamsheet</h2>
+                                        <p class="text-slate-300 text-sm max-w-md leading-relaxed">Access your personal 
+                                             2027 club teamsheet. This is a live Google Sheet — no login or saving required. All changes are tracked automatically.</p>
                                     </div>
                                 </div>
                                 
@@ -399,11 +400,8 @@ if ($is_logged_in) {
                             
                             <div class="relative z-10 mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <p class="text-xs text-emerald-400/80 font-medium flex items-center gap-2">
-                                    <i data-lucide="info" class="w-4 h-4"></i> Sheets lock automatically on the submission deadline.
+                                    <i data-lucide="info" class="w-4 h-4"></i> Round entries will be taken automatically on the submission deadline.
                                 </p>
-                                <a href="<?php echo htmlspecialchars($master_teamsheet_link); ?>" target="_blank" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1">
-                                    View Master Example <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                                </a>
                             </div>
                         </div>
 
