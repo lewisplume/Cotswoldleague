@@ -318,8 +318,11 @@ endif; ?>
                     </div>
                 </div>
             </div>
-            <footer class="mt-20 text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-                &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+            <footer class="mt-20 text-slate-600 text-[10px] uppercase tracking-[0.3em] text-center">
+                <p>&copy; 2026 The Cotswold Swimming League | Built by Lewis Plume</p>
+                <a href="privacy.php" class="inline-block mt-3 text-slate-400 hover:text-sky-400 transition-colors normal-case tracking-normal text-xs">
+                    Privacy Policy
+                </a>
             </footer>
         </div>
     </main>
