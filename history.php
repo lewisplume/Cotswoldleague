@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | History</title>
-    <link rel="icon" href="images/league-logo.webp" type="image/webp">
+    <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>

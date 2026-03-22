@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spectator Programme | Cotswold League</title>
-    <link rel="icon" href="images/league-logo.webp" type="image/webp">
+    <link rel="icon" href="images/league-logo.svg" type="image/webp">
 
     <!-- Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Chief Timekeeper Slips | Cotswold League</title>
-    <link rel="icon" href="images/league-logo.webp" type="image/webp">
+    <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>

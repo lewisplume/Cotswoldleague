@@ -16,7 +16,7 @@ $news_result = $conn->query($news_sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Cotswold League | Official Site</title>
-    <link rel="icon" href="images/league-logo.webp" type="image/webp">
+    <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
@@ -66,7 +66,7 @@ $news_result = $conn->query($news_sql);
         <div class="w-full max-w-4xl px-6 text-center py-12">
 
             <div class="mb-6">
-                <img src="images/league-logo.webp" alt="The Cotswold League Logo"
+                <img src="images/league-logo.svg" alt="The Cotswold League Logo"
                     class="h-32 md:h-48 w-auto mx-auto drop-shadow-2xl">
             </div>
 
