@@ -74,43 +74,23 @@ else: ?>
                     </a>
                 </div>
                 
-                <!-- TOP ACTIONS GRID -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    
-                    <!-- Venue Management Card -->
+                <!-- TOP ACTION: CONSOLIDATED TEAM PORTAL -->
+                <div class="mb-8">
                     <div class="p-6 bg-sky-900/20 border border-sky-500/30 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
-                         <div class="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                         <div class="flex items-start gap-4 relative z-10 mb-4">
-                             <div class="p-3 bg-sky-500/20 rounded-xl flex-shrink-0">
-                                 <i data-lucide="map-pin" class="w-8 h-8 text-sky-400"></i>
-                             </div>
-                             <div>
-                                 <h2 class="text-xl font-bold text-white">Manage Venues</h2>
-                                 <p class="text-slate-300 text-sm mt-1">Update venue details, warm-up times, and parking info.</p>
-                             </div>
-                         </div>
-                         <a href="edit_venue.php" class="relative z-10 w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-900/20 flex items-center justify-center gap-2">
-                             Manage Venues <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                         </a>
+                        <div class="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                        <div class="flex items-start gap-4 relative z-10 mb-4">
+                            <div class="p-3 bg-sky-500/20 rounded-xl flex-shrink-0">
+                                <i data-lucide="layout-dashboard" class="w-8 h-8 text-sky-400"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-white">Team Portal</h2>
+                                <p class="text-slate-300 text-sm mt-1">Your clubs workspace for league admin tasks. Update your host venue details, manage your team contacts, access your club teamsheet, and use the league directory from a single secure dashboard.</p>
+                            </div>
+                        </div>
+                        <a href="teamportal.php" class="relative z-10 w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-900/20 flex items-center justify-center gap-2">
+                            Open Team Portal <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
                     </div>
-
-                    <!-- Contact Details Card -->
-                    <div class="p-6 bg-emerald-900/20 border border-emerald-500/30 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
-                         <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                         <div class="flex items-start gap-4 relative z-10 mb-4">
-                             <div class="p-3 bg-emerald-500/20 rounded-xl flex-shrink-0">
-                                 <i data-lucide="users" class="w-8 h-8 text-emerald-400"></i>
-                             </div>
-                             <div>
-                                 <h2 class="text-xl font-bold text-white">Team Contacts</h2>
-                                 <p class="text-slate-300 text-sm mt-1">Update your club's contact details and view the directory.</p>
-                             </div>
-                         </div>
-                         <a href="contacts.php" class="relative z-10 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
-                             Manage Contacts <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                         </a>
-                    </div>
-
                 </div>
 
                 <!-- NEW: Audit Log Summary -->
@@ -125,38 +105,7 @@ else: ?>
         }
     }
 ?>
-                <?php if (!empty($recent_logs)): ?>
-                    <div class="mb-8 p-6 glass-panel rounded-2xl border border-white/5">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-bold flex items-center gap-2">
-                                <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i> Recent Venue Updates
-                            </h3>
-                            <a href="audit_log.php" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1">
-                                View Full Log <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                            </a>
-                        </div>
-                        <div class="space-y-3">
-                            <?php foreach ($recent_logs as $log): ?>
-                                <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                                    <div class="bg-emerald-500/10 p-2 rounded-lg mt-0.5">
-                                        <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i>
-                                    </div>
-                                    <div class="flex-grow min-w-0">
-                                        <div class="flex justify-between items-start">
-                                            <p class="text-sm font-bold text-white"><?php echo htmlspecialchars($log['club_name']); ?></p>
-                                            <span class="text-[10px] text-slate-500 font-mono"><?php echo date('d M H:i', strtotime($log['timestamp'])); ?></span>
-                                        </div>
-                                        <p class="text-xs text-slate-400 truncate mt-1"><?php echo htmlspecialchars($log['change_details']); ?></p>
-                                    </div>
-                                </div>
-                            <?php
-        endforeach; ?>
-                        </div>
-                    </div>
-                <?php
-    endif; ?>
-
-                <!-- STATISTICS BAR -->
+                <!-- Updates data -->
                 <?php
     // Fetch stats
     $prog_count = 0;
@@ -174,33 +123,6 @@ else: ?>
         }
     }
 ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    <div class="glass-panel p-4 rounded-xl flex items-center justify-between border border-white/5 relative overflow-hidden group">
-                        <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative z-10 flex items-center gap-4">
-                            <div class="bg-emerald-500/20 p-3 rounded-lg">
-                                <i data-lucide="printer" class="w-6 h-6 text-emerald-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Smart Programmes Generated</p>
-                                <p class="text-2xl font-bold text-white"><?php echo number_format($prog_count); ?></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel p-4 rounded-xl flex items-center justify-between border border-white/5 relative overflow-hidden group">
-                        <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative z-10 flex items-center gap-4">
-                            <div class="bg-purple-500/20 p-3 rounded-lg">
-                                <i data-lucide="bar-chart-2" class="w-6 h-6 text-purple-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Results Matcher Reports Generated</p>
-                                <p class="text-2xl font-bold text-white"><?php echo number_format($rep_count); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="space-y-12">
                     <!-- ROW 1: Governance & Planning -->
@@ -208,29 +130,18 @@ else: ?>
                         <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-sky-400">
                             <i data-lucide="landmark" class="w-5 h-5"></i> Governance & Info
                         </h2>
-                        <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
+                        <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/5">
                             <a href="https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                                 <div class="bg-sky-500/10 p-2 rounded-lg mr-4 group-hover:bg-sky-500/20">
                                     <i data-lucide="gavel" class="text-sky-500 w-5 h-5"></i>
                                 </div>
                                 <div class="flex-grow min-w-0">
                                     <p class="text-sm font-medium truncate">League Rules 2026</p>
-                                    <p class="text-xs text-slate-500 truncate">Official Constitution</p>
+                                    <p class="text-xs text-slate-500 truncate">Official Rules & Regulations</p>
                                 </div>
                                 <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
                             </a>
                             
-                            <a href="https://docs.google.com/spreadsheets/d/1ihRDTmrKMc9VAsvqA3-TYJD53AARAJdT/edit?usp=drive_link&ouid=106844982787765338918&rtpof=true&sd=true" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
-                                <div class="bg-sky-500/10 p-2 rounded-lg mr-4 group-hover:bg-sky-500/20">
-                                    <i data-lucide="map" class="text-sky-500 w-5 h-5"></i>
-                                </div>
-                                <div class="flex-grow min-w-0">
-                                    <p class="text-sm font-medium truncate">Host Venue List</p>
-                                    <p class="text-xs text-slate-500 truncate">Teams to update details</p>
-                                </div>
-                                <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
-                            </a>
-
                             <a href="https://docs.google.com/document/d/1-YlK_WXOpi_DG-KGR3JZTTTPxoGRW6rIB8ay4VKm1N0/edit?usp=drive_link" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
                                 <div class="bg-sky-500/10 p-2 rounded-lg mr-4 group-hover:bg-sky-500/20">
                                     <i data-lucide="help-circle" class="text-sky-500 w-5 h-5"></i>
@@ -249,52 +160,24 @@ else: ?>
                         <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-emerald-400">
                             <i data-lucide="calculator" class="w-5 h-5"></i> Teamsheets & Results
                         </h2>
-                        <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/5">
-                            
-                            <!-- Teamsheets Column -->
-                            <div class="flex flex-col">
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                            <!-- Teamsheets Card -->
+                            <div class="glass-panel rounded-2xl overflow-hidden border border-white/5">
                                 <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Teamsheets</div>
-                                <div class="flex-grow flex flex-col">
-                                    <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
-                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-plus" class="text-emerald-500 w-5 h-5"></i></div>
+                                <div class="p-3">
+                                    <a href="teamportal.php" class="flex items-center p-3 hover:bg-white/5 rounded-xl border border-white/5 transition-colors group">
+                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Google Sheets Version</p>
-                                            <p class="text-xs text-slate-500">Full Featured Version</p>
-                                        </div>
-                                    </a>
-                                    <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
-                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-down" class="text-emerald-500 w-5 h-5"></i></div>
-                                        <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Excel Version</p>
-                                            <p class="text-xs text-slate-500">Reduced Functionality</p>
+                                            <p class="text-sm font-medium">Manage in Team Portal</p>
+                                            <p class="text-xs text-slate-500">Google Sheets teamsheets are now handled in the Team Portal dashboard.</p>
                                         </div>
                                     </a>
                                 </div>
                             </div>
 
-                            <!-- Guides Column -->
-                            <div class="flex flex-col">
-                                <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Teamsheet Guides</div>
-                                <div class="flex-grow flex flex-col">
-                                    <a href="https://docs.google.com/spreadsheets/u/0/d/1hsoW_x12MH1B-qzGAjXUwcdtsK5h1jWDN1_qYBSluBI/copy" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
-                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="sheet" class="text-emerald-500 w-5 h-5"></i></div>
-                                        <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Google Sheets Guide</p>
-                                            <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
-                                        </div>
-                                    </a>
-                                    <a href="https://docs.google.com/spreadsheets/u/0/d/10urOBlt_49ZMCLPxQ9sjZw9vJKUTMh_R/edit" target="_blank" class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
-                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="file-spreadsheet" class="text-emerald-500 w-5 h-5"></i></div>
-                                        <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Excel Guide</p>
-                                            <p class="text-xs text-slate-500">Step-by-Step Instructions</p>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <!-- Programme Column -->
-                            <div class="flex flex-col">
+                            <!-- Programme Card -->
+                            <div class="glass-panel rounded-2xl overflow-hidden border border-white/5">
                                 <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Gala Programme</div>
                                 <div class="flex-grow flex flex-col">
                                     <a href="smartprogramme.php" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
@@ -314,11 +197,11 @@ else: ?>
                                 </div>
                             </div>
 
-                            <!-- Calculator Column -->
-                            <div class="flex flex-col">
+                            <!-- Results Calculator Card -->
+                            <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 md:col-span-2 xl:col-span-2">
                                 <div class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">Results Calculator</div>
-                                <div class="flex-grow flex flex-col">
-                                    <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                <div class="grid grid-cols-1 lg:grid-cols-2">
+                                    <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-r transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="download-cloud" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Results Calculator</p>
@@ -329,10 +212,10 @@ else: ?>
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="users" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Results Matcher</p>
-                                            <p class="text-xs text-slate-500">Match Swimmers to Results automatically</p>
+                                            <p class="text-xs text-slate-500">Match Swimmers to the Results Calculator automatically Post-Gala</p>
                                         </div>
                                     </a>
-                                    <a href="https://docs.google.com/document/d/10CvL07WJMVqDPZJU7LXIhFinBAcUarDiF7jNj03fdb4/edit?usp=sharing" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 transition-colors group h-full">
+                                    <a href="https://docs.google.com/document/d/10CvL07WJMVqDPZJU7LXIhFinBAcUarDiF7jNj03fdb4/edit?usp=sharing" target="_blank" class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-b-0 lg:border-r transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i data-lucide="book-open" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Full User Guide</p>
@@ -356,14 +239,34 @@ else: ?>
                         <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-amber-400">
                             <i data-lucide="users" class="w-5 h-5"></i> Community & Support
                         </h2>
-                        <div class="glass-panel rounded-2xl overflow-hidden">
-                            <a href="https://chat.whatsapp.com/KGftukKhKYHGWQgjsoemZz" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group">
+                        <div class="glass-panel rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
+                            <a href="https://chat.whatsapp.com/KGftukKhKYHGWQgjsoemZz" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
                                 <div class="bg-emerald-500/10 p-2 rounded-lg mr-4 group-hover:bg-emerald-500/20">
                                     <i data-lucide="message-circle" class="text-emerald-500 w-5 h-5"></i>
                                 </div>
                                 <div class="flex-grow min-w-0">
                                     <p class="text-sm font-medium truncate">WhatsApp Community</p>
                                     <p class="text-xs text-slate-500 truncate">Join the representative group</p>
+                                </div>
+                                <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
+                            </a>
+                            <a href="https://www.facebook.com/profile.php?id=100094686571540" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-[#1877F2]/10 p-2 rounded-lg mr-4 group-hover:bg-[#1877F2]/20">
+                                    <i data-lucide="facebook" class="text-[#1877F2] w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Facebook</p>
+                                    <p class="text-xs text-slate-500 truncate">Follow the Cotswold League updates</p>
+                                </div>
+                                <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
+                            </a>
+                            <a href="https://www.instagram.com/thecotswoldleague/" target="_blank" class="flex items-center p-4 hover:bg-white/5 transition-colors group h-full">
+                                <div class="bg-[#E1306C]/10 p-2 rounded-lg mr-4 group-hover:bg-[#E1306C]/20">
+                                    <i data-lucide="instagram" class="text-[#E1306C] w-5 h-5"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="text-sm font-medium truncate">Instagram</p>
+                                    <p class="text-xs text-slate-500 truncate">Follow the latest photos and highlights</p>
                                 </div>
                                 <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
                             </a>
@@ -595,6 +498,64 @@ else: ?>
                             </a>
                         </div>
 
+                    </div>
+                </div>
+
+                <!-- Updates -->
+                <div class="mt-12 space-y-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-emerald-400">
+                        <i data-lucide="activity" class="w-5 h-5"></i> Updates
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i> Recent Venue Updates
+                                </h3>
+                                <a href="audit_log.php" class="text-[11px] text-slate-400 hover:text-white transition-colors">View Log</a>
+                            </div>
+                            <?php if (!empty($recent_logs)): ?>
+                                <div class="space-y-2.5">
+                                    <?php foreach ($recent_logs as $log): ?>
+                                        <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                                            <div class="flex justify-between items-start gap-2">
+                                                <p class="text-xs font-semibold text-slate-200 truncate"><?php echo htmlspecialchars($log['club_name']); ?></p>
+                                                <span class="text-[10px] text-slate-500 font-mono flex-shrink-0"><?php echo date('d M H:i', strtotime($log['timestamp'])); ?></span>
+                                            </div>
+                                            <p class="text-[11px] text-slate-400 truncate mt-1"><?php echo htmlspecialchars($log['change_details']); ?></p>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-xs text-slate-500">No recent venue changes logged.</p>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative z-10">
+                                <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-3">Smart Programmes Generated</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-emerald-500/20 p-2.5 rounded-lg">
+                                        <i data-lucide="printer" class="w-5 h-5 text-emerald-400"></i>
+                                    </div>
+                                    <p class="text-3xl font-bold text-white"><?php echo number_format($prog_count); ?></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative z-10">
+                                <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-3">Results Matcher Reports Generated</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-sky-500/20 p-2.5 rounded-lg">
+                                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-sky-400"></i>
+                                    </div>
+                                    <p class="text-3xl font-bold text-white"><?php echo number_format($rep_count); ?></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

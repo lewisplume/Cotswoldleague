@@ -329,6 +329,18 @@
             { id: 53, desc: "8x25m Mixed Cannon", limit: "N/A" }
         ];
 
+        // A Final uses 50m for 11/u individual events and therefore has different time limits.
+        const aFinal11uLimits = {
+            5: "32.29",
+            6: "31.80",
+            21: "37.00",
+            22: "38.00",
+            29: "37.00",
+            30: "37.50",
+            45: "43.30",
+            46: "44.60"
+        };
+
         function generateProgramme() {
             const type = document.getElementById('galaType').value;
 
@@ -368,11 +380,11 @@
                 baseEvents.slice(40, 53) // Last block has 13 events
             ];
 
-            document.getElementById('programmePage1').innerHTML = buildChunksHtml(chunksPage1, dist11u, teamCount);
-            document.getElementById('programmePage2').innerHTML = buildChunksHtml(chunksPage2, dist11u, teamCount);
+            document.getElementById('programmePage1').innerHTML = buildChunksHtml(chunksPage1, dist11u, teamCount, type);
+            document.getElementById('programmePage2').innerHTML = buildChunksHtml(chunksPage2, dist11u, teamCount, type);
         }
 
-        function buildChunksHtml(chunks, dist11u, teamCount) {
+        function buildChunksHtml(chunks, dist11u, teamCount, type) {
             let html = '';
 
             chunks.forEach((chunk) => {
@@ -399,13 +411,18 @@
                     let desc = evt.desc;
                     if (evt.is11u) desc = desc.replace('{dist}', dist11u);
 
+                    let limit = evt.limit;
+                    if (type === 'final_a' && Object.prototype.hasOwnProperty.call(aFinal11uLimits, evt.id)) {
+                        limit = aFinal11uLimits[evt.id];
+                    }
+
                     const rowBg = index % 2 === 0 ? 'print-bg-slate-50 bg-slate-50' : 'bg-white';
 
                     html += `
                         <tr class="${rowBg}">
                             <td class="text-center font-bold text-slate-700">${evt.id}</td>
                             <td class="font-bold text-slate-800">${desc}</td>
-                            <td class="limit-col">${evt.limit !== 'N/A' ? evt.limit : '-'}</td>
+                            <td class="limit-col">${limit !== 'N/A' ? limit : '-'}</td>
                             <td class="write-in-col"></td>
                         </tr>
                     `;

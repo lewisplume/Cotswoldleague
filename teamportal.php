@@ -5,7 +5,7 @@ include 'db.php';
 // Handle Logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
-    header("Location: team_portal.php");
+    header("Location: teamportal.php");
     exit;
 }
 
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $_SESSION['club_id'] = $club_id;
             $_SESSION['club_name'] = $row['club_name'];
             
-            header("Location: team_portal.php");
+            header("Location: teamportal.php");
             exit;
         } else {
             $error_msg = "Invalid Club or PIN. Please try again.";
