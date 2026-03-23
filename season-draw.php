@@ -1,0 +1,556 @@
+<?php
+include 'db.php';
+include 'season_data.php';
+
+// Fetch Round 1, Round 2, and Round 3 points for Season Draw page
+$completed_points = [];
+$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3 FROM results r JOIN clubs c ON r.club_id = c.id";
+$result = $conn->query($sql);
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $completed_points[1][$row['name']] = $row['round_1'];
+        $completed_points[2][$row['name']] = $row['round_2'];
+        $completed_points[3][$row['name']] = $row['round_3'];
+    }
+}
+
+// Name Mapping: Season Data Name => DB Host Name
+$host_map = [
+    "Bath Dolphin" => "Bath",
+    "COB (City of Bristol)" => "City Of Bristol",
+    "Swindon ASC" => "Swindon",
+    "Academy Swim Team" => "AST",
+    "Burnham-On-Sea" => "Burnham",
+    "Southwold SC" => "Southwold",
+    "Monnow SC" => "Monnow",
+    "Forest of Dean" => "FOD",
+    "Severnside Tritons" => "Severnside"
+];
+
+// Fetch Venue Details from DB
+$venue_db = [];
+$v_sql = "SELECT * FROM venue_details";
+$v_res = $conn->query($v_sql);
+if ($v_res && $v_res->num_rows > 0) {
+    while ($row = $v_res->fetch_assoc()) {
+        // Key by round and host for lookup
+        $key = $row['host_club'] . '_' . $row['round_number'];
+        $venue_db[$key] = $row;
+    }
+}
+
+// Helper to get points
+function getPoints($round, $team, $completed_points)
+{
+    if (isset($completed_points[$round][$team])) {
+        return $completed_points[$round][$team];
+    }
+    return null;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotswold League | Season Draw</title>
+    <link rel="icon" href="images/league-logo.svg" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="text-white font-sans min-h-screen">
+
+    <?php include 'nav.php'; ?>
+
+    <!-- HEADER -->
+    <div class="py-12 text-center px-4">
+        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl mb-4">
+            Season <span class="text-sky-500">Draw</span>
+        </h1>
+        <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+            Full round-by-round gala fixtures, venues, and live links for the 2026 season.
+        </p>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div class="space-y-8">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold">Season <span class="text-sky-500">Draw</span></h2>
+                    <p class="text-slate-400">All preliminary rounds for the 2026 season.</p>
+                </div>
+                <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl border border-slate-700">
+                    <button onclick="filterDraw(1)" id="btnR1"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-sky-600 text-white">R1</button>
+                    <button onclick="filterDraw(2)" id="btnR2"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R2</button>
+                    <button onclick="filterDraw(3)" id="btnR3"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R3</button>
+                    <button onclick="filterDraw(4)" id="btnR4"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R4</button>
+                    <button onclick="filterDraw('Finals')" id="btnRFinals"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">Finals</button>
+                </div>
+            </div>
+
+            <!-- DRAW CONTAINER -->
+            <div id="drawWrapper">
+                <?php foreach ($season_draw as $round_data):
+    $round_num = $round_data['round'];
+    $is_completed = $round_num <= 3;
+?>
+                <div id="round-<?php echo $round_num; ?>"
+                    class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 <?php echo $round_num !== 1 ? 'hidden' : ''; ?>">
+
+                    <?php foreach ($round_data['galas'] as $index => $gala):
+        $host = $gala['host'];
+        $teams = $gala['teams'];
+
+        // Use Mapping or fallback to original name
+        $db_host_name = $host_map[$host] ?? $host;
+        $lookup_key = $db_host_name . '_' . $round_num;
+
+        $venue_info = $venue_db[$lookup_key] ?? null;
+
+        // Construct display Details
+        $payment_info_raw = '';
+        $v_name = '';
+        $v_addr = '';
+        $v_wu = '';
+        $v_st = '';
+        $v_pay = '';
+        $v_park = '';
+        $is_db_venue = false; // Flag to track if we have DB data
+
+        if ($venue_info) {
+            $is_db_venue = true;
+            $v_name = $venue_info['venue_name'] ?? '';
+            $v_addr = $venue_info['address'] ?? '';
+            $v_wu = !empty($venue_info['warmup_time']) ? $venue_info['warmup_time'] : "Check with host";
+            $v_st = !empty($venue_info['start_time']) ? $venue_info['start_time'] : "Check with host";
+            $v_pay = !empty($venue_info['payment_info']) ? $venue_info['payment_info'] : "Check with host";
+            $v_park = !empty($venue_info['parking_info']) ? $venue_info['parking_info'] : "Check with host";
+
+            $payment_info_raw = $venue_info['payment_info'] ?? '';
+        }
+        else {
+            $display_details = $gala['details']; // Fallback
+            $payment_info_raw = $gala['details'];
+        }
+
+        $has_card = stripos($payment_info_raw, 'Card') !== false;
+        $embedUrl = $gala['embedUrl'] ?? '';
+?>
+
+                    <div
+                        class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">Host
+                                    Club</span>
+                                <?php if ($is_completed): ?>
+                                <span
+                                    class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-emerald-500/30">Completed</span>
+                                <?php
+        endif; ?>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium">
+                                <?php echo $round_data['date']; ?>
+                            </span>
+                        </div>
+                        <div class="p-5">
+                            <h3
+                                class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                                <?php echo htmlspecialchars($host); ?>
+                            </h3>
+
+                            <div class="space-y-2 mb-4">
+                                <?php foreach ($teams as $team):
+            $pts = getPoints($round_num, $team, $completed_points);
+            $is_host = ($team === $host);
+?>
+                                <div
+                                    class="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                    <div class="flex items-center gap-3 text-sm">
+                                        <div
+                                            class="w-1.5 h-1.5 rounded-full <?php echo $is_host ? 'bg-sky-500' : 'bg-slate-600'; ?>">
+                                        </div>
+                                        <span
+                                            class="<?php echo $is_host ? 'text-white font-bold' : 'text-slate-400'; ?>">
+                                            <?php echo htmlspecialchars($team); ?>
+                                        </span>
+                                        <?php if ($is_host): ?>
+                                        <span
+                                            class="text-[10px] bg-sky-500/20 text-sky-400 px-2 rounded-full font-black uppercase">Host</span>
+                                        <?php
+            endif; ?>
+                                    </div>
+                                    <?php if ($pts !== null): ?>
+                                    <span
+                                        class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                                        <?php echo $pts; ?> pts
+                                    </span>
+                                    <?php
+            endif; ?>
+                                </div>
+                                <?php
+        endforeach; ?>
+                            </div>
+
+                            <!-- VENUE DETAILS -->
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p
+                                    class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+
+                                <?php if ($is_db_venue): ?>
+                                <!-- Structured Grid View -->
+                                <div class="text-xs text-slate-300">
+                                    <?php if ($v_name || $v_addr): ?>
+                                    <div class="mb-3">
+                                        <?php if ($v_name): ?>
+                                        <div class="font-bold text-white text-sm mb-0.5">
+                                            <?php echo htmlspecialchars($v_name); ?>
+                                        </div>
+                                        <?php
+                endif; ?>
+                                        <?php if ($v_addr): ?>
+                                        <div class="text-slate-400 leading-snug">
+                                            <?php echo htmlspecialchars($v_addr); ?>
+                                        </div>
+                                        <?php
+                endif; ?>
+                                    </div>
+                                    <?php
+            endif; ?>
+
+                                    <div
+                                        class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm
+                                                Up</span>
+                                            <span class="font-medium text-white">
+                                                <?php echo htmlspecialchars($v_wu); ?>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Start
+                                                Time</span>
+                                            <span class="font-medium text-white">
+                                                <?php echo htmlspecialchars($v_st); ?>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Payment</span>
+                                            <span class="font-medium text-white flex items-center gap-2">
+                                                <?php echo htmlspecialchars($v_pay); ?>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span
+                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking
+                                                & Other Info</span>
+                                            <span class="font-medium text-white">
+                                                <?php echo htmlspecialchars($v_park); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <?php if ($has_card): ?>
+                                    <div class="mt-2">
+                                        <span
+                                            class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-bold">
+                                            <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
+                                        </span>
+                                    </div>
+                                    <?php
+            endif; ?>
+                                </div>
+                                <?php
+        else: ?>
+                                <!-- Fallback View (Raw Text) -->
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    <?php echo $display_details; ?>
+                                </p>
+                                <?php
+        endif; ?>
+                            </div>
+
+                            <?php if ($embedUrl): ?>
+                            <div class="mt-4 pt-4 border-t border-white/5">
+                                <button onclick="toggleLive(<?php echo $round_num; ?>, <?php echo $index; ?>)"
+                                    class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
+                                    <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
+                                </button>
+                            </div>
+                            <?php
+        endif; ?>
+                        </div>
+                    </div>
+                    <?php
+    endforeach; ?>
+                </div>
+                <?php
+endforeach; ?>
+
+                <!-- FINALS SECTION -->
+                <div id="round-Finals" class="hidden round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <!-- A FINAL -->
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group border-sky-500/30 relative">
+                        <div class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-sky-500 to-transparent opacity-50"></div>
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">A Final Location</span>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                                Hutton Moore Leisure Centre
+                            </h3>
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+                                <div class="text-xs text-slate-300">
+                                    <div class="mb-3">
+                                        <div class="font-bold text-white text-sm mb-0.5">Weston-Super-Mare</div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
+                                            <span class="font-medium text-white">5.45PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
+                                            <span class="font-medium text-white">6.15PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
+                                            <span class="font-medium text-white">Free, must register with reception</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B or C FINAL (Easton) -->
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B or C Final (TBD After R4)</span>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                                Easton Leisure Centre
+                            </h3>
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+                                <div class="text-xs text-slate-300">
+                                    <div class="mb-3">
+                                        <div class="font-bold text-white text-sm mb-0.5">Bristol</div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
+                                            <span class="font-medium text-white">5.45PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
+                                            <span class="font-medium text-white">6.15PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
+                                            <span class="font-medium text-white">Paid parking</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B or C FINAL (PontyPool) -->
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B or C Final (TBD After R4)</span>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                                PontyPool Leisure Centre
+                            </h3>
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+                                <div class="text-xs text-slate-300">
+                                    <div class="mb-3">
+                                        <div class="font-bold text-white text-sm mb-0.5">Pontypool</div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
+                                            <span class="font-medium text-white">4.45PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
+                                            <span class="font-medium text-white">5.15PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
+                                            <span class="font-medium text-white">Free parking</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- LIVE RESULTS VIEWER (Full Width) -->
+            <div id="liveViewer"
+                class="hidden mt-8 glass-panel overflow-hidden rounded-2xl border border-sky-500/30 shadow-[0_0_50px_rgba(14,165,233,0.15)] transition-all duration-500">
+            </div>
+        </div>
+
+        <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
+            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const drawData = <?php echo json_encode($season_draw); ?>;
+
+        let currentActiveGala = null;
+        let liveRefreshInterval = null;
+
+        function filterDraw(roundNum) {
+            const rounds = [1, 2, 3, 4, 'Finals'];
+            for (let i of rounds) {
+                const btn = document.getElementById(`btnR${i}`);
+                const section = document.getElementById(`round-${i}`);
+                if (!btn) continue;
+
+                if (i === roundNum) {
+                    btn.classList.add('bg-sky-600', 'text-white');
+                    btn.classList.remove('text-slate-400');
+                    if (section) section.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('bg-sky-600', 'text-white');
+                    btn.classList.add('text-slate-400');
+                    if (section) section.classList.add('hidden');
+                }
+            }
+            closeLive();
+        }
+
+        function toggleLive(roundNum, galaIndex) {
+            const viewer = document.getElementById('liveViewer');
+            const round = drawData.find(r => r.round === roundNum);
+            const gala = round.galas[galaIndex];
+            const galaId = `${roundNum}-${galaIndex}`;
+
+            if (currentActiveGala === galaId && !viewer.classList.contains('hidden')) {
+                closeLive();
+                return;
+            }
+
+            currentActiveGala = galaId;
+            viewer.classList.remove('hidden');
+
+            viewer.innerHTML = `
+                <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-red-500/20 p-2 rounded-lg border border-red-500/30">
+                            <i data-lucide="radio" class="w-6 h-6 text-red-500 animate-pulse"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white leading-none">Live Results</h3>
+                            <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">${gala.host} Gala • Round ${roundNum}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Auto-refreshing every 60s</p>
+                        </div>
+                    </div>
+                    <button onclick="closeLive()" class="group bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white p-2 rounded-lg transition-all border border-slate-700 hover:border-slate-500">
+                        <span class="sr-only">Close</span>
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="bg-white w-full h-[800px] md:h-[900px] relative">
+                     <iframe id="live-iframe" width="100%" height="100%" frameborder="0" scrolling="no" src="${gala.embedUrl}" class="absolute inset-0"></iframe>
+                </div>
+            `;
+
+            lucide.createIcons();
+
+            if (liveRefreshInterval) clearInterval(liveRefreshInterval);
+            liveRefreshInterval = setInterval(() => {
+                const iframe = document.getElementById('live-iframe');
+                if (iframe) {
+                    iframe.src = iframe.src;
+                }
+            }, 60000);
+
+            setTimeout(() => {
+                viewer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 50);
+        }
+
+        function closeLive() {
+            const viewer = document.getElementById('liveViewer');
+            if (viewer) {
+                viewer.classList.add('hidden');
+                viewer.innerHTML = '';
+            }
+            currentActiveGala = null;
+            if (liveRefreshInterval) {
+                clearInterval(liveRefreshInterval);
+                liveRefreshInterval = null;
+            }
+        }
+
+        filterDraw(4);
+    </script>
+</body>
+
+</html>

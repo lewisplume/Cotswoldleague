@@ -49,6 +49,8 @@ $enableLogoFlair = $currentScript !== 'index.php';
                             class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Clubs</a>
                         <a href="spectators"
                             class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Spectators</a>
+                        <a href="season-draw"
+                            class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Season Draw</a>
                         <a href="table"
                             class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">League
                             Table</a>
@@ -81,6 +83,8 @@ $enableLogoFlair = $currentScript !== 'index.php';
             class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Clubs</a>
         <a href="spectators"
             class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Spectators</a>
+        <a href="season-draw"
+            class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Season Draw</a>
         <a href="table" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">League
             Table</a>
         <a href="history"

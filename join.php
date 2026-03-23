@@ -33,47 +33,31 @@
     <!-- MAIN CONTENT -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
-        <!-- INTRO GRID -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-            <!-- PHILOSOPHY -->
-            <div class="space-y-6">
-                <h2 class="text-3xl font-bold flex items-center gap-3">
-                    <i data-lucide="heart" class="text-rose-500"></i> Our Ethos
-                </h2>
-                <div class="prose prose-invert text-slate-300 leading-relaxed">
-                    <p>
-                        The Cotswold League is not just another competitive series. Our primary mission is to provide a supportive environment for <strong>less experienced swimmers</strong>, many of whom may be competing for the first time.
-                    </p>
-                    <p>
-                        We differentiate ourselves from elite regional leagues by prioritizing development over dominance. We offer a space for swimmers to gain confidence, learn the rules of disqualification and turns, and experience the excitement of team competition without the intense pressure of top-tier events.
-                    </p>
-                    <p>
-                        Our galas are <strong>unlicensed</strong>, creating a more relaxed competition environment for developing swimmers and newer club families while still maintaining structure, standards, and clear race administration.
-                    </p>
-                    <p>
-                        Joining clubs are expected to share this spirit of sportsmanship. We encourage cheering for all lanes and fostering a friendly rivalry that builds character alongside speed.
-                    </p>
-                </div>
-            </div>
+        <!-- ETHOS -->
+        <div class="mb-20 space-y-6">
+            <h2 class="text-3xl font-bold flex items-center justify-center gap-3 text-center">
+                <i data-lucide="heart" class="text-rose-500"></i> Our Ethos
+            </h2>
 
-            <!-- PRIORITY POLICY CARD -->
-            <div class="glass-panel p-8 rounded-3xl border-l-4 border-l-rose-500 h-fit">
-                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <i data-lucide="shield-alert" class="text-rose-500"></i> Membership Priority
-                </h3>
-                <p class="text-slate-400 mb-4">
-                    The league is capped at 20 clubs to ensure efficient gala management. When vacancies arise, we adhere to a strict priority policy:
+            <div class="glass-panel rounded-3xl p-7">
+                <p class="text-slate-300 text-base leading-relaxed">
+                    The Cotswold League is built for <strong>development first</strong>. We give less experienced swimmers a supportive, team-focused race environment where confidence can grow.
                 </p>
-                <ul class="space-y-3 text-sm text-slate-300">
-                    <li class="flex items-start gap-2">
-                        <i data-lucide="check-circle" class="text-rose-500 w-4 h-4 mt-0.5"></i>
-                        <span><strong>Priority 1:</strong> Independent local clubs with a desire to allow lower level swimmers entries into competitive swimming events.</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <i data-lucide="x-circle" class="text-slate-500 w-4 h-4 mt-0.5"></i>
-                        <span><strong>Secondary:</strong> 'B' teams from higher-ranked clubs are considered only if no independent local clubs are on the waiting list.</span>
-                    </li>
-                </ul>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 text-sm">
+                    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+                        <p class="text-sky-400 font-bold uppercase text-[11px] tracking-wider mb-1">Relaxed Competition</p>
+                        <p class="text-slate-300">Our galas are unlicensed, keeping race nights structured but less intense for newer swimmers and families.</p>
+                    </div>
+                    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+                        <p class="text-sky-400 font-bold uppercase text-[11px] tracking-wider mb-1">Learning Environment</p>
+                        <p class="text-slate-300">Swimmers build race confidence, team habits, and event knowledge through regular season competition.</p>
+                    </div>
+                    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+                        <p class="text-sky-400 font-bold uppercase text-[11px] tracking-wider mb-1">Sportsmanship</p>
+                        <p class="text-slate-300">We value positive, respectful racing and a friendly rivalry that supports all clubs in the league.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -167,6 +151,28 @@
                     <h3 class="font-bold text-lg mb-2">Clear, Structured Racing</h3>
                     <p class="text-sm text-slate-400">Each gala runs a clear 53-event programme lasting just 2 hours with age-group and relay racing, giving swimmers consistent team-competition experience throughout the season.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- PRIORITY POLICY CARD -->
+        <div class="mb-20">
+            <div class="glass-panel p-8 rounded-3xl border-l-4 border-l-rose-500 h-fit">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="shield-alert" class="text-rose-500"></i> Membership Priority
+                </h3>
+                <p class="text-slate-400 mb-4">
+                    The league is capped at 20 clubs to ensure efficient gala management. When vacancies arise, we adhere to a strict priority policy:
+                </p>
+                <ul class="space-y-3 text-sm text-slate-300">
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="check-circle" class="text-rose-500 w-4 h-4 mt-0.5"></i>
+                        <span><strong>Priority 1:</strong> Independent local clubs with a desire to allow lower level swimmers entries into competitive swimming events.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="x-circle" class="text-slate-500 w-4 h-4 mt-0.5"></i>
+                        <span><strong>Secondary:</strong> 'B' teams from higher-ranked clubs are considered only if no independent local clubs are on the waiting list.</span>
+                    </li>
+                </ul>
             </div>
         </div>
 
