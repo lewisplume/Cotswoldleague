@@ -90,60 +90,99 @@ function getPoints($round, $team, $completed_points)
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            <div class="lg:col-span-2 space-y-6">
+        <div class="space-y-6 mb-12">
                 <h2 class="text-2xl font-bold flex items-center gap-2">
-                    <i data-lucide="info" class="text-sky-500"></i> Essential Gala Info
+                    <i data-lucide="info" class="text-sky-500"></i> Essential Gala Guide
                 </h2>
+
+                <div class="glass-panel rounded-2xl p-6 md:p-7">
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="bg-sky-500/15 p-2 rounded-lg border border-sky-500/30">
+                            <i data-lucide="calendar-range" class="w-5 h-5 text-sky-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">How The League Season Works</h3>
+                            <p class="text-sm text-slate-400">A quick overview for parents and supporters.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+                            <p class="text-sky-400 font-bold uppercase text-[11px] tracking-wider mb-1">League Format</p>
+                            <p class="text-slate-300 leading-relaxed">The season has 4 preliminary rounds, then Finals. After Round 4, teams are placed into Final galas (A, B or C) based on season performance.</p>
+                        </div>
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+                            <p class="text-sky-400 font-bold uppercase text-[11px] tracking-wider mb-1">Events Per Gala</p>
+                            <p class="text-slate-300 leading-relaxed">Each gala includes 53 races, covering individual swims and relays across all age groups.</p>
+                        </div>
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 md:col-span-2">
+                            <p class="text-sky-400 font-bold uppercase text-[11px] tracking-wider mb-1">Galas vs Open Meets</p>
+                            <p class="text-slate-300 leading-relaxed">League galas are team competitions where clubs race head-to-head for points. Open meets focus on individual entries, personal bests, and finals by qualifying time rather than club match scoring.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="glass-panel p-6 rounded-2xl">
-                        <h3 class="font-bold text-sky-400 mb-2">Admission Pricing</h3>
+                        <h3 class="font-bold text-sky-400 mb-2 flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> Age Groups</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Host teams set their own entry prices for preliminary rounds. Most clubs charge around
-                            £3.00. Please check with your club representative for venue-specific pricing.
+                            Events are grouped as 11/u, 13/u, 15/u and Open. Swimmers race in their eligible age band,
+                            helping keep races fair and competitive across the gala.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
-                        <h3 class="font-bold text-sky-400 mb-2">Raffles & Fundraising</h3>
+                        <h3 class="font-bold text-sky-400 mb-2 flex items-center gap-2"><i data-lucide="timer-off" class="w-4 h-4"></i> Speeding Tickets</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Many host clubs organize raffles during the rounds. These are optional, and proceeds support
-                            the hosting club's fundraising efforts.
+                            In this league, each event has a time limit. If a swimmer goes faster than that limit,
+                            they can be disqualified from scoring points for that race.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
-                        <h3 class="font-bold text-sky-400 mb-2">Warm-Up Times</h3>
+                        <h3 class="font-bold text-sky-400 mb-2 flex items-center gap-2"><i data-lucide="git-branch" class="w-4 h-4"></i> Relays Explained</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            Warm-ups typically last 30 minutes. Please refer to your club's coach or TM for the specific
-                            arrival time for your swimmer.
+                            In freestyle relays, each swimmer completes their leg in freestyle before the next teammate
+                            dives. Relay takeovers are crucial, and smooth changes can decide close races.
                         </p>
                     </div>
                     <div class="glass-panel p-6 rounded-2xl">
-                        <h3 class="font-bold text-sky-400 mb-2">Photography & Conduct</h3>
+                        <h3 class="font-bold text-sky-400 mb-2 flex items-center gap-2"><i data-lucide="waves" class="w-4 h-4"></i> Medley Relays</h3>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            The League adopts the Swim England Child Protection Policy. Please follow venue-specific
-                            rules regarding photography and video recording.
+                            Medley relay order is always Backstroke, Breaststroke, Butterfly, then Freestyle.
+                            Each swimmer does one stroke, so team balance across all four strokes really matters.
                         </p>
                     </div>
                 </div>
-            </div>
 
-            <div class="space-y-6">
-                <h2 class="text-2xl font-bold flex items-center gap-2">
-                    <i data-lucide="download" class="text-sky-500"></i> Downloads
-                </h2>
-                <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="font-bold text-sky-400 mb-3 flex items-center gap-2"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Practical Parent Tips</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-slate-300">Arrive early for team check-in and warm-up announcements.</div>
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-slate-300">Bring layers, snacks, and water. Pool balconies can get warm or cold quickly.</div>
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-slate-300">Galas usually last between 1.30 and 2 hours, so plan food and travel around a full evening.</div>
+                        <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-slate-300">Follow host rules on photography, seating and poolside access.</div>
+                    </div>
+                </div>
+        </div>
+
+        <div class="mb-12">
+            <div class="glass-panel rounded-2xl p-6 border border-sky-500/30">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <i data-lucide="file-text" class="w-5 h-5 text-sky-400"></i>
+                            <h3 class="text-lg font-bold text-white">Spectator Programme</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Get the full race list, time limits, and printable gala notes in one place.
+                        </p>
+                    </div>
                     <a href="spectator-programme.php" target="_blank"
-                        class="flex items-center p-5 hover:bg-white/5 transition-colors group">
-                        <div class="bg-sky-500/10 p-3 rounded-xl mr-4 group-hover:bg-sky-500/20">
-                            <i data-lucide="file-text" class="text-sky-500 w-6 h-6"></i>
-                        </div>
-                        <div class="flex-grow">
-                            <p class="font-bold text-white">Spectator Programme</p>
-                            <p class="text-xs text-slate-500">Save & Print Our Full Event List</p>
-                        </div>
-                        <i data-lucide="external-link" class="w-4 h-4 text-slate-600"></i>
+                        class="inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold text-sm border border-sky-500/40 transition-all whitespace-nowrap">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        Open Programme
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
                     </a>
                 </div>
+                <p class="text-[11px] text-slate-500 mt-3">Best viewed on mobile before the gala, or printed for poolside use.</p>
             </div>
         </div>
 
