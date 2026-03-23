@@ -25,6 +25,9 @@
         <p class="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
             A unique swimming league focused on development, sporting spirit, and providing a platform for less experienced swimmers to compete.
         </p>
+        <p class="text-sm text-sky-400/90 max-w-3xl mx-auto mt-4 font-semibold tracking-wide uppercase">
+            Unlicensed, team-first competition with full league support for clubs and volunteers.
+        </p>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -43,6 +46,9 @@
                     </p>
                     <p>
                         We differentiate ourselves from elite regional leagues by prioritizing development over dominance. We offer a space for swimmers to gain confidence, learn the rules of disqualification and turns, and experience the excitement of team competition without the intense pressure of top-tier events.
+                    </p>
+                    <p>
+                        Our galas are <strong>unlicensed</strong>, creating a more relaxed competition environment for developing swimmers and newer club families while still maintaining structure, standards, and clear race administration.
                     </p>
                     <p>
                         Joining clubs are expected to share this spirit of sportsmanship. We encourage cheering for all lanes and fostering a friendly rivalry that builds character alongside speed.
@@ -106,6 +112,60 @@
                     </div>
                     <h3 class="font-bold text-lg mb-2">Fees</h3>
                     <p class="text-sm text-slate-400">Membership fees are typically £100 per year & due by Nov 30th. <strong>Note:</strong> 2026 Season fees have been waived.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLUB BENEFITS -->
+        <div class="mb-20">
+            <h2 class="text-3xl font-bold mb-8 text-center">Why Clubs Choose <span class="text-sky-500">Cotswold</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors">
+                    <div class="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-4 text-cyan-400">
+                        <i data-lucide="laptop" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Software Included</h3>
+                    <p class="text-sm text-slate-400">All software needed to operate in the league is provided to member clubs. We do not use Meet Manager, helping reduce cost and setup barriers for teams.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors">
+                    <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 text-emerald-400">
+                        <i data-lucide="user-plus" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Volunteer Development</h3>
+                    <p class="text-sm text-slate-400">We actively encourage new volunteers to get involved with timekeeping and recording. Many clubs use the Cotswold League as a great pathway for training race-night officials.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors">
+                    <div class="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center mb-4 text-amber-400">
+                        <i data-lucide="trophy" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Finals Recognition</h3>
+                    <p class="text-sm text-slate-400">All teams receive trophies at the Finals, celebrating contribution and season performance across every level of the league.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors">
+                    <div class="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center mb-4 text-sky-400">
+                        <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Team Portal Access</h3>
+                    <p class="text-sm text-slate-400">Member teams gain access to dedicated team portals with fixtures, resources, downloads, and operational information in one location.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors">
+                    <div class="w-12 h-12 bg-rose-500/10 rounded-xl flex items-center justify-center mb-4 text-rose-400">
+                        <i data-lucide="megaphone" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Strong Club Promotion</h3>
+                    <p class="text-sm text-slate-400">Clubs are promoted heavily across our website and social channels. The league now generates 100,000+ views over a season, giving excellent visibility to member teams.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl hover:bg-white/5 transition-colors">
+                    <div class="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-4 text-indigo-400">
+                        <i data-lucide="clipboard-check" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Clear, Structured Racing</h3>
+                    <p class="text-sm text-slate-400">Each gala runs a clear 53-event programme lasting just 2 hours with age-group and relay racing, giving swimmers consistent team-competition experience throughout the season.</p>
                 </div>
             </div>
         </div>
