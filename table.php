@@ -146,7 +146,7 @@ if ($result->num_rows > 0) {
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-                        <h4 class="font-bold text-sm">A Final</h4>
+                        <h4 class="font-bold text-sm">A Final - Hutton Moore Leisure Centre</h4>
                     </div>
                     <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413"
                         target="_blank"
@@ -171,7 +171,7 @@ endforeach; ?>
             <div class="glass-panel p-6 rounded-2xl">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></div>
-                    <h4 class="font-bold text-sm">B Final</h4>
+                    <h4 class="font-bold text-sm">B Final - Pontypool Leisure Centre</h4>
                 </div>
                 <ul class="space-y-2 mt-4">
                     <?php foreach ($b_final as $t): ?>
@@ -190,7 +190,7 @@ endforeach; ?>
             <div class="glass-panel p-6 rounded-2xl">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-2 h-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50"></div>
-                    <h4 class="font-bold text-sm">C Final</h4>
+                    <h4 class="font-bold text-sm">C Final - Easton Leisure Centre</h4>
                 </div>
                 <ul class="space-y-2 mt-4">
                     <?php foreach ($c_final as $t): ?>
