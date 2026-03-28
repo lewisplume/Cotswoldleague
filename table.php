@@ -143,16 +143,11 @@ if ($result->num_rows > 0) {
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div class="glass-panel p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3 mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
                         <h4 class="font-bold text-sm">A Final - Hutton Moore Leisure Centre</h4>
                     </div>
-                    <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413"
-                        target="_blank"
-                        class="text-[9px] font-black uppercase tracking-wider bg-[#cfb53b]/20 text-[#cfb53b] hover:bg-[#cfb53b]/30 px-2 py-1 rounded-md transition-colors border border-[#cfb53b]/30 shadow-[0_0_10px_rgba(207,181,59,0.1)]">
-                        Hat Preorder Now
-                    </a>
                 </div>
                 <ul class="space-y-2 mt-4">
                     <?php foreach ($a_final as $t): ?>
