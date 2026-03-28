@@ -2,15 +2,16 @@
 include 'db.php';
 include 'season_data.php';
 
-// Fetch Round 1, Round 2, and Round 3 points for Spectators page
+// Fetch Round 1, Round 2, Round 3, and Round 4 points for Spectators page
 $completed_points = [];
-$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3 FROM results r JOIN clubs c ON r.club_id = c.id";
+$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4 FROM results r JOIN clubs c ON r.club_id = c.id";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $completed_points[1][$row['name']] = $row['round_1'];
         $completed_points[2][$row['name']] = $row['round_2'];
         $completed_points[3][$row['name']] = $row['round_3'];
+        $completed_points[4][$row['name']] = $row['round_4'];
     }
 }
 
@@ -194,7 +195,7 @@ function getPoints($round, $team, $completed_points)
                 </div>
                 <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl border border-slate-700">
                     <button onclick="filterDraw(1)" id="btnR1"
-                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-sky-600 text-white">R1</button>
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R1</button>
                     <button onclick="filterDraw(2)" id="btnR2"
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R2</button>
                     <button onclick="filterDraw(3)" id="btnR3"
@@ -202,7 +203,7 @@ function getPoints($round, $team, $completed_points)
                     <button onclick="filterDraw(4)" id="btnR4"
                         class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">R4</button>
                     <button onclick="filterDraw('Finals')" id="btnRFinals"
-                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">Finals</button>
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-sky-600 text-white">Finals</button>
                 </div>
             </div>
 
@@ -210,10 +211,10 @@ function getPoints($round, $team, $completed_points)
             <div id="drawWrapper">
                 <?php foreach ($season_draw as $round_data):
     $round_num = $round_data['round'];
-    $is_completed = $round_num <= 3;
+    $is_completed = $round_num <= 4;
 ?>
                 <div id="round-<?php echo $round_num; ?>"
-                    class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 <?php echo $round_num !== 1 ? 'hidden' : ''; ?>">
+                    class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
 
                     <?php foreach ($round_data['galas'] as $index => $gala):
         $host = $gala['host'];
@@ -411,7 +412,7 @@ function getPoints($round, $team, $completed_points)
 endforeach; ?>
 
                 <!-- FINALS SECTION -->
-                <div id="round-Finals" class="hidden round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="round-Finals" class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     
                     <!-- A FINAL -->
                     <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group border-sky-500/30 relative">
@@ -457,11 +458,54 @@ endforeach; ?>
                         </div>
                     </div>
 
-                    <!-- B or C FINAL (Easton) -->
+                    <!-- B FINAL (Pontypool) -->
                     <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
                         <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B or C Final (TBD After R4)</span>
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B Final Location</span>
+                            </div>
+                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                                Pontypool Leisure Centre
+                            </h3>
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
+                                </p>
+                                <div class="text-xs text-slate-300">
+                                    <div class="mb-3">
+                                        <div class="font-bold text-white text-sm mb-0.5">Pontypool</div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
+                                            <span class="font-medium text-white">4.45PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
+                                            <span class="font-medium text-white">5.15PM</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
+                                            <span class="font-medium text-white">Free parking</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- C FINAL (Easton) -->
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
+                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">C Final Location</span>
                             </div>
                             <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
                         </div>
@@ -493,49 +537,6 @@ endforeach; ?>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
                                             <span class="font-medium text-white">Paid parking</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- B or C FINAL (PontyPool) -->
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/30 transition-all group">
-                        <div class="bg-sky-500/10 px-5 py-3 border-b border-white/5 flex justify-between items-center">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B or C Final (TBD After R4)</span>
-                            </div>
-                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
-                        </div>
-                        <div class="p-5">
-                            <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
-                                PontyPool Leisure Centre
-                            </h3>
-                            <div class="mt-4 pt-4 border-t border-white/10">
-                                <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
-                                </p>
-                                <div class="text-xs text-slate-300">
-                                    <div class="mb-3">
-                                        <div class="font-bold text-white text-sm mb-0.5">Pontypool</div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
-                                            <span class="font-medium text-white">4.45PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
-                                            <span class="font-medium text-white">5.15PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
-                                            <span class="font-medium text-white">Free parking</span>
                                         </div>
                                     </div>
                                 </div>
@@ -649,7 +650,7 @@ endforeach; ?>
             }
         }
 
-        filterDraw(4);
+        filterDraw('Finals');
     </script>
 </body>
 
