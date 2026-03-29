@@ -42,6 +42,7 @@ $teamsheets = [
 ];
 $master_teamsheet_link = "https://docs.google.com/spreadsheets/d/1HWqc4Lw8Iule7tv2mHRkfDWmQUs9fo5OO8uI2QnwC0U/edit?usp=drive_web";
 
+
 // 2. Club DB Shortname Mapping (for venue retrieval)
 $club_map = [
     "Academy Swim Team" => "AST",
@@ -384,14 +385,30 @@ if ($is_logged_in) {
                                     </div>
                                 </div>
                                 
-                                <div class="w-full sm:w-auto flex-shrink-0">
+                                <div class="w-full sm:w-64 flex-shrink-0 flex flex-col gap-3">
+                                    <?php 
+                                        $sheet_id = '';
+                                        if ($my_teamsheet_link && preg_match('/\/d\/([a-zA-Z0-9-_]+)/', $my_teamsheet_link, $match)) {
+                                            $sheet_id = $match[1];
+                                        }
+                                    ?>
                                     <?php if($my_teamsheet_link): ?>
-                                        <a href="<?php echo htmlspecialchars($my_teamsheet_link); ?>" target="_blank" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-3">
+                                        <a href="<?php echo htmlspecialchars($my_teamsheet_link); ?>" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-3">
                                             <span>Open Teamsheet</span>
                                             <i data-lucide="external-link" class="w-4 h-4"></i>
                                         </a>
+                                        
+                                        <div class="flex flex-col gap-2 mt-1">
+                                            <a href="smartprogrammenew.php?sheet_id=<?php echo htmlspecialchars($sheet_id); ?>" target="_blank" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2 text-sm">
+                                                <span>Print Smart Programme</span>
+                                                <i data-lucide="printer" class="w-4 h-4"></i>
+                                            </a>
+                                            <p class="text-[11px] text-slate-400 text-center leading-tight px-1">
+                                                1-click generation! Automatically imports your live Google Sheet into a printable format.
+                                            </p>
+                                        </div>
                                     <?php else: ?>
-                                        <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-sm text-center">
+                                        <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-sm text-center w-full">
                                             Link unavailable. Contact admin.
                                         </div>
                                     <?php endif; ?>
