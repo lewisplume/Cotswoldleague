@@ -130,7 +130,14 @@ if ($result->num_rows > 0) {
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_1"] > 0 ? $row["round_1"] : '-') . '</td>';
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_2"] > 0 ? $row["round_2"] : '-') . '</td>';
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_3"] > 0 ? $row["round_3"] : '-') . '</td>';
-        echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_4"] > 0 ? $row["round_4"] : '-') . '</td>';
+        $round_4_display = ($row["round_4"] > 0 ? $row["round_4"] : '-');
+        if ($row["name"] === 'Burnham-On-Sea') {
+            $round_4_display .= '<sup class="text-amber-400 font-bold ml-0.5">*</sup>';
+        }
+        elseif ($row["name"] === 'Yeovil') {
+            $round_4_display .= '<sup class="text-amber-400 font-bold ml-0.5">*</sup>';
+        }
+        echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . $round_4_display . '</td>';
         echo '<td class="px-4 py-3 text-sm font-black text-sky-500 text-center count-up" data-target="' . $row["total"] . '">0</td>';
         echo '</tr>';
     }
@@ -138,6 +145,10 @@ if ($result->num_rows > 0) {
 ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="px-4 py-3 border-t border-white/5 text-[11px] text-slate-400">
+                <p>* Burnham-On-Sea R4: Virtual scores used using their Round 1 times.</p>
+                <p>* Yeovil R4: Virtual scores used using their Round 2 times.</p>
             </div>
         </div>
 
