@@ -346,7 +346,7 @@ endforeach; ?>
                                         </div>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5 adults, £3 for children</span>
                                         </div>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
@@ -389,7 +389,7 @@ endforeach; ?>
                                         </div>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5 adults, £3 for children</span>
                                         </div>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
@@ -432,7 +432,7 @@ endforeach; ?>
                                         </div>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5</span>
+                                            <span class="font-medium text-white flex items-center gap-2">£5 adults, £3 for children</span>
                                         </div>
                                         <div>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
