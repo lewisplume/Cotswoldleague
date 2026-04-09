@@ -43,18 +43,7 @@ $teamsheets = [
 $master_teamsheet_link = "https://docs.google.com/spreadsheets/d/1HWqc4Lw8Iule7tv2mHRkfDWmQUs9fo5OO8uI2QnwC0U/edit?usp=drive_web";
 
 
-// 2. Club DB Shortname Mapping (for venue retrieval)
-$club_map = [
-    "Academy Swim Team" => "AST",
-    "Bath Dolphin" => "Bath",
-    "COB (City of Bristol)" => "City Of Bristol",
-    "Burnham-On-Sea" => "Burnham",
-    "Forest of Dean" => "FOD",
-    "Monnow SC" => "Monnow",
-    "Severnside Tritons" => "Severnside",
-    "Southwold SC" => "Southwold",
-    "Swindon ASC" => "Swindon"
-];
+// 2. Club DB Shortname Mapping handled directly by club_id JOIN
 
 // Handle Login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
@@ -207,10 +196,9 @@ if ($is_logged_in) {
     }
 
     // 3. Fetch My Venues
-    $selected_db_host = $club_map[$current_club_name] ?? $current_club_name;
-    $v_sql = "SELECT * FROM venue_details WHERE host_club = ? ORDER BY round_number ASC";
+    $v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.club_id = ? ORDER BY vd.round_number ASC";
     $v_stmt = $conn->prepare($v_sql);
-    $v_stmt->bind_param("s", $selected_db_host);
+    $v_stmt->bind_param("i", $current_club_id);
     $v_stmt->execute();
     $v_res = $v_stmt->get_result();
     if ($v_res->num_rows > 0) {
@@ -451,14 +439,14 @@ if ($is_logged_in) {
                                             <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
                                                 <div>
                                                     <span class="bg-sky-500/20 text-sky-400 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-1 inline-block">Round <?php echo $venue['round_number']; ?></span>
-                                                    <h3 class="font-bold text-white"><?php echo htmlspecialchars($venue['host_club']); ?></h3>
+                                                    <h3 class="font-bold text-white"><?php echo htmlspecialchars($venue['host_club_name']); ?></h3>
                                                 </div>
                                             </div>
 
                                             <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <input type="hidden" name="action" value="update_venue">
                                                 <input type="hidden" name="venue_id" value="<?php echo $venue['id']; ?>">
-                                                <input type="hidden" name="target_host_name" value="<?php echo htmlspecialchars($venue['host_club']); ?>">
+                                                <input type="hidden" name="target_host_name" value="<?php echo htmlspecialchars($venue['host_club_name']); ?>">
                                                 
                                                 <!-- Col 1 -->
                                                 <div class="space-y-4">

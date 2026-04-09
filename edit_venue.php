@@ -11,18 +11,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $success_msg = "";
 $error_msg = "";
 
-// 1. Define Mapping: Full Club Name (from `clubs` table) => DB Host Name (in `venue_details`)
-$club_map = [
-    "Academy Swim Team" => "AST",
-    "Bath Dolphin" => "Bath",
-    "COB (City of Bristol)" => "City Of Bristol",
-    "Burnham-On-Sea" => "Burnham",
-    "Forest of Dean" => "FOD",
-    "Monnow SC" => "Monnow",
-    "Severnside Tritons" => "Severnside",
-    "Southwold SC" => "Southwold",
-    "Swindon ASC" => "Swindon"
-];
+// 1. Removed $club_map as mapping is now handled via JOIN
+
 
 // 2. Fetch All Clubs for Dropdown (Sorted)
 $all_club_names = [];
@@ -42,8 +32,7 @@ $selected_club_full = $_GET['club'] ?? null; // The "Pretty" name
 $selected_db_host = null; // The short code for DB
 
 if ($selected_club_full) {
-    // Map full name to short name, or use full name if no mapping exists
-    $selected_db_host = $club_map[$selected_club_full] ?? $selected_club_full;
+    // No mapping needed, we join query by club name
 }
 
 // 4. Handle Update
@@ -59,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_venue'])) {
     
     // Maintain selection state
     $selected_club_full = $_POST['original_club_full'];
-    $selected_db_host = $club_map[$selected_club_full] ?? $selected_club_full;
     $target_host_name = $_POST['target_host_name']; // For audit log clarity
 
     // Get old values for audit log
@@ -107,10 +95,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_venue'])) {
 
 // 5. Fetch Venues for Selected Club (Using DB Host Name)
 $venues = [];
-if ($selected_db_host) {
-    $sql = "SELECT * FROM venue_details WHERE host_club = ? ORDER BY round_number ASC";
+if ($selected_club_full) {
+    $sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE c.name = ? ORDER BY vd.round_number ASC";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $selected_db_host);
+    $stmt->bind_param("s", $selected_club_full);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
@@ -197,7 +185,7 @@ if ($selected_db_host) {
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-white/5 pb-4">
                             <div>
                                 <span class="bg-sky-500/20 text-sky-400 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-2 inline-block">Round <?php echo $venue['round_number']; ?></span>
-                                <h2 class="text-xl font-bold text-white"><?php echo htmlspecialchars($venue['host_club']); ?></h2> 
+                                <h2 class="text-xl font-bold text-white"><?php echo htmlspecialchars($venue['host_club_name']); ?></h2> 
                             </div>
                             <div class="text-xs text-slate-500 flex items-center gap-1">
                                 <i data-lucide="database" class="w-3 h-3"></i> ID: #<?php echo $venue['id']; ?>
@@ -207,7 +195,7 @@ if ($selected_db_host) {
                         <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="hidden" name="venue_id" value="<?php echo $venue['id']; ?>">
                             <input type="hidden" name="original_club_full" value="<?php echo htmlspecialchars($selected_club_full); ?>">
-                            <input type="hidden" name="target_host_name" value="<?php echo htmlspecialchars($venue['host_club']); ?>">
+                            <input type="hidden" name="target_host_name" value="<?php echo htmlspecialchars($venue['host_club_name']); ?>">
                             
                             <!-- Col 1 -->
                             <div class="space-y-4">

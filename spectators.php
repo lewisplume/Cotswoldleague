@@ -15,27 +15,16 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-// Name Mapping: Season Data Name => DB Host Name
-$host_map = [
-    "Bath Dolphin" => "Bath",
-    "COB (City of Bristol)" => "City Of Bristol",
-    "Swindon ASC" => "Swindon",
-    "Academy Swim Team" => "AST",
-    "Burnham-On-Sea" => "Burnham",
-    "Southwold SC" => "Southwold",
-    "Monnow SC" => "Monnow",
-    "Forest of Dean" => "FOD",
-    "Severnside Tritons" => "Severnside"
-];
+// Name mapping no longer needed with JOIN
 
 // Fetch Venue Details from DB
 $venue_db = [];
-$v_sql = "SELECT * FROM venue_details";
+$v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id";
 $v_res = $conn->query($v_sql);
 if ($v_res && $v_res->num_rows > 0) {
     while ($row = $v_res->fetch_assoc()) {
         // Key by round and host for lookup
-        $key = $row['host_club'] . '_' . $row['round_number'];
+        $key = $row['host_club_name'] . '_' . $row['round_number'];
         $venue_db[$key] = $row;
     }
 }
