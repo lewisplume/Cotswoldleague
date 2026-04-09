@@ -20,9 +20,13 @@ The Cotswold League is a unique swimming league focused on development, sporting
 * **Club Rep Portal:** A password-protected dashboard providing officials with access to essential documentation (Team Sheets, Rules, Gala Paperwork).
 * **Score Management System:** A secure, server-side utility (`update_scores.php`) allowing the League Secretary to input and update round scores directly into the MySQL database.
 
+## Technical Documentation
+
+For an in-depth breakdown of the project architecture, database schemas, and complete descriptions of all automated functionality (like the Smart Programmes, Results Matcher, and Animated Showcase), please refer to the comprehensive [Website Guide](WEBSITE_GUIDE.md).
+
 ## Technical Details
 
-The project has evolved from a static site to a dynamic PHP application to handle data persistence and templating.
+The project has evolved from a static site to a highly dynamic, DB-driven PHP application.
 
 * **Core Logic:** PHP (v8+) used for component templating (`nav.php`) and backend logic.
 * **Database:** MySQL (`cotswold_league`) stores club data and match results.
