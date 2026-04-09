@@ -1,12 +1,12 @@
 <?php
 include 'db.php';
 
-// Fetch Round 3 Scores for Ticker
-$news_sql = "SELECT c.name, c.logo, r.round_3 
+// Fetch Round 4 Scores for Ticker
+$news_sql = "SELECT c.name, c.logo, r.round_4 
              FROM clubs c 
              JOIN results r ON c.id = r.club_id 
-             WHERE r.round_3 > 0 
-             ORDER BY r.round_3 DESC";
+             WHERE r.round_4 > 0 
+             ORDER BY r.round_4 DESC";
 $news_result = $conn->query($news_sql);
 ?>
 <!DOCTYPE html>
@@ -90,7 +90,7 @@ $news_result = $conn->query($news_sql);
 
             <!-- BREAKING NEWS TICKER -->
             <?php if ($news_result && $news_result->num_rows > 0): ?>
-            <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 3
+            <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 4
                 Results</h2>
             <div
                 class="mb-12 w-full max-w-3xl mx-auto overflow-hidden bg-sky-900/30 backdrop-blur-sm border-y border-sky-500/20 py-2 relative rounded-lg">
@@ -111,7 +111,7 @@ $news_result = $conn->query($news_sql);
                             <?php echo $item['name']; ?>
                         </span>
                         <span class="text-white font-mono font-bold">
-                            <?php echo $item['round_3']; ?>
+                            <?php echo $item['round_4']; ?>
                         </span>
                     </div>
                     <div class="text-slate-600 select-none">|</div>
@@ -131,8 +131,8 @@ endif; ?>
 
             <!-- COUNTDOWN SECTION -->
             <div class="mb-16">
-                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 4
-                    Begins In:</h2>
+                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Finals
+                    Begin In:</h2>
                 <div class="grid grid-cols-4 gap-2 md:gap-4 max-w-md mx-auto">
                     <div class="timer-box p-3 rounded-xl">
                         <div id="days" class="text-3xl md:text-4xl font-black text-white">00</div>
@@ -151,7 +151,7 @@ endif; ?>
                         <div class="text-[10px] uppercase tracking-widest text-slate-500">Sec</div>
                     </div>
                 </div>
-                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, March 28th, 2026</p>
+                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, April 25th, 2026</p>
             </div>
 
             <!-- ABOUT SECTION -->
@@ -331,7 +331,7 @@ endif; ?>
         lucide.createIcons();
 
         // Mobile Menu Toggle Logic is now handled in nav.php but added here as fallback/init
-        const targetDate = new Date("March 28, 2026 00:00:00").getTime();
+        const targetDate = new Date("April 25, 2026 00:00:00").getTime();
 
         const countdown = setInterval(function () {
             const now = new Date().getTime();
@@ -349,7 +349,7 @@ endif; ?>
 
             if (distance < 0) {
                 clearInterval(countdown);
-                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Round 4 Underway!</div>";
+                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Finals Underway!</div>";
             }
         }, 1000);
 
