@@ -403,8 +403,16 @@ if ($is_logged_in) {
                                                 <span>Print Smart Programme</span>
                                                 <i data-lucide="printer" class="w-4 h-4"></i>
                                             </a>
+                                            <p class="text-[11px] text-slate-400 text-center leading-tight px-1 border-b border-white/5 pb-2 mb-1">
+                                                Automatically imports your live Teamsheet for printing.
+                                            </p>
+                                            
+                                            <a href="smart-results-matcher.php?sheet_id=<?php echo htmlspecialchars($sheet_id); ?>" target="_blank" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 text-sm">
+                                                <span>Smart Results Matcher</span>
+                                                <i data-lucide="check-square" class="w-4 h-4"></i>
+                                            </a>
                                             <p class="text-[11px] text-slate-400 text-center leading-tight px-1">
-                                                1-click generation! Automatically imports your live Google Sheet into a printable format.
+                                                Automatically fetches swimmers and matches times from gala results.
                                             </p>
                                         </div>
                                     <?php else: ?>
