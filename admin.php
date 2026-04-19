@@ -58,6 +58,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                         <?php
     endif; ?>
                     </form>
+
+                    <div class="mt-6 pt-6 border-t border-slate-700/50">
+                        <a href="league_admin.php" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-sm font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 group">
+                            <i data-lucide="shield" class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform"></i> Super Admin Login
+                        </a>
+                    </div>
                 </div>
             </div>
         <?php

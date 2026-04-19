@@ -13,4 +13,5 @@ if ($conn->connect_error) {
 }
 
 define('LEAGUE_PASSWORD', 'Cotswold2026Galas');
+define('SUPER_ADMIN_PASSWORD', 'SuperAdmin2026!');
 ?>

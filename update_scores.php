@@ -1,11 +1,13 @@
 <?php
+session_start();
 include 'db.php';
 
-// Simple Password Protection
-$pass = "Cotswold2026Galas";
-$authenticated = false;
+// Check if already authenticated via Super Admin portal
+$authenticated = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
 
-if (isset($_POST['password']) && $_POST['password'] === $pass) {
+// Fallback password protection
+$pass = "Cotswold2026Galas";
+if (!$authenticated && isset($_POST['password']) && $_POST['password'] === $pass) {
     $authenticated = true;
 }
 
