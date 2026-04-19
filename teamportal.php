@@ -603,10 +603,10 @@ if ($is_logged_in) {
                             <p class="text-slate-400 text-xs mt-1">Contact details for all league clubs.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="emailSelected()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2 shadow-lg">
+                            <button type="button" onclick="emailSelected()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2 shadow-lg">
                                 <i data-lucide="mail" class="w-4 h-4"></i> Email Selected
                             </button>
-                            <button onclick="copyEmails()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-sm font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2">
+                            <button type="button" onclick="copyEmails()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-sm font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2">
                                 <i data-lucide="copy" class="w-4 h-4"></i> Copy List
                             </button>
                         </div>
@@ -730,25 +730,67 @@ if ($is_logged_in) {
         function emailSelected() {
             const emails = getSelectedEmails();
             if(emails.length === 0) {
-                alert('Please select at least one club to email.');
+                alert('Please select at least one contact to email.');
                 return;
             }
-            const mailtoLink = `mailto:?bcc=${emails.join(';')}`;
-            window.location.href = mailtoLink;
+            // Standard mailto string uses commas
+            const bccList = emails.join(',');
+            const mailtoLink = `mailto:?bcc=${encodeURIComponent(bccList)}`;
+            const a = document.createElement('a');
+            a.href = mailtoLink;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function copyEmails() {
             const emails = getSelectedEmails();
             if(emails.length === 0) {
-                alert('Please select at least one club to copy.');
+                alert('Please select at least one contact to copy.');
                 return;
             }
-            const emailString = emails.join('; ');
-            navigator.clipboard.writeText(emailString).then(() => {
-                alert('Emails copied to clipboard: ' + emails.length + ' addresses.');
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
+            // Most email clients prefer comma separated list when pasting
+            const emailString = emails.join(', ');
+            
+            if (navigator.clipboard) {
+                try {
+                    navigator.clipboard.writeText(emailString).then(() => {
+                        alert('Emails copied to clipboard: ' + emails.length + ' addresses.');
+                    }).catch(err => {
+                        console.error('Clipboard API failed: ', err);
+                        fallbackCopyTextToClipboard(emailString, emails.length);
+                    });
+                } catch (err) {
+                    fallbackCopyTextToClipboard(emailString, emails.length);
+                }
+            } else {
+                fallbackCopyTextToClipboard(emailString, emails.length);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text, count) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('Emails copied to clipboard: ' + count + ' addresses.');
+                } else {
+                    prompt('Failed to copy automatically. Please copy the emails manually:', text);
+                }
+            } catch (err) {
+                prompt('Failed to copy. Please copy manually:', text);
+            }
+            
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
