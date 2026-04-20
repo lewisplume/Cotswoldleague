@@ -96,6 +96,28 @@ else: ?>
                         <a href="teamportal.php" class="relative z-10 w-full py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-sky-900/20 flex items-center justify-center gap-2">
                             Open Team Portal <i data-lucide="arrow-right" class="w-4 h-4"></i>
                         </a>
+                        <div class="relative z-10 mt-4 rounded-xl border border-emerald-500/30 bg-emerald-900/20 p-4 text-sm text-slate-200">
+                            <p class="font-bold text-emerald-300">AGM Invitation</p>
+                            <p class="mt-1">Saturday 6th June at 9.45am</p>
+                            <p>Burnham United Football Club, Cassis Close, Burnham-On-Sea</p>
+                            <p class="mt-1">Attendance is mandatory, either in person or virtually.</p>
+                            <p>Anyone from your club can attend.</p>
+                            <p>Teas and coffees provided.</p>
+                            <p class="text-xs text-slate-300 mt-1">Free parking available. Playing fields on site if you want to bring children.</p>
+                            <div class="mt-3">
+                                <a target="_blank" href="https://calendar.google.com/calendar/event?action=TEMPLATE&amp;tmeid=Nmh2NmZwZnVqN28xYTFxbmpkOHJlYjNhdDUgNzU5NzYwZDI1MmQ5YmIwM2ZlNGM3YjY3NDhlYzYyZGE5MzllNWNkZmE2M2RiOWM1YjRkNzMxOTRmY2QzZTM0M0Bn&amp;tmsrc=759760d252d9bb03fe4c7b6748ec62da939e5cdfa63db9c5b4d73194fcd3e343%40group.calendar.google.com"><img border="0" src="https://calendar.google.com/calendar/images/ext/gc_button1_en-GB.gif" alt="Google Calendar"></a>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-emerald-500/20">
+                                <p class="text-amber-300 font-semibold">2026 Season Feedback Form must be completed before the AGM.</p>
+                                <p class="text-xs text-slate-300 mt-1">Use this form to submit volunteer proposed rule changes for AGM discussion.</p>
+                                <div class="mt-3">
+                                    <a target="_blank" rel="noopener noreferrer" href="https://forms.gle/DJ4jrBFRFVsjxdmCA" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 text-xs font-bold uppercase tracking-wide transition-colors">
+                                        2026 Season Feedback Form
+                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

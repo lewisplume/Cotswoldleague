@@ -17,6 +17,34 @@ if ($result && $result->num_rows > 0) {
 
 // Name mapping no longer needed with JOIN
 
+// Build Finals team lists using the same ordering logic as the table page
+$a_final = [];
+$b_final = [];
+$c_final = [];
+
+$finals_sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4,
+              (r.round_1 + r.round_2 + r.round_3 + r.round_4) as total
+              FROM results r
+              JOIN clubs c ON r.club_id = c.id
+              ORDER BY total DESC, c.name ASC";
+$finals_result = $conn->query($finals_sql);
+
+if ($finals_result && $finals_result->num_rows > 0) {
+    $pos = 1;
+    while ($row = $finals_result->fetch_assoc()) {
+        if ($pos <= 8) {
+            $a_final[] = $row;
+        }
+        elseif ($pos <= 14) {
+            $b_final[] = $row;
+        }
+        else {
+            $c_final[] = $row;
+        }
+        $pos++;
+    }
+}
+
 
 // Fetch Venue Details from DB
 $venue_db = [];
@@ -342,6 +370,18 @@ endforeach; ?>
                                             <span class="font-medium text-white">Free, must register with reception</span>
                                         </div>
                                     </div>
+
+                                    <div class="mt-4 pt-4 border-t border-white/10">
+                                        <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3">Qualified Teams</p>
+                                        <ul class="space-y-1.5">
+                                            <?php foreach ($a_final as $team_row): ?>
+                                            <li class="flex items-center justify-between text-xs border-b border-white/5 pb-1 last:border-0">
+                                                <span class="text-slate-300"><?php echo htmlspecialchars($team_row['name']); ?></span>
+                                                <span class="font-bold text-emerald-400"><?php echo (int) $team_row['total']; ?></span>
+                                            </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -385,6 +425,18 @@ endforeach; ?>
                                             <span class="font-medium text-white">Free parking</span>
                                         </div>
                                     </div>
+
+                                    <div class="mt-4 pt-4 border-t border-white/10">
+                                        <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3">Qualified Teams</p>
+                                        <ul class="space-y-1.5">
+                                            <?php foreach ($b_final as $team_row): ?>
+                                            <li class="flex items-center justify-between text-xs border-b border-white/5 pb-1 last:border-0">
+                                                <span class="text-slate-300"><?php echo htmlspecialchars($team_row['name']); ?></span>
+                                                <span class="font-bold text-amber-400"><?php echo (int) $team_row['total']; ?></span>
+                                            </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -427,6 +479,18 @@ endforeach; ?>
                                             <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
                                             <span class="font-medium text-white">Paid parking</span>
                                         </div>
+                                    </div>
+
+                                    <div class="mt-4 pt-4 border-t border-white/10">
+                                        <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3">Qualified Teams</p>
+                                        <ul class="space-y-1.5">
+                                            <?php foreach ($c_final as $team_row): ?>
+                                            <li class="flex items-center justify-between text-xs border-b border-white/5 pb-1 last:border-0">
+                                                <span class="text-slate-300"><?php echo htmlspecialchars($team_row['name']); ?></span>
+                                                <span class="font-bold text-rose-400"><?php echo (int) $team_row['total']; ?></span>
+                                            </li>
+                                            <?php endforeach; ?>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
