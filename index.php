@@ -222,11 +222,11 @@ endif; ?>
                         Exciting Announcement!
                     </h3>
                     <p class="text-slate-300 text-sm leading-relaxed mb-4">
-                        To celebrate the incredible efforts of our swimmers this season, we have created a special, one-of-a-kind <strong>"A Final" Gold Swimming Hat!</strong> Available to pre-order right now for individuals, or in bulk by team reps.
+                        To celebrate the incredible efforts of our swimmers this season, we have created a special, one-of-a-kind <strong>"A Final" Gold Swimming Hat!</strong> The hat can be purchased in person at the A Final, and Wyvern Swimwear will be in attendance on the day.
                     </p>
-                    <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413" target="_blank" class="inline-block px-6 py-2 bg-[#cfb53b] hover:bg-[#b09825] text-slate-900 font-bold rounded-full text-sm transition-colors shadow-lg shadow-[#cfb53b]/20">
-                        Pre-Order A Final Gold Hat
-                    </a>
+                    <p class="inline-block px-6 py-2 bg-[#cfb53b] text-slate-900 font-bold rounded-full text-sm shadow-lg shadow-[#cfb53b]/20">
+                        Buy In Person At The A Final
+                    </p>
                 </div>
 
                 <!-- MERCHANDISE GALLERY -->
@@ -234,8 +234,7 @@ endif; ?>
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6 text-center">2026
                         Collection</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413" target="_blank"
-                            class="group block">
+                        <div class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-[#cfb53b]/50 overflow-hidden mb-2 shadow-[0_0_15px_rgba(207,181,59,0.2)] group-hover:border-[#cfb53b] transition-colors relative">
                                 <img src="images/Wyvern/A%20Final%20Hat_result.webp" alt="A Final Hat"
@@ -244,9 +243,9 @@ endif; ?>
                             <p
                                 class="text-[10px] font-bold text-[#cfb53b] group-hover:text-[#e5d064] transition-colors uppercase text-center">
                                 A Final Hat</p>
-                        </a>
-                        <a href="https://www.wyvernswimwear.co.uk/products/cotswold-swim-league-a-final-silicone-swim-cap?variant=57304223449413" target="_blank"
-                            class="group block">
+                            <p class="text-[9px] text-slate-400 uppercase tracking-wide text-center mt-1">In Person At A Final</p>
+                        </div>
+                        <div class="group block">
                             <div
                                 class="aspect-square rounded-xl bg-slate-800 border border-[#cfb53b]/50 overflow-hidden mb-2 shadow-[0_0_15px_rgba(207,181,59,0.2)] group-hover:border-[#cfb53b] transition-colors relative">
                                 <img src="images/Wyvern/A%20fInal%20hat%20mockup_result.webp" alt="A Final Hat Mockup"
@@ -255,7 +254,8 @@ endif; ?>
                             <p
                                 class="text-[10px] font-bold text-[#cfb53b] group-hover:text-[#e5d064] transition-colors uppercase text-center">
                                 A Final Hat</p>
-                        </a>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-wide text-center mt-1">Wyvern Swimwear Attending</p>
+                        </div>
                         <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank"
                             class="group block">
                             <div
