@@ -124,15 +124,40 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         if ($host_id === null || $round_num === null) {
             $error_msg = "Error: Stale data detected. Please refresh the page and try again to prevent data loss.";
         } else {
-            // If date is provided, update it for all venues in this round so they stay perfectly in sync
             if ($r_date !== null) {
                 $stmt_date = $conn->prepare("UPDATE venue_details SET round_date=? WHERE round_number=?");
                 $stmt_date->bind_param("si", $r_date, $round_num);
                 $stmt_date->execute();
             }
 
-            $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=? WHERE id=?");
-            $stmt->bind_param("issssssiiiii", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $id);
+            // FILE UPLOAD LOGIC
+            $results_file_name = null;
+            if (isset($_FILES['results_file']) && $_FILES['results_file']['error'] === UPLOAD_ERR_OK) {
+                // Fetch the actual club name for the filename
+                $host_name_query = $conn->query("SELECT name FROM clubs WHERE id=" . (int)$host_id);
+                $host_name_row = $host_name_query->fetch_assoc();
+                $host_club_name = preg_replace('/[^a-zA-Z0-9]/', '', $host_name_row['name']); // Clean for filename
+
+                $upload_dir = 'uploads/results/';
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+                $file_info = pathinfo($_FILES['results_file']['name']);
+                $ext = strtolower($file_info['extension']);
+                $new_filename = 'R' . $round_num . '_' . $host_club_name . '_Results.' . $ext;
+                
+                if (move_uploaded_file($_FILES['results_file']['tmp_name'], $upload_dir . $new_filename)) {
+                    $results_file_name = $new_filename;
+                }
+            }
+
+            if ($results_file_name !== null) {
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, results_file=? WHERE id=?");
+                $stmt->bind_param("issssssiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $results_file_name, $id);
+            } else {
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=? WHERE id=?");
+                $stmt->bind_param("issssssiiiii", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $id);
+            }
             if ($stmt->execute()) {
                 $success_msg = "Venue details updated successfully.";
                 $conn->query("INSERT INTO audit_log (club_name, action, change_details) VALUES ('Super Admin', 'Venue Override', 'Overridden details for venue id: $id')");
@@ -450,7 +475,7 @@ if ($is_logged_in) {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <?php foreach($venues_data as $venue): ?>
                             <div class="glass-panel p-5 rounded-2xl border border-white/5 relative group">
-                                <form method="POST" class="space-y-4">
+                                <form method="POST" class="space-y-4" enctype="multipart/form-data">
                                     <input type="hidden" name="admin_action" value="update_venue">
                                     <input type="hidden" name="venue_id" value="<?php echo $venue['id']; ?>">
                                     <input type="hidden" name="round_number" value="<?php echo $venue['round_number']; ?>">
@@ -497,12 +522,22 @@ if ($is_logged_in) {
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Payment</label>
-                                                <input type="text" name="payment_info" value="<?php echo htmlspecialchars($venue['payment_info']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                                <input type="text" name="payment_info" value="<?php echo htmlspecialchars($venue['payment_info'] ?? ''); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                             </div>
                                             <div>
                                                 <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Parking</label>
-                                                <input type="text" name="parking_info" value="<?php echo htmlspecialchars($venue['parking_info']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                                <input type="text" name="parking_info" value="<?php echo htmlspecialchars($venue['parking_info'] ?? ''); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                             </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1 flex items-center justify-between">
+                                                <span>Results Spreadsheet Upload</span>
+                                                <?php if(!empty($venue['results_file'])): ?>
+                                                    <span class="text-emerald-400 normal-case">File: <?php echo htmlspecialchars($venue['results_file']); ?></span>
+                                                <?php endif; ?>
+                                            </label>
+                                            <input type="file" name="results_file" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
                                         </div>
                                     </div>
 

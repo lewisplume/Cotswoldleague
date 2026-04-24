@@ -214,6 +214,33 @@ if ($is_logged_in) {
     }
     $v_stmt->close();
 
+    // 3b. Fetch Round Draws (Where this club is competing)
+    $draws = [];
+    $draws_sql = "SELECT vd.*, 
+                         c_host.name AS host_name,
+                         c1.name AS team1_name, 
+                         c2.name AS team2_name, 
+                         c3.name AS team3_name, 
+                         c4.name AS team4_name
+                  FROM venue_details vd
+                  LEFT JOIN clubs c_host ON vd.club_id = c_host.id
+                  LEFT JOIN clubs c1 ON vd.team_1_id = c1.id
+                  LEFT JOIN clubs c2 ON vd.team_2_id = c2.id
+                  LEFT JOIN clubs c3 ON vd.team_3_id = c3.id
+                  LEFT JOIN clubs c4 ON vd.team_4_id = c4.id
+                  WHERE vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
+                  ORDER BY vd.round_number ASC";
+    $d_stmt = $conn->prepare($draws_sql);
+    $d_stmt->bind_param("iiiii", $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
+    $d_stmt->execute();
+    $d_res = $d_stmt->get_result();
+    if ($d_res->num_rows > 0) {
+        while ($row = $d_res->fetch_assoc()) {
+            $draws[] = $row;
+        }
+    }
+    $d_stmt->close();
+
     // 4. Fetch Directory Data
     $sql = "SELECT cc.*, c.logo, c.name as real_club_name FROM club_contacts cc LEFT JOIN clubs c ON cc.club_id = c.id ORDER BY c.name ASC";
     $dir_res = $conn->query($sql);
@@ -658,6 +685,8 @@ if ($is_logged_in) {
                             <?php endif; ?>
                         </div>
 
+
+
                     </div>
 
                     <!-- RIGHT COLUMN: Contacts & Security -->
@@ -761,6 +790,71 @@ if ($is_logged_in) {
                         </form>
                     </div>
 
+                </div>
+
+                <!-- ROUND DRAWS FULL WIDTH -->
+                <div class="glass-panel p-6 rounded-3xl overflow-hidden border border-white/5 mb-8">
+                    <h2 class="text-xl font-bold flex items-center gap-2 mb-6">
+                        <i data-lucide="calendar-days" class="w-6 h-6 text-purple-400"></i> My Round Draws & Results
+                    </h2>
+
+                    <?php if (empty($draws)): ?>
+                        <div class="bg-slate-800/50 rounded-xl p-8 text-center border border-white/5">
+                            <div class="bg-slate-700/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="calendar-x" class="w-6 h-6 text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-300 font-medium mb-1">No Draws Available</p>
+                            <p class="text-xs text-slate-500">Your club has not been assigned to any rounds yet.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                            <?php foreach ($draws as $draw): ?>
+                                <div class="bg-slate-900/50 p-5 rounded-xl border border-white/5 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="bg-purple-500/20 text-purple-400 text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider">Round <?php echo $draw['round_number']; ?></span>
+                                        </div>
+                                        <div class="mb-4">
+                                            <span class="text-xs text-slate-500 uppercase font-bold tracking-widest block mb-1">Host Venue</span>
+                                            <div class="text-white font-bold flex items-center gap-2">
+                                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i> <?php echo htmlspecialchars($draw['host_name']); ?>
+                                            </div>
+                                        </div>
+                                        <div class="mb-5">
+                                            <span class="text-xs text-slate-500 uppercase font-bold tracking-widest block mb-2">Competing Teams</span>
+                                            <div class="text-sm text-slate-300 flex flex-col gap-1.5">
+                                                <?php 
+                                                $competing = [];
+                                                if ($draw['host_name']) $competing[] = $draw['host_name'];
+                                                if ($draw['team1_name']) $competing[] = $draw['team1_name'];
+                                                if ($draw['team2_name']) $competing[] = $draw['team2_name'];
+                                                if ($draw['team3_name']) $competing[] = $draw['team3_name'];
+                                                if ($draw['team4_name']) $competing[] = $draw['team4_name'];
+                                                
+                                                $competing = array_unique($competing);
+                                                
+                                                foreach($competing as $team) {
+                                                    echo '<div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-slate-600"></div>' . htmlspecialchars($team) . '</div>';
+                                                }
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pt-4 border-t border-white/5 mt-auto">
+                                        <?php if (!empty($draw['results_file'])): ?>
+                                            <a href="uploads/results/<?php echo htmlspecialchars($draw['results_file']); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
+                                                <i data-lucide="download" class="w-4 h-4"></i> Download Results
+                                            </a>
+                                        <?php else: ?>
+                                            <div class="w-full text-center text-xs text-slate-500 border border-slate-700/50 py-2.5 rounded-lg bg-slate-800/30">
+                                                Results pending
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- DIRECTORY SECTION (From Contacts) -->

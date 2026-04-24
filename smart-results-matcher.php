@@ -1,5 +1,31 @@
 <?php
+session_start();
+include 'db.php';
 $sheetId = $_GET['sheet_id'] ?? null;
+$current_club_id = $_SESSION['club_id'] ?? null;
+
+$available_results = [];
+if ($current_club_id) {
+    $draws_sql = "SELECT vd.*, c_host.name AS host_name
+                  FROM venue_details vd
+                  LEFT JOIN clubs c_host ON vd.club_id = c_host.id
+                  WHERE (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?)
+                  AND vd.results_file IS NOT NULL
+                  ORDER BY vd.round_number ASC";
+    $d_stmt = $conn->prepare($draws_sql);
+    if ($d_stmt) {
+        $d_stmt->bind_param("iiiii", $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
+        $d_stmt->execute();
+        $d_res = $d_stmt->get_result();
+        while ($row = $d_res->fetch_assoc()) {
+            $available_results[] = [
+                'name' => 'Round ' . $row['round_number'] . ' - ' . $row['host_name'],
+                'file' => $row['results_file']
+            ];
+        }
+        $d_stmt->close();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -255,12 +281,43 @@ $sheetId = $_GET['sheet_id'] ?? null;
 
         <div class="control-group opacity-50 pointer-events-none transition-opacity" id="step2Container">
             <h3 class="text-lg font-bold text-green-900 mb-2">Step 2: Upload Results File</h3>
-            <p class="text-sm text-gray-600 mb-3">Upload the Gala Results Calculator file (Excel or CSV).</p>
+            
+            <?php if (!empty($available_results)): ?>
+                <p class="text-sm text-gray-600 mb-3">Select an available Gala Results file from your draws, or upload one manually.</p>
+                <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <label class="block text-sm font-bold text-green-800 mb-2">Select Available Results:</label>
+                    <div class="flex gap-3">
+                        <select id="serverResultsSelector" class="flex-grow border border-green-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-green-500 shadow-sm">
+                            <option value="">-- Select a Results File --</option>
+                            <?php foreach ($available_results as $res): ?>
+                                <option value="<?php echo htmlspecialchars('uploads/results/' . $res['file']); ?>">
+                                    <?php echo htmlspecialchars($res['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button onclick="loadServerResults()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition font-bold whitespace-nowrap text-sm shadow-sm" id="loadServerBtn">Load Selected</button>
+                    </div>
+                </div>
+            <?php else: ?>
+                <p class="text-sm text-gray-600 mb-3">Upload the Gala Results Calculator file (Excel or CSV).</p>
+            <?php endif; ?>
+
+            <div id="resultsSheetSelectorContainer" class="hidden mb-4 p-4 bg-green-100 border border-green-300 rounded-lg flex items-center gap-3 shadow-inner">
+                <span class="text-sm font-bold text-green-800">Select Sheet Tab:</span>
+                <select id="resultsSheetSelector" class="flex-grow border border-green-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"></select>
+            </div>
+
+            <?php if (!empty($available_results)): ?>
+                <div class="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-wider relative mb-4">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span>or upload manually</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+            <?php endif; ?>
+
             <div class="flex gap-4 items-center">
                 <input type="file" id="resultsInput" accept=".xlsx, .xls, .csv"
                     class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
-                <select id="resultsSheetSelector"
-                    class="hidden border border-gray-300 rounded px-3 py-2 text-sm min-w-[200px]"></select>
             </div>
         </div>
 
@@ -422,7 +479,41 @@ $sheetId = $_GET['sheet_id'] ?? null;
 
         // --- STEP 2: RESULTS UPLOAD ---
         document.getElementById('resultsInput').addEventListener('change', handleResultsUpload);
-        document.getElementById('resultsSheetSelector').addEventListener('change', (e) => processResults(e.target.workbook, e.target.value));
+        const resultsSheetSelector = document.getElementById('resultsSheetSelector');
+        if (resultsSheetSelector) {
+            resultsSheetSelector.addEventListener('change', (e) => processResults(e.target.workbook, e.target.value));
+        }
+
+        async function loadServerResults() {
+            const url = document.getElementById('serverResultsSelector').value;
+            if (!url) {
+                alert('Please select a results file.');
+                return;
+            }
+            
+            const btn = document.getElementById('loadServerBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Loading...';
+            btn.disabled = true;
+            
+            try {
+                // Add cache-busting query parameter to ensure we get the latest file
+                const cacheBuster = '?t=' + new Date().getTime();
+                const response = await fetch(url + cacheBuster);
+                if (!response.ok) throw new Error('File not found');
+                
+                const data = await response.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                setupSheetSelector(workbook, 'resultsSheetSelector', (wb, sheet) => processResults(wb, sheet));
+            } catch (error) {
+                console.error(error);
+                alert('Error loading the results file from the server.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
 
         async function handleResultsUpload(e) {
             const file = e.target.files[0];
@@ -462,7 +553,10 @@ $sheetId = $_GET['sheet_id'] ?? null;
             }
 
             if (laneRowIndex === -1) {
-                alert("Could not find a row with multiple 'Lane' headers (e.g. Lane 1, Lane 2, or Lane 3, Lane 4 etc.) in the results file. Please check the file.");
+                step3.classList.add('hidden');
+                if (workbook.SheetNames.length === 1) {
+                    alert("Could not find a row with multiple 'Lane' headers (e.g. Lane 1, Lane 2, or Lane 3, Lane 4 etc.) in the results file. Please check the file.");
+                }
                 return;
             }
 
@@ -666,10 +760,12 @@ $sheetId = $_GET['sheet_id'] ?? null;
         // --- HELPER: Sheet Selector ---
         function setupSheetSelector(workbook, selectorId, callback) {
             const selector = document.getElementById(selectorId);
+            const container = document.getElementById(selectorId + 'Container');
             selector.innerHTML = "";
 
             if (workbook.SheetNames.length > 1) {
                 selector.classList.remove('hidden');
+                if (container) container.classList.remove('hidden');
                 workbook.SheetNames.forEach(name => {
                     const opt = document.createElement('option');
                     opt.value = name;
@@ -680,6 +776,7 @@ $sheetId = $_GET['sheet_id'] ?? null;
                 callback(workbook, workbook.SheetNames[0]);
             } else {
                 selector.classList.add('hidden');
+                if (container) container.classList.add('hidden');
                 callback(workbook, workbook.SheetNames[0]);
             }
         }

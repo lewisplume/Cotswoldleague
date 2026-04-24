@@ -373,7 +373,10 @@
             }
 
             if (laneRowIndex === -1) {
-                alert("Could not find a row with multiple 'Lane' headers (e.g. Lane 1, Lane 2, or Lane 3, Lane 4 etc.) in the results file. Please check the file.");
+                step3.classList.add('hidden');
+                if (workbook.SheetNames.length === 1) {
+                    alert("Could not find a row with multiple 'Lane' headers (e.g. Lane 1, Lane 2, or Lane 3, Lane 4 etc.) in the results file. Please check the file.");
+                }
                 return;
             }
 
