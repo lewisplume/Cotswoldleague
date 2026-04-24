@@ -216,8 +216,19 @@
     <div id="controlPanel"
         class="no-print bg-yellow-50 border-b border-yellow-200 p-6 flex flex-col items-center justify-center gap-4 shadow-sm">
         <div class="text-center">
-            <h3 class="text-lg font-bold text-yellow-900">Step 1: Upload Data</h3>
-            <p class="text-sm text-yellow-800">Upload your Teamsheet Excel (.xlsx) or CSV file.</p>
+            <h3 class="text-lg font-bold text-yellow-900">Step 1: Programme Setup</h3>
+            <p class="text-sm text-yellow-800">Select programme type, then upload your Teamsheet.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <label class="text-yellow-900 text-sm font-bold uppercase tracking-wider">Programme Type:</label>
+            <select id="galaType" onchange="updateProgrammeType()"
+                class="bg-white text-slate-800 text-sm font-bold py-2 px-3 rounded-md border border-yellow-300 shadow-sm focus:ring-2 focus:ring-yellow-500 outline-none cursor-pointer">
+                <option value="round">Rounds Programme</option>
+                <option value="final_c">C Final Programme</option>
+                <option value="final_b">B Final Programme</option>
+                <option value="final_a">A Final Programme</option>
+            </select>
         </div>
 
         <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" class="block w-full max-w-sm text-sm text-slate-500
@@ -1258,19 +1269,84 @@
             }
         });
 
+        const aFinal11uLimits = {
+            5: { limit: "32.29", name: "Girls 11/u 50m Freestyle" },
+            6: { limit: "31.80", name: "Boys 11/u 50m Freestyle" },
+            21: { limit: "37.00", name: "Girls 11/u 50m Butterfly" },
+            22: { limit: "38.00", name: "Boys 11/u 50m Butterfly" },
+            29: { limit: "37.00", name: "Girls 11/u 50m Backstroke" },
+            30: { limit: "37.50", name: "Boys 11/u 50m Backstroke" },
+            45: { limit: "43.30", name: "Girls 11/u 50m Breaststroke" },
+            46: { limit: "44.60", name: "Boys 11/u 50m Breaststroke" }
+        };
+
+        const standard11uLimits = {
+            5: { limit: "14.78", name: "Girls 11/u 25m Freestyle" },
+            6: { limit: "14.81", name: "Boys 11/u 25m Freestyle" },
+            21: { limit: "16.16", name: "Girls 11/u 25m Butterfly" },
+            22: { limit: "16.39", name: "Boys 11/u 25m Butterfly" },
+            29: { limit: "18.12", name: "Girls 11/u 25m Backstroke" },
+            30: { limit: "18.22", name: "Boys 11/u 25m Backstroke" },
+            45: { limit: "20.27", name: "Girls 11/u 25m Breaststroke" },
+            46: { limit: "19.27", name: "Boys 11/u 25m Breaststroke" }
+        };
+
+        function updateProgrammeType() {
+            const type = document.getElementById('galaType').value;
+            const isAFinal = type === 'final_a';
+            const limits = isAFinal ? aFinal11uLimits : standard11uLimits;
+
+            const numCells = Array.from(document.querySelectorAll('.col-num'));
+            Object.keys(limits).forEach(eventNum => {
+                const targetCell = numCells.find(td => td.textContent.trim() == eventNum);
+                if (targetCell) {
+                    const row = targetCell.parentElement;
+                    const eventCell = row.querySelector('.col-event');
+                    const limitCell = row.querySelector('.col-limit');
+                    
+                    if (eventCell) eventCell.textContent = limits[eventNum].name;
+                    if (limitCell) limitCell.textContent = limits[eventNum].limit;
+                }
+            });
+
+            updateTitles();
+        }
+
+        function updateTitles() {
+            const type = document.getElementById('galaType').value;
+            const sheetName = sheetSelector.value;
+            const cleanName = sheetName ? sheetName.replace('.csv', '') : '';
+            
+            let prefix = "Coach & Team Manager Programme";
+            if (type === 'final_a') prefix = "A Final Coach Programme";
+            else if (type === 'final_b') prefix = "B Final Coach Programme";
+            else if (type === 'final_c') prefix = "C Final Coach Programme";
+
+            if (cleanName) {
+                programmeTitle.textContent = `${prefix} - ${cleanName}`;
+                page2Title.textContent = `${prefix} - ${cleanName} (Page 2)`;
+            } else {
+                programmeTitle.textContent = `${prefix} 2026`;
+                page2Title.textContent = `${prefix} (Page 2)`;
+            }
+        }
+
         // 2. Sheet Selection Listener
         sheetSelector.addEventListener('change', (e) => {
             const sheetName = e.target.value;
             if (!sheetName || !workbook) return;
 
-            const cleanName = sheetName.replace('.csv', '');
-            programmeTitle.textContent = `Coach & Team Manager Programme - ${cleanName}`;
-            page2Title.textContent = `Coach & Team Manager Programme - ${cleanName} (Page 2)`;
+            updateTitles();
 
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
             populateTable(jsonData);
+        });
+
+        // Initialize state on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgrammeType();
         });
 
         // 3. Populate Logic
