@@ -272,6 +272,20 @@ if ($is_logged_in) {
         }
     }
 
+    // 5c. Determine My Final Tier
+    $my_final_tier = null;
+    $my_final_file = null;
+    if (in_array($current_club_id, $filter_matrix['finals']['A'])) $my_final_tier = 'A';
+    elseif (in_array($current_club_id, $filter_matrix['finals']['B'])) $my_final_tier = 'B';
+    elseif (in_array($current_club_id, $filter_matrix['finals']['C'])) $my_final_tier = 'C';
+    
+    if ($my_final_tier) {
+        $final_files = glob('uploads/results/Final_' . $my_final_tier . '_Results.*');
+        if (!empty($final_files)) {
+            $my_final_file = basename($final_files[0]);
+        }
+    }
+
     // 5b. Hosted Rounds pulled from venue_details
     $rounds_sql = "SELECT vd.round_number, c.name AS host_name, vd.team_1_id, vd.team_2_id, vd.team_3_id, vd.team_4_id 
                    FROM venue_details vd JOIN clubs c ON vd.club_id = c.id";
@@ -807,22 +821,22 @@ if ($is_logged_in) {
                             <p class="text-xs text-slate-500">Your club has not been assigned to any rounds yet.</p>
                         </div>
                     <?php else: ?>
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                             <?php foreach ($draws as $draw): ?>
-                                <div class="bg-slate-900/50 p-5 rounded-xl border border-white/5 flex flex-col justify-between">
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5 flex flex-col justify-between">
                                     <div>
-                                        <div class="flex items-center justify-between mb-4">
-                                            <span class="bg-purple-500/20 text-purple-400 text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider">Round <?php echo $draw['round_number']; ?></span>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Round <?php echo $draw['round_number']; ?></span>
                                         </div>
-                                        <div class="mb-4">
-                                            <span class="text-xs text-slate-500 uppercase font-bold tracking-widest block mb-1">Host Venue</span>
-                                            <div class="text-white font-bold flex items-center gap-2">
-                                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i> <?php echo htmlspecialchars($draw['host_name']); ?>
+                                        <div class="mb-3">
+                                            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Host Venue</span>
+                                            <div class="text-white text-sm font-bold flex items-center gap-1.5">
+                                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i> <?php echo htmlspecialchars($draw['host_name']); ?>
                                             </div>
                                         </div>
-                                        <div class="mb-5">
-                                            <span class="text-xs text-slate-500 uppercase font-bold tracking-widest block mb-2">Competing Teams</span>
-                                            <div class="text-sm text-slate-300 flex flex-col gap-1.5">
+                                        <div class="mb-4">
+                                            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1.5">Competing Teams</span>
+                                            <div class="text-xs text-slate-300 flex flex-col gap-1">
                                                 <?php 
                                                 $competing = [];
                                                 if ($draw['host_name']) $competing[] = $draw['host_name'];
@@ -834,25 +848,55 @@ if ($is_logged_in) {
                                                 $competing = array_unique($competing);
                                                 
                                                 foreach($competing as $team) {
-                                                    echo '<div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-slate-600"></div>' . htmlspecialchars($team) . '</div>';
+                                                    echo '<div class="flex items-center gap-1.5"><div class="w-1 h-1 rounded-full bg-slate-600"></div>' . htmlspecialchars($team) . '</div>';
                                                 }
                                                 ?>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="pt-4 border-t border-white/5 mt-auto">
+                                    <div class="pt-3 border-t border-white/5 mt-auto">
                                         <?php if (!empty($draw['results_file'])): ?>
-                                            <a href="uploads/results/<?php echo htmlspecialchars($draw['results_file']); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
-                                                <i data-lucide="download" class="w-4 h-4"></i> Download Results
+                                            <a href="uploads/results/<?php echo htmlspecialchars($draw['results_file']); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results
                                             </a>
                                         <?php else: ?>
-                                            <div class="w-full text-center text-xs text-slate-500 border border-slate-700/50 py-2.5 rounded-lg bg-slate-800/30">
+                                            <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
                                                 Results pending
                                             </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
+                            
+                            <!-- FINALS CARD -->
+                            <?php if ($my_final_tier): ?>
+                                <div class="bg-sky-900/30 p-4 rounded-xl border border-sky-500/30 flex flex-col justify-between relative overflow-hidden group">
+                                    <div class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-sky-500 to-transparent opacity-50"></div>
+                                    <div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="bg-sky-500/20 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Final <?php echo $my_final_tier; ?></span>
+                                            <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                                        </div>
+                                        <div class="mb-3">
+                                            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Status</span>
+                                            <div class="text-white text-sm font-bold flex items-center gap-1.5">
+                                                Qualified
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 border-t border-white/5 mt-auto">
+                                        <?php if ($my_final_file): ?>
+                                            <a href="uploads/results/<?php echo htmlspecialchars($my_final_file); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results
+                                            </a>
+                                        <?php else: ?>
+                                            <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
+                                                Results pending
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>

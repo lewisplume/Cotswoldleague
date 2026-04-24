@@ -25,6 +25,33 @@ if ($current_club_id) {
         }
         $d_stmt->close();
     }
+    
+    // Calculate Finals Tier
+    $standings_sql = "SELECT c.id FROM results r JOIN clubs c ON r.club_id = c.id ORDER BY (r.round_1 + r.round_2 + r.round_3 + r.round_4) DESC, c.name ASC";
+    $s_res = $conn->query($standings_sql);
+    if ($s_res) {
+        $pos = 1;
+        $my_final_tier = null;
+        while ($r = $s_res->fetch_assoc()) {
+            if ((int)$r['id'] === (int)$current_club_id) {
+                if ($pos <= 8) $my_final_tier = 'A';
+                elseif ($pos <= 14) $my_final_tier = 'B';
+                else $my_final_tier = 'C';
+                break;
+            }
+            $pos++;
+        }
+        
+        if ($my_final_tier) {
+            $final_files = glob('uploads/results/Final_' . $my_final_tier . '_Results.*');
+            if (!empty($final_files)) {
+                $available_results[] = [
+                    'name' => 'Final ' . $my_final_tier . ' - Results',
+                    'file' => basename($final_files[0])
+                ];
+            }
+        }
+    }
 }
 ?>
 <!DOCTYPE html>

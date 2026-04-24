@@ -166,6 +166,38 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             }
         }
     }
+
+    // --- FINALS RESULTS UPLOAD ---
+    if ($_POST['admin_action'] === 'upload_final_results') {
+        $tier = $_POST['final_tier']; // A, B, or C
+        
+        if (isset($_FILES['results_file']) && $_FILES['results_file']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'uploads/results/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+            $file_info = pathinfo($_FILES['results_file']['name']);
+            $ext = strtolower($file_info['extension']);
+            
+            // Delete old files for this final
+            $existing = glob($upload_dir . "Final_{$tier}_Results.*");
+            if ($existing) {
+                foreach ($existing as $old_file) {
+                    unlink($old_file);
+                }
+            }
+            
+            $new_filename = "Final_{$tier}_Results." . $ext;
+            
+            if (move_uploaded_file($_FILES['results_file']['tmp_name'], $upload_dir . $new_filename)) {
+                $success_msg = "Final {$tier} Results uploaded successfully.";
+            } else {
+                $error_msg = "Failed to move uploaded file.";
+            }
+        } else {
+            $error_msg = "Error uploading file or no file selected.";
+        }
+    }
 }
 
 // Fetch all necessary data
@@ -560,6 +592,37 @@ if ($is_logged_in) {
                                 </form>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+
+                    <!-- FINALS RESULTS PANEL -->
+                    <div class="mt-10 border-t border-slate-700/50 pt-8">
+                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Results Upload</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <?php foreach(['A', 'B', 'C'] as $tier): 
+                                $existing = glob('uploads/results/Final_' . $tier . '_Results.*');
+                                $has_file = count($existing) > 0;
+                            ?>
+                                <div class="glass-panel p-5 rounded-2xl border border-white/5 relative">
+                                    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                                        <input type="hidden" name="admin_action" value="upload_final_results">
+                                        <input type="hidden" name="final_tier" value="<?php echo $tier; ?>">
+                                        
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h3 class="font-bold text-lg text-white">Final <?php echo $tier; ?></h3>
+                                            <?php if($has_file): ?>
+                                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">File Active</span>
+                                            <?php else: ?>
+                                                <span class="bg-slate-500/20 text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">No File</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <input type="file" name="results_file" accept=".xlsx,.xls,.csv" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
+                                        
+                                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-sm border border-slate-700 transition-colors">Upload Results</button>
+                                    </form>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
 
