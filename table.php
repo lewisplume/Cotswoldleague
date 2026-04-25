@@ -157,7 +157,7 @@ if ($result->num_rows > 0) {
                 <div class="flex items-center gap-3 mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-                        <h4 class="font-bold text-sm">A Final - Hutton Moore Leisure Centre</h4>
+                        <h4 class="font-bold text-sm">A Final - Hutton Moor Leisure Centre</h4>
                     </div>
                 </div>
                 <ul class="space-y-2 mt-4">
@@ -210,6 +210,57 @@ endforeach; ?>
                     </li>
                     <?php
 endforeach; ?>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Finals Results -->
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl mb-2">
+                Finals <span class="text-sky-500">Results</span>
+            </h2>
+            <p class="text-sm text-slate-400">Cotswold Swimming Series 2026 Finals Day</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-emerald-500">
+                <h3 class="font-bold text-xl mb-4 text-emerald-400 flex items-center gap-2">
+                    <i data-lucide="trophy" class="w-5 h-5"></i> A Final
+                </h3>
+                <ul class="space-y-2 text-sm text-slate-300">
+                    <li class="flex justify-between"><span>🥇 Monnow SC</span> <span class="font-bold text-emerald-400">271</span></li>
+                    <li class="flex justify-between"><span>🥈 Severnside Tritons</span> <span class="font-bold text-emerald-400">270</span></li>
+                    <li class="flex justify-between"><span>🥉 Cwmbran</span> <span class="font-bold text-emerald-400">259</span></li>
+                    <li class="flex justify-between"><span>COB (City of Bristol)</span> <span class="font-bold">236</span></li>
+                    <li class="flex justify-between"><span>Bridgwater</span> <span class="font-bold">230</span></li>
+                    <li class="flex justify-between"><span>Bath Dolphin</span> <span class="font-bold">228</span></li>
+                    <li class="flex justify-between"><span>Southwold SC</span> <span class="font-bold">208</span></li>
+                    <li class="flex justify-between"><span>Clevedon</span> <span class="font-bold">172</span></li>
+                </ul>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-amber-500">
+                <h3 class="font-bold text-xl mb-4 text-amber-400 flex items-center gap-2">
+                    <i data-lucide="medal" class="w-5 h-5"></i> B Final
+                </h3>
+                <ul class="space-y-2 text-sm text-slate-300">
+                    <li class="flex justify-between"><span>🥇 Brockworth</span> <span class="font-bold text-amber-400">233</span></li>
+                    <li class="flex justify-between"><span>🥈 Backwell</span> <span class="font-bold text-amber-400">196</span></li>
+                    <li class="flex justify-between"><span>🥉 Academy Swim Team</span> <span class="font-bold text-amber-400">191</span></li>
+                    <li class="flex justify-between"><span>Forest of Dean</span> <span class="font-bold">172</span></li>
+                    <li class="flex justify-between"><span>Swindon ASC</span> <span class="font-bold">166</span></li>
+                    <li class="flex justify-between"><span>Wells</span> <span class="font-bold">142</span></li>
+                </ul>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-rose-500">
+                <h3 class="font-bold text-xl mb-4 text-rose-400 flex items-center gap-2">
+                    <i data-lucide="award" class="w-5 h-5"></i> C Final
+                </h3>
+                <ul class="space-y-2 text-sm text-slate-300">
+                    <li class="flex justify-between"><span>🥇 Bristol North</span> <span class="font-bold text-rose-400">222</span></li>
+                    <li class="flex justify-between"><span>🥈 Dursley</span> <span class="font-bold text-rose-400">172</span></li>
+                    <li class="flex justify-between"><span>🥉 Yeovil</span> <span class="font-bold text-rose-400">153</span></li>
+                    <li class="flex justify-between"><span>Burnham-On-Sea</span> <span class="font-bold">133</span></li>
+                    <li class="flex justify-between"><span>Corsham</span> <span class="font-bold">107</span></li>
+                    <li class="flex justify-between"><span>Newport</span> <span class="font-bold italic">DNS</span></li>
                 </ul>
             </div>
         </div>
