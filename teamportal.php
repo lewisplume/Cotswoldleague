@@ -275,6 +275,7 @@ if ($is_logged_in) {
     // 5c. Determine My Final Tier
     $my_final_tier = null;
     $my_final_file = null;
+    $my_final_teamsheet_link = null;
     if (in_array($current_club_id, $filter_matrix['finals']['A'])) $my_final_tier = 'A';
     elseif (in_array($current_club_id, $filter_matrix['finals']['B'])) $my_final_tier = 'B';
     elseif (in_array($current_club_id, $filter_matrix['finals']['C'])) $my_final_tier = 'C';
@@ -283,6 +284,11 @@ if ($is_logged_in) {
         $final_files = glob('uploads/results/Final_' . $my_final_tier . '_Results.*');
         if (!empty($final_files)) {
             $my_final_file = basename($final_files[0]);
+        }
+        $finals_links_file = 'uploads/results/finals_teamsheets.json';
+        if (file_exists($finals_links_file)) {
+            $links = json_decode(file_get_contents($finals_links_file), true);
+            $my_final_teamsheet_link = $links[$my_final_tier] ?? null;
         }
     }
 
@@ -854,7 +860,12 @@ if ($is_logged_in) {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="pt-3 border-t border-white/5 mt-auto">
+                                    <div class="pt-3 border-t border-white/5 mt-auto space-y-2">
+                                        <?php if (!empty($draw['teamsheet_link'])): ?>
+                                            <a href="<?php echo htmlspecialchars($draw['teamsheet_link']); ?>" target="_blank" class="w-full bg-sky-600/20 hover:bg-sky-600 text-sky-400 hover:text-white border border-sky-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> View Teamsheets
+                                            </a>
+                                        <?php endif; ?>
                                         <?php if (!empty($draw['results_file'])): ?>
                                             <a href="uploads/results/<?php echo htmlspecialchars($draw['results_file']); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
                                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results
@@ -884,7 +895,12 @@ if ($is_logged_in) {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="pt-3 border-t border-white/5 mt-auto">
+                                    <div class="pt-3 border-t border-white/5 mt-auto space-y-2">
+                                        <?php if ($my_final_teamsheet_link): ?>
+                                            <a href="<?php echo htmlspecialchars($my_final_teamsheet_link); ?>" target="_blank" class="w-full bg-sky-600/20 hover:bg-sky-600 text-sky-400 hover:text-white border border-sky-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> View Teamsheets
+                                            </a>
+                                        <?php endif; ?>
                                         <?php if ($my_final_file): ?>
                                             <a href="uploads/results/<?php echo htmlspecialchars($my_final_file); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
                                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results

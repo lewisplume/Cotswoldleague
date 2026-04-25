@@ -19,6 +19,13 @@ try {
     // Column likely already exists
 }
 
+// Add teamsheet_link column if it doesn't exist
+try {
+    $conn->query("ALTER TABLE venue_details ADD COLUMN teamsheet_link VARCHAR(500) DEFAULT NULL");
+} catch (Exception $e) {
+    // Column likely already exists
+}
+
 define('LEAGUE_PASSWORD', 'Cotswold2026Galas');
 define('SUPER_ADMIN_PASSWORD', 'SuperAdmin2026!');
 ?>

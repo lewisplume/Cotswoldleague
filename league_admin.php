@@ -120,6 +120,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $t2 = !empty($_POST['team_2_id']) ? $_POST['team_2_id'] : null;
         $t3 = !empty($_POST['team_3_id']) ? $_POST['team_3_id'] : null;
         $t4 = !empty($_POST['team_4_id']) ? $_POST['team_4_id'] : null;
+        $teamsheet_link = !empty($_POST['teamsheet_link']) ? $_POST['teamsheet_link'] : null;
 
         if ($host_id === null || $round_num === null) {
             $error_msg = "Error: Stale data detected. Please refresh the page and try again to prevent data loss.";
@@ -152,11 +153,11 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             }
 
             if ($results_file_name !== null) {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, results_file=? WHERE id=?");
-                $stmt->bind_param("issssssiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $results_file_name, $id);
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, results_file=?, teamsheet_link=? WHERE id=?");
+                $stmt->bind_param("issssssiiiissi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $results_file_name, $teamsheet_link, $id);
             } else {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=? WHERE id=?");
-                $stmt->bind_param("issssssiiiii", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $id);
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, teamsheet_link=? WHERE id=?");
+                $stmt->bind_param("issssssiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $teamsheet_link, $id);
             }
             if ($stmt->execute()) {
                 $success_msg = "Venue details updated successfully.";
@@ -170,7 +171,18 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
     // --- FINALS RESULTS UPLOAD ---
     if ($_POST['admin_action'] === 'upload_final_results') {
         $tier = $_POST['final_tier']; // A, B, or C
+        $success_msgs = [];
         
+        // Handle Teamsheet Link
+        if (isset($_POST['teamsheet_link']) && trim($_POST['teamsheet_link']) !== '') {
+            $json_file = 'uploads/results/finals_teamsheets.json';
+            $links = file_exists($json_file) ? json_decode(file_get_contents($json_file), true) : [];
+            $links[$tier] = trim($_POST['teamsheet_link']);
+            file_put_contents($json_file, json_encode($links, JSON_PRETTY_PRINT));
+            $success_msgs[] = "Final {$tier} teamsheet link saved.";
+        }
+        
+        // Handle File Upload
         if (isset($_FILES['results_file']) && $_FILES['results_file']['error'] === UPLOAD_ERR_OK) {
             $upload_dir = 'uploads/results/';
             if (!is_dir($upload_dir)) {
@@ -190,12 +202,16 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             $new_filename = "Final_{$tier}_Results." . $ext;
             
             if (move_uploaded_file($_FILES['results_file']['tmp_name'], $upload_dir . $new_filename)) {
-                $success_msg = "Final {$tier} Results uploaded successfully.";
+                $success_msgs[] = "Final {$tier} Results uploaded successfully.";
             } else {
                 $error_msg = "Failed to move uploaded file.";
             }
-        } else {
-            $error_msg = "Error uploading file or no file selected.";
+        }
+        
+        if (!empty($success_msgs)) {
+            $success_msg = implode(" ", $success_msgs);
+        } elseif (empty($error_msg) && empty($_FILES['results_file']['name']) && empty($_POST['teamsheet_link'])) {
+            $error_msg = "No file or link provided.";
         }
     }
 }
@@ -571,6 +587,10 @@ if ($is_logged_in) {
                                             </label>
                                             <input type="file" name="results_file" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
                                         </div>
+                                        <div class="mt-3">
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Collated Teamsheet Link (Google Sheets)</label>
+                                            <input type="url" name="teamsheet_link" value="<?php echo htmlspecialchars($venue['teamsheet_link'] ?? ''); ?>" placeholder="https://docs.google.com/spreadsheets/d/..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                        </div>
                                     </div>
 
                                     <div class="pt-3 border-t border-white/5 space-y-2">
@@ -596,9 +616,12 @@ if ($is_logged_in) {
 
                     <!-- FINALS RESULTS PANEL -->
                     <div class="mt-10 border-t border-slate-700/50 pt-8">
-                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Results Upload</h2>
+                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Results & Teamsheets Upload</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <?php foreach(['A', 'B', 'C'] as $tier): 
+                            <?php 
+                            $finals_links_file = 'uploads/results/finals_teamsheets.json';
+                            $finals_links = file_exists($finals_links_file) ? json_decode(file_get_contents($finals_links_file), true) : [];
+                            foreach(['A', 'B', 'C'] as $tier): 
                                 $existing = glob('uploads/results/Final_' . $tier . '_Results.*');
                                 $has_file = count($existing) > 0;
                             ?>
@@ -610,15 +633,23 @@ if ($is_logged_in) {
                                         <div class="flex items-center justify-between mb-2">
                                             <h3 class="font-bold text-lg text-white">Final <?php echo $tier; ?></h3>
                                             <?php if($has_file): ?>
-                                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">File Active</span>
+                                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Results Active</span>
                                             <?php else: ?>
-                                                <span class="bg-slate-500/20 text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">No File</span>
+                                                <span class="bg-slate-500/20 text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">No Results</span>
                                             <?php endif; ?>
                                         </div>
                                         
-                                        <input type="file" name="results_file" accept=".xlsx,.xls,.csv" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
+                                        <div>
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Results File</label>
+                                            <input type="file" name="results_file" accept=".xlsx,.xls,.csv" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
+                                        </div>
+
+                                        <div>
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Collated Teamsheet Link</label>
+                                            <input type="url" name="teamsheet_link" placeholder="https://docs.google.com/spreadsheets/d/..." value="<?php echo htmlspecialchars($finals_links[$tier] ?? ''); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                                        </div>
                                         
-                                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-sm border border-slate-700 transition-colors">Upload Results</button>
+                                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-sm border border-slate-700 transition-colors">Save Updates</button>
                                     </form>
                                 </div>
                             <?php endforeach; ?>
