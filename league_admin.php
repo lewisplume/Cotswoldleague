@@ -385,6 +385,13 @@ if ($is_logged_in) {
                             <h3 class="font-bold text-white">Club Rep Portal</h3>
                             <p class="text-xs text-slate-400 mt-1">The standard portal for club representatives.</p>
                         </a>
+                        <a href="showcase.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-violet-900/30 transition-all group border border-violet-500/20">
+                            <div class="h-12 w-12 bg-violet-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="monitor-play" class="w-6 h-6 text-violet-400"></i>
+                            </div>
+                            <h3 class="font-bold text-white">Showcase</h3>
+                            <p class="text-xs text-slate-400 mt-1">Configure and launch results presentations.</p>
+                        </a>
                     </div>
                 </div>
 
