@@ -1,14 +1,3 @@
-<?php
-include 'db.php';
-
-// Fetch Round 4 Scores for Ticker
-$news_sql = "SELECT c.name, c.logo, r.round_4 
-             FROM clubs c 
-             JOIN results r ON c.id = r.club_id 
-             WHERE r.round_4 > 0 
-             ORDER BY r.round_4 DESC";
-$news_result = $conn->query($news_sql);
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -33,23 +22,6 @@ $news_result = $conn->query($news_sql);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        @keyframes scroll {
-            0% {
-                transform: translateX(0);
-            }
-
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-
-        .animate-scroll {
-            animation: scroll 40s linear infinite;
-        }
-
-        .animate-scroll:hover {
-            animation-play-state: paused;
-        }
     </style>
 </head>
 
@@ -96,51 +68,10 @@ $news_result = $conn->query($news_sql);
                 </div>
             </div>
 
-            <!-- BREAKING NEWS TICKER -->
-            <?php if ($news_result && $news_result->num_rows > 0): ?>
-            <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Round 4
-                Results</h2>
-            <div
-                class="mb-12 w-full max-w-3xl mx-auto overflow-hidden bg-sky-900/30 backdrop-blur-sm border-y border-sky-500/20 py-2 relative rounded-lg">
-                <div class="flex animate-scroll whitespace-nowrap w-max">
-                    <?php
-    $ticker_items = [];
-    while ($row = $news_result->fetch_assoc()) {
-        $ticker_items[] = $row;
-    }
-    // Duplicate for smooth infinite scroll
-    $display_items = array_merge($ticker_items, $ticker_items);
-
-    foreach ($display_items as $item): ?>
-                    <div class="flex items-center gap-3 mx-6">
-                        <img src="images/Teams/<?php echo $item['logo']; ?>" alt="<?php echo $item['name']; ?>"
-                            class="h-6 w-6 object-contain rounded-full bg-white p-0.5">
-                        <span class="text-sky-400 font-bold text-sm uppercase">
-                            <?php echo $item['name']; ?>
-                        </span>
-                        <span class="text-white font-mono font-bold">
-                            <?php echo $item['round_4']; ?>
-                        </span>
-                    </div>
-                    <div class="text-slate-600 select-none">|</div>
-                    <?php
-    endforeach; ?>
-                </div>
-                <!-- Gradient Fade Edges -->
-                <div
-                    class="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#0f172a] to-transparent pointer-events-none">
-                </div>
-                <div
-                    class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#0f172a] to-transparent pointer-events-none">
-                </div>
-            </div>
-            <?php
-endif; ?>
-
             <!-- COUNTDOWN SECTION -->
             <div class="mb-16">
-                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">Finals
-                    Begin In:</h2>
+                <h2 class="text-xl font-bold mb-6 text-sky-400 uppercase tracking-tighter italic text-center">AGM
+                    Begins In:</h2>
                 <div class="grid grid-cols-4 gap-2 md:gap-4 max-w-md mx-auto">
                     <div class="timer-box p-3 rounded-xl">
                         <div id="days" class="text-3xl md:text-4xl font-black text-white">00</div>
@@ -159,7 +90,7 @@ endif; ?>
                         <div class="text-[10px] uppercase tracking-widest text-slate-500">Sec</div>
                     </div>
                 </div>
-                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, April 25th, 2026</p>
+                <p class="mt-4 text-slate-500 font-medium text-sm">Saturday, June 6th, 2026</p>
             </div>
 
             <!-- ABOUT SECTION -->
@@ -215,17 +146,17 @@ endif; ?>
                     <span aria-hidden="true">&rarr;</span>
                 </a>
 
-                <!-- A FINAL ANNOUNCEMENT -->
+                <!-- MERCHANDISE NOTICE -->
                 <div class="mt-8 mb-4 max-w-3xl bg-[#cfb53b]/10 border border-[#cfb53b]/30 rounded-xl p-6 text-center transition-all mx-auto w-full">
                     <h3 class="text-[#cfb53b] font-bold uppercase tracking-widest mb-3 flex items-center justify-center gap-2 text-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                        Exciting Announcement!
+                        Last Chance
                     </h3>
                     <p class="text-slate-300 text-sm leading-relaxed mb-4">
-                        To celebrate the incredible efforts of our swimmers this season, we have created a special, one-of-a-kind <strong>"A Final" Gold Swimming Hat!</strong> The hat can be purchased in person at the A Final, and Wyvern Swimwear will be in attendance on the day.
+                        Last chance for <strong>2026 branded Cotswold League merchandise</strong>. Grab official kit while current season stock is still available from Wyvern Swimwear.
                     </p>
                     <p class="inline-block px-6 py-2 bg-[#cfb53b] text-slate-900 font-bold rounded-full text-sm shadow-lg shadow-[#cfb53b]/20">
-                        Buy In Person At The A Final
+                        Shop The 2026 Collection
                     </p>
                 </div>
 
@@ -234,28 +165,6 @@ endif; ?>
                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6 text-center">2026
                         Collection</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div class="group block">
-                            <div
-                                class="aspect-square rounded-xl bg-slate-800 border border-[#cfb53b]/50 overflow-hidden mb-2 shadow-[0_0_15px_rgba(207,181,59,0.2)] group-hover:border-[#cfb53b] transition-colors relative">
-                                <img src="images/Wyvern/A%20Final%20Hat_result.webp" alt="A Final Hat"
-                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-100">
-                            </div>
-                            <p
-                                class="text-[10px] font-bold text-[#cfb53b] group-hover:text-[#e5d064] transition-colors uppercase text-center">
-                                A Final Hat</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-wide text-center mt-1">In Person At A Final</p>
-                        </div>
-                        <div class="group block">
-                            <div
-                                class="aspect-square rounded-xl bg-slate-800 border border-[#cfb53b]/50 overflow-hidden mb-2 shadow-[0_0_15px_rgba(207,181,59,0.2)] group-hover:border-[#cfb53b] transition-colors relative">
-                                <img src="images/Wyvern/A%20fInal%20hat%20mockup_result.webp" alt="A Final Hat Mockup"
-                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-100">
-                            </div>
-                            <p
-                                class="text-[10px] font-bold text-[#cfb53b] group-hover:text-[#e5d064] transition-colors uppercase text-center">
-                                A Final Hat</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-wide text-center mt-1">Wyvern Swimwear Attending</p>
-                        </div>
                         <a href="https://www.wyvernswimwear.co.uk/collections/cotswold-swim-league" target="_blank"
                             class="group block">
                             <div
@@ -339,7 +248,7 @@ endif; ?>
         lucide.createIcons();
 
         // Mobile Menu Toggle Logic is now handled in nav.php but added here as fallback/init
-        const targetDate = new Date("April 25, 2026 00:00:00").getTime();
+        const targetDate = new Date("June 6, 2026 00:00:00").getTime();
 
         const countdown = setInterval(function () {
             const now = new Date().getTime();
@@ -357,7 +266,7 @@ endif; ?>
 
             if (distance < 0) {
                 clearInterval(countdown);
-                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>Finals Underway!</div>";
+                document.querySelector(".grid").innerHTML = "<div class='col-span-4 text-2xl font-bold text-sky-500 uppercase'>AGM Underway!</div>";
             }
         }, 1000);
 
