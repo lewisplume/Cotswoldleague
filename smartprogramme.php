@@ -1409,7 +1409,7 @@
         }
 
         function printProgramme() {
-            trackAction('programme_generated');
+
             window.print();
         }
     </script>

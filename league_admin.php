@@ -214,6 +214,15 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             $error_msg = "No file or link provided.";
         }
     }
+
+    // --- RESET STATS ---
+    if ($_POST['admin_action'] === 'reset_stats') {
+        if ($conn->query("UPDATE tracking_stats SET count = 0 WHERE action_name IN ('programme_generated', 'report_generated')")) {
+            $success_msg = "Tracking statistics have been reset to zero.";
+        } else {
+            $error_msg = "Failed to reset stats: " . $conn->error;
+        }
+    }
 }
 
 // Fetch all necessary data
@@ -233,6 +242,17 @@ if ($is_logged_in) {
     // Venues
     $res = $conn->query("SELECT vd.*, c.name as host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id ORDER BY round_number ASC, c.name ASC");
     if ($res) while($r = $res->fetch_assoc()) $venues_data[] = $r;
+
+    // Stats
+    $prog_count = 0;
+    $rep_count = 0;
+    $res = $conn->query("SELECT action_name, count FROM tracking_stats");
+    if ($res) {
+        while($r = $res->fetch_assoc()) {
+            if ($r['action_name'] == 'programme_generated') $prog_count = $r['count'];
+            if ($r['action_name'] == 'report_generated') $rep_count = $r['count'];
+        }
+    }
 }
 
 ?>
@@ -355,6 +375,43 @@ if ($is_logged_in) {
                 <!-- TAB: QUICK LINKS -->
                 <div id="tab-links" class="tab-content active space-y-6">
                     <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i data-lucide="zap" class="w-5 h-5 text-sky-400"></i> Admin Shortcuts</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <div>
+                                    <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">Smart Programmes</p>
+                                    <p class="text-3xl font-bold text-white"><?php echo number_format($prog_count); ?></p>
+                                </div>
+                                <div class="bg-emerald-500/20 p-3 rounded-xl">
+                                    <i data-lucide="printer" class="w-6 h-6 text-emerald-400"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <div>
+                                    <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">Results Matcher Reports</p>
+                                    <p class="text-3xl font-bold text-white"><?php echo number_format($rep_count); ?></p>
+                                </div>
+                                <div class="bg-sky-500/20 p-3 rounded-xl">
+                                    <i data-lucide="bar-chart-2" class="w-6 h-6 text-sky-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mb-6">
+                        <form method="POST" onsubmit="return confirm('Are you sure you want to reset all generation statistics to zero?');">
+                            <input type="hidden" name="admin_action" value="reset_stats">
+                            <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-bold transition-colors border border-slate-700 flex items-center gap-2">
+                                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset Statistics
+                            </button>
+                        </form>
+                    </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <a href="update_scores.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-sky-900/30 transition-all group border border-sky-500/20">

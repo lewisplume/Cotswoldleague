@@ -412,7 +412,7 @@
 
         // --- STEP 3: GENERATE REPORT ---
         function generateReport() {
-            trackAction('report_generated');
+
 
             const selectedColIndex = parseInt(document.getElementById('teamSelector').value);
             const selectedTeamObj = teamMapping.find(t => t.colIndex === selectedColIndex);
