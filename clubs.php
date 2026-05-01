@@ -1,10 +1,13 @@
 <?php
 include 'db.php';
+include 'geocode_init.php';
 $sql = "SELECT * FROM clubs ORDER BY name ASC";
 $result = $conn->query($sql);
+$clubs_json_data = [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +15,23 @@ $result = $conn->query($sql);
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body { background-color: #0f172a; }
-        .card-gradient { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); }
-        .swim-gradient { background: linear-gradient(135deg, #075985 0%, #0ea5e9 100%); }
+        body {
+            background-color: #0f172a;
+        }
+
+        .card-gradient {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .swim-gradient {
+            background: linear-gradient(135deg, #075985 0%, #0ea5e9 100%);
+        }
     </style>
 </head>
+
 <body class="text-white font-sans min-h-screen flex flex-col">
 
     <?php include 'nav.php'; ?>
@@ -26,26 +40,41 @@ $result = $conn->query($sql);
         <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl mb-4">
             Participating <span class="text-sky-500">Teams</span>
         </h1>
-        <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-8">
-            The 20 clubs competing in the 2026 Cotswold Swimming League.
+        <p class="text-lg text-slate-400 max-w-3xl mx-auto mb-8 leading-relaxed">
+            The 2026 Cotswold Swimming League is proudly made up of 20 competitive clubs spanning across seven counties.
+            Browse the interactive map or the directory below to find the team closest to you and discover more about
+            their programs!
         </p>
-        
+
         <!-- Search is handled via JS locally for speed -->
         <div class="max-w-md mx-auto relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i data-lucide="search" class="h-5 w-5 text-slate-500"></i>
             </div>
-            <input type="text" id="searchInput" onkeyup="filterClubs()" 
-                   class="block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-xl leading-5 bg-slate-800 text-slate-300 placeholder-slate-500 focus:outline-none focus:bg-slate-900 focus:border-sky-500 sm:text-sm transition duration-150 ease-in-out" 
-                   placeholder="Search for a club...">
+            <input type="text" id="searchInput" onkeyup="filterClubs()"
+                class="block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-xl leading-5 bg-slate-800 text-slate-300 placeholder-slate-500 focus:outline-none focus:bg-slate-900 focus:border-sky-500 sm:text-sm transition duration-150 ease-in-out"
+                placeholder="Search for a club...">
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 flex-grow">
+
+        <!-- Interactive Map Container -->
+        <div id="clubMap" class="w-full h-96 rounded-2xl border border-slate-700/50 shadow-xl mb-10 relative z-0"></div>
+
         <div id="clubGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <?php
             if ($result->num_rows > 0) {
-                while($row = $result->fetch_assoc()) {
+                while ($row = $result->fetch_assoc()) {
+                    $clubs_json_data[] = [
+                        'name' => $row['name'],
+                        'pool_name' => $row['pool_name'],
+                        'postcode' => $row['postcode'],
+                        'logo' => $row['logo'],
+                        'lat' => $row['latitude'] ?? null,
+                        'lng' => $row['longitude'] ?? null
+                    ];
+
                     echo '
                     <div class="club-card card-gradient rounded-2xl p-6 border border-slate-700/50 hover:border-sky-500/50 transition-all duration-300 group" data-name="' . strtolower($row['name']) . '" data-pool="' . strtolower($row['pool_name']) . '">
                         <div class="flex items-center justify-between mb-4">
@@ -69,7 +98,7 @@ $result = $conn->query($sql);
             }
             ?>
         </div>
-        
+
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
             &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
         </footer>
@@ -78,6 +107,37 @@ $result = $conn->query($sql);
     <script>
         lucide.createIcons();
 
+        // Initialize Map
+        const clubsData = <?php echo json_encode($clubs_json_data); ?>;
+        const map = L.map('clubMap').setView([51.8, -2.1], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        const bounds = [];
+        clubsData.forEach(club => {
+            if (club.lat && club.lng) {
+                const marker = L.marker([club.lat, club.lng]).addTo(map);
+                bounds.push([club.lat, club.lng]);
+
+                const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(club.pool_name + ' ' + club.postcode)}`;
+                const popupContent = `
+                    <div class="text-center p-2 min-w-[200px]">
+                        <img src="images/Teams/${club.logo}" alt="${club.name}" class="h-12 w-12 mx-auto mb-2 object-contain bg-white rounded-lg p-1 border border-slate-200">
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">${club.name}</h4>
+                        <p class="text-xs text-slate-600 mb-3">${club.pool_name}</p>
+                        <a href="${googleMapsLink}" target="_blank" class="bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-1.5 px-3 rounded-lg block transition-colors" style="text-decoration:none;">Get Directions</a>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+            }
+        });
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [30, 30] });
+        }
 
         // Filter Function
         function filterClubs() {
@@ -95,4 +155,5 @@ $result = $conn->query($sql);
         }
     </script>
 </body>
+
 </html>

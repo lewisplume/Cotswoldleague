@@ -40,6 +40,7 @@
                 <button onclick="jumpTo('2025')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2025</button>
                 <button onclick="jumpTo('2024')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2024</button>
                 <button onclick="jumpTo('2023')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2023</button>
+                <button onclick="jumpTo('2020')" class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 border border-sky-500/20 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">2020</button>
             </div>
         </div>
 
@@ -431,6 +432,106 @@
             </div>
         </div>
 
+        <div class="w-full h-px bg-white/5 my-12"></div>
+
+        <div id="year-2020" class="space-y-8 scroll-mt-40">
+            <button onclick="toggleYear('2020')" class="w-full flex items-center justify-between group focus:outline-none text-left">
+                <h2 class="text-3xl font-bold flex items-center gap-3">
+                    <span class="text-sky-500">2020</span> Season Results
+                </h2>
+                <div class="bg-white/5 p-2 rounded-full group-hover:bg-white/10 transition-colors">
+                    <i id="icon-2020" data-lucide="chevron-down" class="w-6 h-6 text-slate-400 group-hover:text-white transition-transform duration-300"></i>
+                </div>
+            </button>
+            <div id="content-2020" class="hidden space-y-8 transition-all duration-500 origin-top">
+
+            <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/50 border-b border-white/5">
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-500">Team Name</th>
+                                <th class="px-4 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R1</th>
+                                <th class="px-4 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R2</th>
+                                <th class="px-4 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R3</th>
+                                <th class="px-4 py-5 text-xs font-black uppercase tracking-widest text-slate-500 text-center">R4</th>
+                                <th class="px-6 py-5 text-xs font-black uppercase tracking-widest text-sky-500 text-center">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Wells</td><td class="text-center text-slate-400">147</td><td class="text-center text-slate-400">161</td><td class="text-center text-slate-400">188</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">496</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Bath Dolphin</td><td class="text-center text-slate-400">167</td><td class="text-center text-slate-400">142</td><td class="text-center text-slate-400">146</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">455</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Backwell</td><td class="text-center text-slate-400">165</td><td class="text-center text-slate-400">148</td><td class="text-center text-slate-400">136</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">449</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Brockworth</td><td class="text-center text-slate-400">168</td><td class="text-center text-slate-400">122</td><td class="text-center text-slate-400">158</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">448</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Bridgwater</td><td class="text-center text-slate-400">148</td><td class="text-center text-slate-400">136</td><td class="text-center text-slate-400">153</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">437</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Taunton</td><td class="text-center text-slate-400">138</td><td class="text-center text-slate-400">156</td><td class="text-center text-slate-400">137</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">431</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Clevedon</td><td class="text-center text-slate-400">135</td><td class="text-center text-slate-400">145</td><td class="text-center text-slate-400">148</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">428</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Cinderford</td><td class="text-center text-slate-400">136</td><td class="text-center text-slate-400">145</td><td class="text-center text-slate-400">146</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">427</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">AST BOS</td><td class="text-center text-slate-400">104</td><td class="text-center text-slate-400">153</td><td class="text-center text-slate-400">168</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">425</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Bristol Penguins</td><td class="text-center text-slate-400">118</td><td class="text-center text-slate-400">158</td><td class="text-center text-slate-400">141</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">417</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Cheddar</td><td class="text-center text-slate-400">128</td><td class="text-center text-slate-400">125</td><td class="text-center text-slate-400">153</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">406</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">City of Bristol</td><td class="text-center text-slate-400">133</td><td class="text-center text-slate-400">108</td><td class="text-center text-slate-400">143</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">384</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Weston Super Mare</td><td class="text-center text-slate-400">135</td><td class="text-center text-slate-400">108</td><td class="text-center text-slate-400">135</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">378</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Burnham on Sea</td><td class="text-center text-slate-400">123</td><td class="text-center text-slate-400">125</td><td class="text-center text-slate-400">120</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">368</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Cwmbran</td><td class="text-center text-slate-400">95</td><td class="text-center text-slate-400">118</td><td class="text-center text-slate-400">138</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">351</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Bristol North</td><td class="text-center text-slate-400">130</td><td class="text-center text-slate-400">125</td><td class="text-center text-slate-400">85</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">340</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Bristol Henleaze</td><td class="text-center text-slate-400">143</td><td class="text-center text-slate-400">120</td><td class="text-center text-slate-400">53</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">316</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Cheltenham</td><td class="text-center text-slate-400">97</td><td class="text-center text-slate-400">122</td><td class="text-center text-slate-400">84</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">303</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Norton Radstock</td><td class="text-center text-slate-400">92</td><td class="text-center text-slate-400">78</td><td class="text-center text-slate-400">80</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">250</td></tr>
+                            <tr class="table-row-hover"><td class="px-6 py-4 text-sm font-bold text-white">Dursley</td><td class="text-center text-slate-400">90</td><td class="text-center text-slate-400">80</td><td class="text-center text-slate-400">77</td><td class="text-center text-slate-400">0</td><td class="text-center font-black text-sky-400">247</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-3 bg-slate-900/30 text-xs italic text-slate-500">
+                    * Round 4 and the finals were cancelled due to Covid-19.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-emerald-500">
+                    <h3 class="font-bold text-xl mb-4 text-emerald-400 flex items-center gap-2">
+                        <i data-lucide="trophy" class="w-5 h-5"></i> A Final
+                    </h3>
+                    <ul class="space-y-2 text-sm text-slate-300">
+                        <li class="flex justify-between"><span>Wells</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Bath Dolphin</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Backwell</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Brockworth</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Bridgwater</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Taunton</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Clevedon</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Cinderford</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                    </ul>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-amber-500">
+                    <h3 class="font-bold text-xl mb-4 text-amber-400 flex items-center gap-2">
+                        <i data-lucide="medal" class="w-5 h-5"></i> B Final
+                    </h3>
+                    <ul class="space-y-2 text-sm text-slate-300">
+                        <li class="flex justify-between"><span>AST BOS</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Bristol Penguins</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Cheddar</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>City of Bristol</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Weston Super Mare</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Burnham on Sea</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                    </ul>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-rose-500">
+                    <h3 class="font-bold text-xl mb-4 text-rose-400 flex items-center gap-2">
+                        <i data-lucide="award" class="w-5 h-5"></i> C Final
+                    </h3>
+                    <ul class="space-y-2 text-sm text-slate-300">
+                        <li class="flex justify-between"><span>Cwmbran</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Bristol North</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Bristol Henleaze</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Cheltenham</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Norton Radstock</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                        <li class="flex justify-between"><span>Dursley</span> <span class="font-bold italic text-slate-500">Cancelled</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-amber-500 flex flex-col md:flex-row items-center gap-4">
             <div class="bg-amber-500/10 p-3 rounded-xl text-amber-500">
                 <i data-lucide="archive" class="w-6 h-6"></i>
@@ -468,7 +569,7 @@
         }
 
         function toggleAll(expand) {
-            ['2026', '2025', '2024', '2023'].forEach(year => toggleYear(year, expand));
+            ['2026', '2025', '2024', '2023', '2020'].forEach(year => toggleYear(year, expand));
         }
 
         function jumpTo(year) {

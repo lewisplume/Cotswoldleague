@@ -230,7 +230,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">
                                     Results Calculator</div>
                                 <div class="grid grid-cols-1 lg:grid-cols-3">
-                                    <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT"
+                                    <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQAavPrQy9y9S7DWUpvjXmZIAdPgyvNEAZtEnu9i0ISWK5Q?e=5LEDAr"
                                         target="_blank"
                                         class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-b-0 lg:border-r transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
@@ -473,7 +473,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                 </div>
                             </label>
                             <div class="flex gap-2 mt-3">
-                                <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQDK_3Hs134ZIIB8vRYCAAAAAfETmDjTVlWJiPf8iIyF0Gs?e=ivrYWT"
+                                <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQAavPrQy9y9S7DWUpvjXmZIAdPgyvNEAZtEnu9i0ISWK5Q?e=5LEDAr"
                                     target="_blank"
                                     class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
                                     <i data-lucide="download" class="w-3 h-3"></i> Download

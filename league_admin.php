@@ -36,10 +36,23 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $pool_name = $_POST['pool_name'];
         $postcode = $_POST['postcode'];
         $website = $_POST['website'];
-        $logo = $_POST['logo'];
+        $logo = trim($_POST['logo']);
+        $lat = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
+        $lng = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
 
-        $stmt = $conn->prepare("UPDATE clubs SET name=?, pool_name=?, postcode=?, website=?, logo=? WHERE id=?");
-        $stmt->bind_param("sssssi", $name, $pool_name, $postcode, $website, $logo, $id);
+        if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'images/Teams/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+            $file_info = pathinfo($_FILES['logo_file']['name']);
+            $ext = strtolower($file_info['extension']);
+            $new_filename = preg_replace('/[^a-zA-Z0-9]/', '', $name) . '_logo.' . $ext;
+            if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_dir . $new_filename)) {
+                $logo = $new_filename;
+            }
+        }
+
+        $stmt = $conn->prepare("UPDATE clubs SET name=?, pool_name=?, postcode=?, website=?, logo=?, latitude=?, longitude=? WHERE id=?");
+        $stmt->bind_param("ssssssddi", $name, $pool_name, $postcode, $website, $logo, $lat, $lng, $id);
         if ($stmt->execute()) {
             $success_msg = "Club '$name' updated successfully.";
             // Also update club_contacts name just in case sync is needed
@@ -54,10 +67,23 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $pool_name = $_POST['pool_name'];
         $postcode = $_POST['postcode'];
         $website = $_POST['website'];
-        $logo = $_POST['logo'];
+        $logo = trim($_POST['logo']);
+        $lat = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
+        $lng = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
 
-        $stmt = $conn->prepare("INSERT INTO clubs (name, pool_name, postcode, website, logo) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $name, $pool_name, $postcode, $website, $logo);
+        if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'images/Teams/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+            $file_info = pathinfo($_FILES['logo_file']['name']);
+            $ext = strtolower($file_info['extension']);
+            $new_filename = preg_replace('/[^a-zA-Z0-9]/', '', $name) . '_logo.' . $ext;
+            if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_dir . $new_filename)) {
+                $logo = $new_filename;
+            }
+        }
+
+        $stmt = $conn->prepare("INSERT INTO clubs (name, pool_name, postcode, website, logo, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssdd", $name, $pool_name, $postcode, $website, $logo, $lat, $lng);
         if ($stmt->execute()) {
             $new_club_id = $conn->insert_id;
             // Create a stub entry in club_contacts
@@ -464,13 +490,16 @@ if ($is_logged_in) {
                     <!-- Add Club Form (Hidden by default) -->
                     <div id="addClubForm" class="hidden glass-panel p-6 rounded-2xl mb-6 border border-indigo-500/30">
                         <h3 class="font-bold text-lg mb-4 text-indigo-400">Add New Participating Club</h3>
-                        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <input type="hidden" name="admin_action" value="add_club">
                             <input type="text" name="name" placeholder="Club Name*" required class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <input type="text" name="pool_name" placeholder="Pool Name*" required class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <input type="text" name="postcode" placeholder="Postcode*" required class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <input type="text" name="website" placeholder="Website URL" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <input type="text" name="logo" placeholder="Logo filename (e.g., logo.webp)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+                            <input type="file" name="logo_file" accept="image/*" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer text-slate-400">
+                            <input type="number" step="0.000001" name="latitude" placeholder="Latitude (optional)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+                            <input type="number" step="0.000001" name="longitude" placeholder="Longitude (optional)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold">Save Club</button>
                         </form>
                     </div>
@@ -478,7 +507,7 @@ if ($is_logged_in) {
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         <?php foreach($clubs_data as $club): ?>
                             <div class="glass-panel p-5 rounded-2xl border border-white/5 relative group">
-                                <form method="POST" class="space-y-3 relative z-10">
+                                <form method="POST" enctype="multipart/form-data" class="space-y-3 relative z-10">
                                     <input type="hidden" name="admin_action" value="update_club">
                                     <input type="hidden" name="id" value="<?php echo $club['id']; ?>">
                                     
@@ -504,7 +533,16 @@ if ($is_logged_in) {
                                         <input type="text" name="website" value="<?php echo htmlspecialchars($club['website']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
                                         
                                         <span class="text-slate-500">Logo file:</span>
-                                        <input type="text" name="logo" value="<?php echo htmlspecialchars($club['logo']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+                                        <div class="flex gap-2 w-full">
+                                            <input type="text" name="logo" value="<?php echo htmlspecialchars($club['logo']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-1/3 text-xs" placeholder="Filename">
+                                            <input type="file" name="logo_file" accept="image/*" class="bg-slate-900/50 border border-slate-800 rounded py-1 px-1 focus:border-indigo-500 focus:outline-none text-slate-400 w-2/3 text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                                        </div>
+
+                                        <span class="text-slate-500">Latitude:</span>
+                                        <input type="number" step="0.000001" name="latitude" value="<?php echo htmlspecialchars($club['latitude'] ?? ''); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+                                        
+                                        <span class="text-slate-500">Longitude:</span>
+                                        <input type="number" step="0.000001" name="longitude" value="<?php echo htmlspecialchars($club['longitude'] ?? ''); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
                                     </div>
 
                                     <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
