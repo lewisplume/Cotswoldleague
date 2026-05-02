@@ -8,17 +8,22 @@ The Cotswold League is a unique swimming league focused on development, sporting
 
 ## Key Features
 
-* **Real-time Countdown:** Live timer tracking the precise time until the start of Round 1.
-* **Live League Table:** Dynamic standings powered by a database connection, automatically updating league positions as scores are entered.
-* **Club Directory:** Searchable list of all 20 participating clubs, complete with venue details and integrated Google Maps directions.
-* **Sponsors & Merchandise:** Dedicated section showcasing the main league sponsor (Wyvern Swimwear) and an image gallery of official 2026 merchandise.
+* **Real-time Countdown:** Live timer tracking the precise time until the next major league event or final.
+* **Interactive Club Map:** A visual directory powered by Leaflet.js, allowing parents and swimmers to locate all participating clubs with integrated directions.
+* **Live League Table:** Dynamic standings powered by a MySQL database, automatically updating positions and reveals as scores are processed.
+* **Sponsors & Merchandise:** Dedicated section showcasing the main league sponsor (Wyvern Swimwear) and official 2026 merchandise.
 * **Spectator Information:** Comprehensive guide for attendees, including admission pricing, parking details, and warm-up times.
-* **League History:** Archive of past season results (starting from 2025).
+* **League History & Archive:** A permanent record of past seasons, including hardcoded results for 2026 and historical data for 2020.
 
 ### Admin & Representative Tools
 
-* **Club Rep Portal:** A password-protected dashboard providing officials with access to essential documentation (Team Sheets, Rules, Gala Paperwork).
-* **Score Management System:** A secure, server-side utility (`update_scores.php`) allowing the League Secretary to input and update round scores directly into the MySQL database.
+* **Super Admin Dashboard (`league_admin.php`):** A centralized control center for managing the league database, club contacts, venue draws, and official results uploads.
+* **Representative Portal (`admin.php`):** A gated gateway for club reps, providing access to the host team checklist and the secure Team Portal.
+* **Team Portal (`teamportal.php`):** A sophisticated dashboard for club reps featuring:
+    * **Smart Programme Generator:** Automated creation of gala programmes via Google Sheets integration.
+    * **Results Matcher:** Intelligent tool for cross-referencing swimmer times with official gala data.
+    * **Dynamic Directory Filtering:** Advanced filtering to isolate contacts by standing or specific round match-ups.
+* **Audit Logging:** Automated tracking of all logistical changes made by club representatives to ensure transparency and data integrity.
 
 ## Technical Documentation
 
@@ -28,12 +33,12 @@ For an in-depth breakdown of the project architecture, database schemas, and com
 
 The project has evolved from a static site to a highly dynamic, DB-driven PHP application.
 
-* **Core Logic:** PHP (v8+) used for component templating (`nav.php`) and backend logic.
-* **Database:** MySQL (`cotswold_league`) stores club data and match results.
-* **Frontend:** HTML5 styled with **Tailwind CSS** (via CDN).
-* **Icons:** Powered by **Lucide** (via CDN).
-* **Interactivity:** Lightweight Vanilla JavaScript for the countdown timer, mobile navigation, and UI interactions.
-* **Security:** Basic password authentication for the admin and score update interfaces.
+* **Core Logic:** PHP (v8+) used for backend logic and component-based templating.
+* **Database:** MySQL (`cotswold_league`) manages all persistent scoring and logistical data.
+* **Frontend:** Styled with **Tailwind CSS** for a modern, responsive user experience.
+* **Mapping:** **Leaflet.js** integration for the interactive club directory.
+* **Icons:** Powered by **Lucide**.
+* **Security:** Multi-tiered authentication system for Super Admins and Club Representatives (PIN-based).
 
 ## Hosting & Infrastructure
 

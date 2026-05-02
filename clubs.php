@@ -41,8 +41,8 @@ $clubs_json_data = [];
             Participating <span class="text-sky-500">Teams</span>
         </h1>
         <p class="text-lg text-slate-400 max-w-3xl mx-auto mb-8 leading-relaxed">
-            The 2026 Cotswold Swimming League is proudly made up of 20 competitive clubs spanning across seven counties.
-            Browse the interactive map or the directory below to find the team closest to you and discover more about
+            The Cotswold Swimming League is proudly made up of 20 competitive clubs spanning across seven counties.
+            Browse the map or the directory below to find the team closest to you and discover more about
             their programs!
         </p>
 
