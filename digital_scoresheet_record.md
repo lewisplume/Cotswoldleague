@@ -60,11 +60,10 @@ The goal was to transform the static, pre-defined gala results system into a **F
 - **Sync Visuals**: Added a glowing "Online/Offline" indicator to reassure hosts of their connection status.
 - **Venue Draw Sync**: Fixed a bug where scoresheets weren't automatically pulling the pre-defined host venue from the season draw.
 
----
-
-## 5. Future Considerations
-- **Finals Automation**: An "Auto-Generate Finals Draw" button is designed but currently on hold. It will rank the Top 8, Next 6, etc., and populate the venues automatically.
-- **Season Rollover**: The system is "Season Aware" (using `season_year`), so moving to 2027 will only require updating the default year in `db.php` and inputting the new draws.
+## 5. System Maturity & Scalability
+- **Finals Automation**: COMPLETED. The system now features an "Auto-Generate Finals Draw" algorithm that ranks teams across 4 rounds and builds the A, B, and C final venues automatically.
+- **Season Rollover**: COMPLETED & ENHANCED. The platform is fully multi-season aware. Furthermore, a **Season Propagation Tool** was added in May 2026 to allow bulk copying of event templates between years (e.g., propagating the 2027 master list to future seasons).
+- **Geocoding**: COMPLETED. Club locations are now geocoded and displayed on an interactive league map.
 
 ---
 
@@ -74,3 +73,6 @@ The goal was to transform the static, pre-defined gala results system into a **F
 - `gala_scoresheet.js`: The "brain" of the scoring and sync logic.
 - `admin_gala_results.php`: Super Admin dashboard for verification and swaps.
 - `gala_admin_api.php`: Admin-only API for cross-gala transactions.
+- `admin_gala_events.php`: Event management with season propagation logic.
+- `league_admin.php`: Central hub for season control, venues, and club geocoding.
+- `_legacy/`: Archive of deprecated scripts replaced by this modern digital infrastructure.

@@ -118,18 +118,27 @@ Further improvements were made to support your chosen operating model: activate 
 *   Active Season setter validates years up to 2099.
 *   Current dropdown UI displays 2026-2035 options; backend supports wider range.
 
-## 8. Functional Outcome Summary (Current State)
-With all completed changes applied, season rollover behavior now works as follows:
+## 9. Season Event Propagation & Import Utility
+To streamline the setup of new seasons, we implemented a sophisticated event management toolset.
 
-*   Changing Active Season does **not** wipe any data.
-*   The system reads/writes only the selected season slice for:
-    *   Host venues
-    *   Season draw calculations and display
-    *   League table standings
-    *   Team portal draw cards and venue teamsheet links
-    *   Scoresheet creation, lookup, and event loading
-*   New seasons remain intentionally empty until you create venues/events/results for that year.
-*   2026 remains preserved and unaffected while future seasons are prepared.
+*   **Template-Based Duplication**: Added a "Source Season" selector to the Duplicate Season tool, allowing administrators to use any year (e.g., 2027) as a master template for other years, even while viewing a blank season.
+*   **Bulk Propagation**: Integrated multi-target support via checkboxes, enabling the event list to be pushed to 2028, 2029, and 2030 simultaneously.
+*   **Smart "Empty Season" Assistant**: Implemented a dynamic UI card that appears when a season has no events, providing a one-click "Import from 2027" shortcut and other setup quick-actions.
+*   **Conflict Prevention**: Enhanced the backend handler to strictly prevent overwriting existing data, providing a detailed report of successful copies vs. skipped years.
+
+## 10. Geospatial Club Directory
+Modernized the club management system to include interactive mapping and location-aware data.
+
+*   **Geocoding Integration**: Added `latitude` and `longitude` fields to the `clubs` table and implemented a geocoding service that automatically resolves coordinates from postcodes.
+*   **Interactive Club Map**: Deployed a Leaflet.js-powered interactive map on the public `clubs.php` page, featuring custom markers and popups for every team in the league.
+*   **Admin Coordinate Overrides**: Updated the Super Admin dashboard to allow manual fine-tuning of GPS coordinates for clubs where automated geocoding is imprecise.
+
+## 11. Collated Teamsheet & Resource Tracking
+Improved the way live digital resources are linked to specific gala venues.
+
+*   **Dynamic Teamsheet Link Storage**: Added `teamsheet_link` support to the `venue_details` table and a centralized `finals_teamsheets.json` for championship tiers.
+*   **Portal Integration**: The Team Portal now dynamically renders "View Teamsheets" buttons for every round, pulling directly from these administrative overrides.
+*   **Legacy Cleanup**: Relocated dozens of deprecated scripts (e.g., old smartprogramme versions, debug tools) into a protected `_legacy` directory to reduce codebase clutter and security surface area.
 
 ---
 **Summary Checklist**
@@ -146,3 +155,8 @@ With all completed changes applied, season rollover behavior now works as follow
 - [x] Scoresheet API defaults aligned to active season.
 - [x] Scoresheet creation now auto-loads team lanes 1-8.
 - [x] Residual hardcoded public season labels removed/aligned.
+- [x] Season Event Propagation tool with bulk copy support implemented.
+- [x] Smart "Empty Season" UI helper deployed.
+- [x] Geocoding and interactive club mapping integrated.
+- [x] Collated teamsheet link management system finalized.
+- [x] Legacy codebase cleanup and directory reorganization completed.

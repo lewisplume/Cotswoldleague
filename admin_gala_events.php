@@ -18,6 +18,15 @@ while ($row = $events_res->fetch_assoc()) {
 }
 $e_stmt->close();
 
+// Fetch seasons that have events for the source dropdown
+$seasons_with_events = [];
+$s_res = $conn->query("SELECT season_year, COUNT(*) as cnt FROM gala_events GROUP BY season_year ORDER BY season_year DESC");
+if ($s_res) {
+    while ($sr = $s_res->fetch_assoc()) {
+        $seasons_with_events[$sr['season_year']] = $sr['cnt'];
+    }
+}
+
 function formatMsToTime($ms) {
     if (!$ms) return '';
     $totalSec = floor($ms / 1000);
@@ -64,7 +73,36 @@ $events_json = json_encode(array_map(function($e) {
     </div>
 </div>
 
-<div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+<?php if (count($all_events) == 0): ?>
+    <div class="glass-panel p-10 rounded-3xl border border-dashed border-white/10 text-center my-8 animate-fade-in">
+        <div class="bg-slate-800/50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/5">
+            <i data-lucide="calendar-days" class="w-10 h-10 text-slate-500"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Season <?php echo $season; ?> is Empty</h3>
+        <p class="text-slate-400 max-w-md mx-auto mb-8 text-sm">There are no events scheduled for this season yet. You can add them manually or quickly import from a previous year.</p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button onclick="openAddEvent()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-emerald-900/20">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add First Event
+            </button>
+            <?php if (isset($seasons_with_events[2027])): ?>
+                <form method="POST" onsubmit="return confirm('Copy all 53 events from 2027 to <?php echo $season; ?>?');">
+                    <input type="hidden" name="admin_action" value="duplicate_season">
+                    <input type="hidden" name="source_year" value="2027">
+                    <input type="hidden" name="target_year" value="<?php echo $season; ?>">
+                    <button type="submit" class="bg-sky-600/20 hover:bg-sky-600 text-sky-400 hover:text-white border border-sky-500/30 font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="copy" class="w-4 h-4"></i> Import from 2027
+                    </button>
+                </form>
+            <?php endif; ?>
+            <button onclick="document.getElementById('duplicate-season-modal').classList.remove('hidden'); lucide.createIcons();" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 border border-slate-700">
+                <i data-lucide="settings-2" class="w-4 h-4"></i> More Options
+            </button>
+        </div>
+    </div>
+<?php endif; ?>
+
+<div class="glass-panel rounded-2xl border border-white/5 overflow-hidden <?php if(count($all_events) == 0) echo 'hidden'; ?>">
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-300" id="events-table">
             <thead class="bg-slate-900/80 text-slate-400 text-xs uppercase font-bold tracking-wider border-b border-white/5">
@@ -534,32 +572,64 @@ $events_json = json_encode(array_map(function($e) {
 
 <!-- DUPLICATE SEASON MODAL -->
 <div id="duplicate-season-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
-    <div class="glass-panel border border-white/10 p-6 rounded-2xl max-w-sm w-full">
-        <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <i data-lucide="copy" class="w-5 h-5 text-sky-400"></i> Duplicate Season
-        </h3>
-        <p class="text-sm text-slate-400 mb-6">Copy all <?php echo count($all_events); ?> events from <strong class="text-white">Season <?php echo $season; ?></strong> to a new season.</p>
+    <div class="glass-panel border border-white/10 p-8 rounded-3xl max-w-md w-full relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 to-indigo-500"></div>
         
-        <form method="POST">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="copy" class="w-6 h-6 text-sky-400"></i> Duplicate Season
+            </h3>
+            <button type="button" onclick="document.getElementById('duplicate-season-modal').classList.add('hidden')" class="text-slate-500 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <form method="POST" class="space-y-6">
             <input type="hidden" name="admin_action" value="duplicate_season">
-            <input type="hidden" name="source_year" value="<?php echo $season; ?>">
             
-            <div class="mb-6">
-                <label class="block text-xs font-bold text-slate-400 mb-1.5">Target Season Year</label>
-                <input type="number" name="target_year" required min="2025" max="2040" value="<?php echo $season + 1; ?>"
-                    class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-sky-500 transition-all text-sm text-center text-lg font-bold tracking-wider">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Source Season (Copy From)</label>
+                <select name="source_year" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-sky-500 transition-all appearance-none cursor-pointer">
+                    <?php if (empty($seasons_with_events)): ?>
+                        <option value="">No seasons found</option>
+                    <?php else: ?>
+                        <?php foreach($seasons_with_events as $year => $cnt): ?>
+                            <option value="<?php echo $year; ?>" <?php if($year == $season) echo 'selected'; ?>>
+                                Season <?php echo $year; ?> (<?php echo $cnt; ?> events)
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Target Season(s) (Copy To)</label>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <?php 
+                    for($y=2026; $y<=2030; $y++): 
+                    ?>
+                        <label class="flex items-center gap-3 bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 hover:bg-slate-800 transition-colors cursor-pointer group">
+                            <input type="checkbox" name="target_years[]" value="<?php echo $y; ?>" class="w-4 h-4 rounded accent-sky-500 border-slate-700 bg-slate-900">
+                            <span class="text-sm font-medium text-slate-300 group-hover:text-white"><?php echo $y; ?></span>
+                        </label>
+                    <?php endfor; ?>
+                </div>
+                <div class="relative">
+                    <input type="number" name="target_year" placeholder="Other Year (e.g. 2031)" min="2025" max="2040"
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-sky-500 transition-all text-sm placeholder:text-slate-600">
+                </div>
             </div>
             
-            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-6">
-                <p class="text-xs text-amber-400 flex items-start gap-2">
-                    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
-                    <span>This will not affect the current season. You can edit the new season's events independently after duplicating.</span>
+            <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
+                <p class="text-xs text-amber-400 flex items-start gap-3 leading-relaxed">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                    <span>This will only duplicate the event list. It will <strong>not</strong> overwrite any season that already has events.</span>
                 </p>
             </div>
             
-            <div class="flex gap-3">
-                <button type="button" onclick="document.getElementById('duplicate-season-modal').classList.add('hidden')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-lg transition-colors text-sm">Cancel</button>
-                <button type="submit" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2">
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('duplicate-season-modal').classList.add('hidden')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-xl transition-colors text-sm">Cancel</button>
+                <button type="submit" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sky-900/30 text-sm flex items-center justify-center gap-2">
                     <i data-lucide="copy" class="w-4 h-4"></i> Duplicate
                 </button>
             </div>

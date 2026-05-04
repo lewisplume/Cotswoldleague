@@ -438,37 +438,66 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
     // --- DUPLICATE SEASON ---
     if ($_POST['admin_action'] === 'duplicate_season') {
         $source_year = intval($_POST['source_year']);
-        $target_year = intval($_POST['target_year']);
+        
+        $targets = [];
+        if (!empty($_POST['target_years']) && is_array($_POST['target_years'])) {
+            $targets = array_map('intval', $_POST['target_years']);
+        } elseif (!empty($_POST['target_year'])) {
+            $targets[] = intval($_POST['target_year']);
+        }
 
-        if (!$source_year || !$target_year || $source_year === $target_year) {
-            $error_msg = "Source and target seasons must be different valid years.";
+        if (!$source_year || empty($targets)) {
+            $error_msg = "Please select a source season and at least one target season.";
         } else {
-            // Check target doesn't already have events
-            $chk = $conn->prepare("SELECT COUNT(*) as cnt FROM gala_events WHERE season_year = ?");
-            $chk->bind_param("i", $target_year);
-            $chk->execute();
-            $existing = $chk->get_result()->fetch_assoc()['cnt'];
-            $chk->close();
+            // Check source has events
+            $chk_src = $conn->prepare("SELECT COUNT(*) as cnt FROM gala_events WHERE season_year = ?");
+            $chk_src->bind_param("i", $source_year);
+            $chk_src->execute();
+            $source_count = $chk_src->get_result()->fetch_assoc()['cnt'];
+            $chk_src->close();
 
-            if ($existing > 0) {
-                $error_msg = "Season $target_year already has $existing event(s). Delete them first or choose a different year.";
+            if ($source_count == 0) {
+                $error_msg = "Source Season $source_year has no events to copy.";
             } else {
-                // Copy all events
-                $copy_sql = "INSERT INTO gala_events 
-                    (event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms, 
-                     a_final_event_name, a_final_distance, a_final_cut_off_time_ms, season_year)
-                    SELECT event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms, 
-                           a_final_event_name, a_final_distance, a_final_cut_off_time_ms, ?
-                    FROM gala_events WHERE season_year = ? ORDER BY event_number ASC";
-                $stmt = $conn->prepare($copy_sql);
-                $stmt->bind_param("ii", $target_year, $source_year);
-                if ($stmt->execute()) {
-                    $copied = $stmt->affected_rows;
-                    $success_msg = "Duplicated $copied events from Season $source_year to Season $target_year.";
-                } else {
-                    $error_msg = "Failed to duplicate season: " . $conn->error;
+                $success_years = [];
+                $skipped_years = [];
+                
+                foreach ($targets as $ty) {
+                    if ($ty === $source_year) continue;
+                    
+                    // Check target doesn't already have events
+                    $chk = $conn->prepare("SELECT COUNT(*) as cnt FROM gala_events WHERE season_year = ?");
+                    $chk->bind_param("i", $ty);
+                    $chk->execute();
+                    $existing = $chk->get_result()->fetch_assoc()['cnt'];
+                    $chk->close();
+
+                    if ($existing > 0) {
+                        $skipped_years[] = $ty;
+                    } else {
+                        $copy_sql = "INSERT INTO gala_events 
+                            (event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms, 
+                             a_final_event_name, a_final_distance, a_final_cut_off_time_ms, season_year)
+                            SELECT event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms, 
+                                   a_final_event_name, a_final_distance, a_final_cut_off_time_ms, ?
+                            FROM gala_events WHERE season_year = ? ORDER BY event_number ASC";
+                        $stmt = $conn->prepare($copy_sql);
+                        $stmt->bind_param("ii", $ty, $source_year);
+                        if ($stmt->execute()) {
+                            $success_years[] = $ty;
+                        }
+                        $stmt->close();
+                    }
                 }
-                $stmt->close();
+                
+                if (count($success_years) > 0) {
+                    $success_msg = "Successfully copied $source_count events to: " . implode(", ", $success_years) . ".";
+                    if (count($skipped_years) > 0) {
+                        $success_msg .= " Skipped (already had data): " . implode(", ", $skipped_years) . ".";
+                    }
+                } else {
+                    $error_msg = "No seasons were updated. " . (count($skipped_years) > 0 ? "Skipped (already had data): " . implode(", ", $skipped_years) : "");
+                }
             }
         }
     }
