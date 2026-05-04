@@ -2,9 +2,11 @@
 include 'db.php';
 include 'season_data.php';
 
+$active_season_year = $current_season_year ?? 2026;
+
 // Fetch Round 1, Round 2, Round 3, and Round 4 points for Season Draw page
 $completed_points = [];
-$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4 FROM results r JOIN clubs c ON r.club_id = c.id";
+$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4 FROM results r JOIN clubs c ON r.club_id = c.id WHERE r.season_year = $active_season_year";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -26,6 +28,7 @@ $finals_sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4,
               (r.round_1 + r.round_2 + r.round_3 + r.round_4) as total
               FROM results r
               JOIN clubs c ON r.club_id = c.id
+              WHERE r.season_year = $active_season_year
               ORDER BY total DESC, c.name ASC";
 $finals_result = $conn->query($finals_sql);
 
@@ -48,7 +51,7 @@ if ($finals_result && $finals_result->num_rows > 0) {
 
 // Fetch Venue Details from DB
 $venue_db = [];
-$v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id";
+$v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $active_season_year";
 $v_res = $conn->query($v_sql);
 if ($v_res && $v_res->num_rows > 0) {
     while ($row = $v_res->fetch_assoc()) {
@@ -100,7 +103,7 @@ function getPoints($round, $team, $completed_points)
             Season <span class="text-sky-500">Draw</span>
         </h1>
         <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-            Full round-by-round gala fixtures, venues, and live links for the 2026 season.
+            Full round-by-round gala fixtures, venues, and live links for the <?php echo $active_season_year; ?> season.
         </p>
     </div>
 
@@ -109,7 +112,7 @@ function getPoints($round, $team, $completed_points)
             <div class="flex flex-col md:flex-row justify-between items-end gap-4">
                 <div>
                     <h2 class="text-3xl font-bold">Season <span class="text-sky-500">Draw</span></h2>
-                    <p class="text-slate-400">All preliminary rounds for the 2026 season.</p>
+                    <p class="text-slate-400">All preliminary rounds for the <?php echo $active_season_year; ?> season.</p>
                 </div>
                 <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl border border-slate-700">
                     <button onclick="filterDraw(1)" id="btnR1"
@@ -338,7 +341,7 @@ endforeach; ?>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-black uppercase tracking-tighter text-sky-400">A Final Location</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo $active_season_year; ?> Finals</span>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
@@ -393,7 +396,7 @@ endforeach; ?>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B Final Location</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo $active_season_year; ?> Finals</span>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
@@ -448,7 +451,7 @@ endforeach; ?>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-black uppercase tracking-tighter text-sky-400">C Final Location</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium">April 25th 2026</span>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo $active_season_year; ?> Finals</span>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
@@ -508,7 +511,7 @@ endforeach; ?>
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+            &copy; <?php echo $active_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume
         </footer>
     </div>
 

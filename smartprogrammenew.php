@@ -1,4 +1,5 @@
 <?php
+include_once 'db.php';
 $sheetId = $_GET['sheet_id'] ?? null;
 ?>
 <!DOCTYPE html>

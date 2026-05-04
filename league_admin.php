@@ -100,7 +100,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
     if ($_POST['admin_action'] === 'delete_club') {
         $id = $_POST['id'];
         // Cascade delete (In a real app, strict foreign keys handle this, but manual cleanup ensures no orphans just in case)
-        $conn->query("DELETE FROM venue_details WHERE club_id=$id OR team_1_id=$id OR team_2_id=$id OR team_3_id=$id OR team_4_id=$id");
+        $conn->query("DELETE FROM venue_details WHERE club_id=$id OR team_1_id=$id OR team_2_id=$id OR team_3_id=$id OR team_4_id=$id OR team_5_id=$id OR team_6_id=$id OR team_7_id=$id OR team_8_id=$id");
         $conn->query("DELETE FROM club_contacts WHERE club_id=$id");
         $conn->query("DELETE FROM results WHERE club_id=$id");
         if ($conn->query("DELETE FROM clubs WHERE id=$id")) {
@@ -130,6 +130,33 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         }
     }
 
+    // --- ADD VENUE SLOT ---
+    if ($_POST['admin_action'] === 'add_venue') {
+        $first_club_res = $conn->query("SELECT id FROM clubs ORDER BY id ASC LIMIT 1");
+        $placeholder_club = ($first_club_res && $first_club_res->num_rows > 0) ? $first_club_res->fetch_assoc()['id'] : 1;
+        $round_num = isset($_POST['new_round']) ? intval($_POST['new_round']) : 1;
+        
+        $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, season_year, gala_type) VALUES (?, 'TBC', ?, ?, 'standard')");
+        $stmt->bind_param("iii", $placeholder_club, $round_num, $current_season_year);
+        if ($stmt->execute()) {
+            $success_msg = "Blank venue added for Round $round_num (Season $current_season_year).";
+        } else {
+            $error_msg = "Failed to add venue: " . $conn->error;
+        }
+    }
+
+    // --- DELETE VENUE SLOT ---
+    if ($_POST['admin_action'] === 'delete_venue') {
+        $venue_id = intval($_POST['venue_id']);
+        $stmt = $conn->prepare("DELETE FROM venue_details WHERE id = ?");
+        $stmt->bind_param("i", $venue_id);
+        if ($stmt->execute()) {
+            $success_msg = "Venue slot removed.";
+        } else {
+            $error_msg = "Failed to delete venue: " . $conn->error;
+        }
+    }
+
     // --- VENUE CRUD ---
     if ($_POST['admin_action'] === 'update_venue') {
         $id = $_POST['venue_id'];
@@ -146,14 +173,18 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $t2 = !empty($_POST['team_2_id']) ? $_POST['team_2_id'] : null;
         $t3 = !empty($_POST['team_3_id']) ? $_POST['team_3_id'] : null;
         $t4 = !empty($_POST['team_4_id']) ? $_POST['team_4_id'] : null;
+        $t5 = !empty($_POST['team_5_id']) ? $_POST['team_5_id'] : null;
+        $t6 = !empty($_POST['team_6_id']) ? $_POST['team_6_id'] : null;
+        $t7 = !empty($_POST['team_7_id']) ? $_POST['team_7_id'] : null;
+        $t8 = !empty($_POST['team_8_id']) ? $_POST['team_8_id'] : null;
         $teamsheet_link = !empty($_POST['teamsheet_link']) ? $_POST['teamsheet_link'] : null;
 
         if ($host_id === null || $round_num === null) {
             $error_msg = "Error: Stale data detected. Please refresh the page and try again to prevent data loss.";
         } else {
             if ($r_date !== null) {
-                $stmt_date = $conn->prepare("UPDATE venue_details SET round_date=? WHERE round_number=?");
-                $stmt_date->bind_param("si", $r_date, $round_num);
+                $stmt_date = $conn->prepare("UPDATE venue_details SET round_date=? WHERE round_number=? AND season_year=?");
+                $stmt_date->bind_param("sii", $r_date, $round_num, $current_season_year);
                 $stmt_date->execute();
             }
 
@@ -179,11 +210,11 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             }
 
             if ($results_file_name !== null) {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, results_file=?, teamsheet_link=? WHERE id=?");
-                $stmt->bind_param("issssssiiiissi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $results_file_name, $teamsheet_link, $id);
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, results_file=?, teamsheet_link=? WHERE id=?");
+                $stmt->bind_param("issssssiiiiiiiissi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $results_file_name, $teamsheet_link, $id);
             } else {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, teamsheet_link=? WHERE id=?");
-                $stmt->bind_param("issssssiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $teamsheet_link, $id);
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, teamsheet_link=? WHERE id=?");
+                $stmt->bind_param("issssssiiiiiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $teamsheet_link, $id);
             }
             if ($stmt->execute()) {
                 $success_msg = "Venue details updated successfully.";
@@ -318,7 +349,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $gender = $_POST['gender'];
         $event_type = $_POST['event_type'];
         $cut_off_raw = trim($_POST['cut_off_time']);
-        $season_year = 2027;
+        $season_year = $current_season_year;
 
         $a_final_event_name = !empty($_POST['a_final_event_name']) ? trim($_POST['a_final_event_name']) : null;
         $a_final_distance = !empty($_POST['a_final_distance']) ? trim($_POST['a_final_distance']) : null;
@@ -441,6 +472,75 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             }
         }
     }
+    
+    // --- SET ACTIVE SEASON ---
+    if ($_POST['admin_action'] === 'set_active_season') {
+        $new_season = intval($_POST['new_season']);
+        if ($new_season >= 2020 && $new_season <= 2099) {
+            $conn->query("UPDATE global_settings SET setting_value = '$new_season' WHERE setting_key = 'current_season_year'");
+            $current_season_year = $new_season;
+            $success_msg = "Active Season successfully changed to $new_season.";
+        } else {
+            $error_msg = "Invalid season year selected.";
+        }
+    }
+    
+    // --- AUTO-GENERATE FINALS ---
+    if ($_POST['admin_action'] === 'generate_finals') {
+        // Find top 8 (A), next 6 (B), final 6 (C)
+        $rank_sql = "SELECT c.id, c.name, (COALESCE(r.round_1,0) + COALESCE(r.round_2,0) + COALESCE(r.round_3,0) + COALESCE(r.round_4,0)) as total
+                     FROM results r JOIN clubs c ON r.club_id = c.id
+                     WHERE r.season_year = $current_season_year
+                     ORDER BY total DESC, c.name ASC";
+        $results_query = $conn->query($rank_sql);
+        
+        $ranked_teams = [];
+        while($row = $results_query->fetch_assoc()) {
+            $ranked_teams[] = $row['id'];
+        }
+        
+        if (count($ranked_teams) < 20) {
+            $error_msg = "Not enough teams ranked to generate finals (requires at least 20). Found: " . count($ranked_teams);
+        } else {
+            // First, scrub any existing finals for this season
+            $conn->query("DELETE FROM venue_details WHERE season_year = $current_season_year AND round_number = 99");
+            
+            // A Final - Top 8
+            $a_teams = array_slice($ranked_teams, 0, 8);
+            // B Final - Next 6
+            $b_teams = array_slice($ranked_teams, 8, 6);
+            // C Final - Next 6 (or remaining)
+            $c_teams = array_slice($ranked_teams, 14, 6);
+            
+            // Note: We need placeholder host clubs. Just use the first team of the final as the placeholder host for now, admin can update.
+            $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, gala_type, season_year, team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id) VALUES (?, ?, 99, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            $types = ['a_final', 'b_final', 'c_final'];
+            $finals_teams_lists = [$a_teams, $b_teams, $c_teams];
+            
+            try {
+                $conn->begin_transaction();
+                
+                foreach ($types as $idx => $ftype) {
+                    $teams = $finals_teams_lists[$idx];
+                    $host = $teams[0]; 
+                    $vname = strtoupper(str_replace('_', ' ', $ftype)) . " Hosted By " . $host;
+                    
+                    // Pad array with nulls to len 8
+                    $t = array_pad($teams, 8, null);
+                    
+                    $stmt->bind_param("issiiiiiiiii", $host, $vname, $ftype, $current_season_year, $t[0], $t[1], $t[2], $t[3], $t[4], $t[5], $t[6], $t[7]);
+                    $stmt->execute();
+                }
+                
+                $conn->commit();
+                $success_msg = "Finals (A, B, C) have been automatically generated successfully.";
+            } catch (Exception $e) {
+                $conn->rollback();
+                $error_msg = "Error generating finals: " . $e->getMessage();
+            }
+        }
+    }
 }
 
 // Fetch all necessary data
@@ -457,8 +557,8 @@ if ($is_logged_in) {
     $res = $conn->query("SELECT cc.*, c.name as real_club_name, c.logo FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id ORDER BY c.name ASC");
     if ($res) while($r = $res->fetch_assoc()) $contacts_data[] = $r;
 
-    // Venues
-    $res = $conn->query("SELECT vd.*, c.name as host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id ORDER BY round_number ASC, c.name ASC");
+    // Venues (filtered by Active Season)
+    $res = $conn->query("SELECT vd.*, c.name as host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $current_season_year ORDER BY round_number ASC, c.name ASC");
     if ($res) while($r = $res->fetch_assoc()) $venues_data[] = $r;
 
     // Stats
@@ -598,7 +698,23 @@ if ($is_logged_in) {
 
                 <!-- TAB: QUICK LINKS -->
                 <div id="tab-links" class="tab-content active space-y-6">
-                    <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i data-lucide="zap" class="w-5 h-5 text-sky-400"></i> Admin Shortcuts</h2>
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2"><i data-lucide="zap" class="w-5 h-5 text-sky-400"></i> Admin Shortcuts</h2>
+                        
+                        <!-- SEASON CONTROLLER -->
+                        <div class="bg-indigo-500/10 border border-indigo-500/30 p-3 rounded-2xl flex items-center gap-4">
+                            <span class="text-sm font-bold text-indigo-400">Active Season:</span>
+                            <form method="POST" class="flex gap-2">
+                                <input type="hidden" name="admin_action" value="set_active_season">
+                                <select name="new_season" class="bg-slate-900 border border-slate-700 rounded-lg py-1 px-3 text-sm focus:outline-none focus:border-indigo-500 text-white">
+                                    <?php for($y=2026; $y<=2035; $y++): ?>
+                                        <option value="<?php echo $y; ?>" <?php if($current_season_year == $y) echo 'selected'; ?>><?php echo $y; ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-xs text-white font-bold py-1 px-3 rounded-lg transition-colors">Apply</button>
+                            </form>
+                        </div>
+                    </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                         <div class="glass-panel p-5 rounded-2xl border border-white/5 relative overflow-hidden group">
@@ -832,7 +948,33 @@ if ($is_logged_in) {
 
                 <!-- TAB: HOST VENUES -->
                 <div id="tab-venues" class="tab-content space-y-6">
-                    <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i data-lucide="map-pin" class="w-5 h-5 text-emerald-400"></i> Event Venues Scheduler</h2>
+                    <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2 mb-2"><i data-lucide="map-pin" class="w-5 h-5 text-emerald-400"></i> Event Venues Scheduler (Season <?php echo $current_season_year; ?>)</h2>
+                        
+                        <div class="flex flex-wrap gap-2">
+                            <!-- ADD VENUE SLOT FORM -->
+                            <form method="POST" class="flex gap-2">
+                                <input type="hidden" name="admin_action" value="add_venue">
+                                <select name="new_round" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500">
+                                    <option value="1">Round 1</option>
+                                    <option value="2">Round 2</option>
+                                    <option value="3">Round 3</option>
+                                    <option value="4">Round 4</option>
+                                    <option value="99">Finals</option>
+                                </select>
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/20">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> Add Venue
+                                </button>
+                            </form>
+
+                            <form method="POST" onsubmit="return confirm('Are you sure you want to Auto-Generate finals? This will overwrite any existing finals for this season.');">
+                                <input type="hidden" name="admin_action" value="generate_finals">
+                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i> Auto-Gen Finals 
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <?php foreach($venues_data as $venue): ?>
@@ -858,9 +1000,14 @@ if ($is_logged_in) {
                                                 <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-500/50"></i>
                                             </div>
                                         </div>
-                                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition-colors group-hover:scale-105 shadow-lg flex-shrink-0">
-                                            <i data-lucide="save" class="w-4 h-4"></i>
-                                        </button>
+                                        <div class="flex gap-2 flex-shrink-0">
+                                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition-colors group-hover:scale-105 shadow-lg">
+                                                <i data-lucide="save" class="w-4 h-4"></i>
+                                            </button>
+                                            <button type="submit" name="admin_action" value="delete_venue" onclick="return confirm('Are you sure you want to permanently delete this venue slot?');" class="bg-rose-600 hover:bg-rose-500 text-white p-2 rounded-lg transition-colors shadow-lg">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="space-y-3">
@@ -910,9 +1057,12 @@ if ($is_logged_in) {
                                     <div class="pt-3 border-t border-white/5 space-y-2">
                                         <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">Competing Teams (Draw)</label>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <?php for($t=1; $t<=4; $t++): 
+                                            <?php 
+                                            // Finals might have up to 8 teams, normally 4 teams
+                                            $max_teams = ($venue['round_number'] == 99) ? 8 : 4;
+                                            for($t=1; $t<=$max_teams; $t++): 
                                                 $team_key = "team_{$t}_id"; 
-                                                $selected_id = $venue[$team_key];
+                                                $selected_id = $venue[$team_key] ?? null;
                                             ?>
                                             <select name="<?php echo $team_key; ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 appearance-none">
                                                 <option value="">- Select Team <?php echo $t; ?> -</option>

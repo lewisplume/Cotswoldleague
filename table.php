@@ -8,6 +8,7 @@ $sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4,
        (r.round_1 + r.round_2 + r.round_3 + r.round_4) as total 
        FROM results r 
        JOIN clubs c ON r.club_id = c.id 
+       WHERE r.season_year = $current_season_year
        ORDER BY total DESC, c.name ASC";
 $result = $conn->query($sql);
 
@@ -219,7 +220,7 @@ endforeach; ?>
             <h2 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl mb-2">
                 Finals <span class="text-sky-500">Results</span>
             </h2>
-            <p class="text-sm text-slate-400">Cotswold Swimming Series 2026 Finals Day</p>
+            <p class="text-sm text-slate-400">Cotswold Swimming Series <?php echo $current_season_year; ?> Finals Day</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-emerald-500">
@@ -320,7 +321,7 @@ endif; ?>
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em] py-8">
-            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+            &copy; <?php echo $current_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume
         </footer>
     </div>
 

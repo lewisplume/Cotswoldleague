@@ -8,6 +8,8 @@ include 'db.php';
 
 header('Content-Type: application/json');
 
+$active_season_year = $current_season_year ?? 2026;
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $is_super_admin = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
 $is_club_logged_in = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'] === true;
@@ -22,7 +24,7 @@ if (!$is_super_admin && !$is_club_logged_in) {
 // GET: Load events for a gala type
 // =====================================================
 if ($action === 'events' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    $season = intval($_GET['season'] ?? 2027);
+    $season = intval($_GET['season'] ?? $active_season_year);
     $type = $_GET['type'] ?? 'round'; // round, a_final, b_final, c_final
 
     $sql = "SELECT * FROM gala_events WHERE season_year = ? ORDER BY event_number ASC";
@@ -68,7 +70,7 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $host_club_id = intval($_POST['host_club_id'] ?? 0);
     $gala_date = $_POST['gala_date'] ?? null;
     $team_count = intval($_POST['team_count'] ?? 4);
-    $season_year = intval($_POST['season_year'] ?? 2027);
+    $season_year = intval($_POST['season_year'] ?? $active_season_year);
 
     if (!$host_club_id || !$round_number) {
         echo json_encode(['error' => 'Missing required fields']);
@@ -99,10 +101,10 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Auto-populate teams from venue_details draw
     if ($venue_detail_id > 0) {
-        $v = $conn->query("SELECT team_1_id, team_2_id, team_3_id, team_4_id FROM venue_details WHERE id = $venue_detail_id");
+        $v = $conn->query("SELECT team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id FROM venue_details WHERE id = $venue_detail_id");
         if ($v && $row = $v->fetch_assoc()) {
             $team_stmt = $conn->prepare("INSERT INTO gala_teams (scoresheet_id, club_id) VALUES (?, ?)");
-            for ($i = 1; $i <= 4; $i++) {
+            for ($i = 1; $i <= 8; $i++) {
                 $tid = $row["team_{$i}_id"];
                 if ($tid) {
                     $team_stmt->bind_param("ii", $scoresheet_id, $tid);
@@ -175,7 +177,7 @@ if ($action === 'create_sandbox' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Pre-create result rows
     $event_ids = [];
-    $e_res = $conn->query("SELECT id FROM gala_events WHERE season_year = 2027 ORDER BY event_number ASC"); // Use 2027 events as template
+    $e_res = $conn->query("SELECT id FROM gala_events WHERE season_year = $active_season_year ORDER BY event_number ASC"); // Use active season events as template
     while ($e = $e_res->fetch_assoc()) {
         $event_ids[] = (int)$e['id'];
     }
@@ -239,7 +241,7 @@ if ($action === 'load' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $gala_type = $scoresheet['gala_type'];
     $season = (int)$scoresheet['season_year'];
     if ($season === 9999) {
-        $season = 2027; // Use 2027 template for Sandbox
+        $season = $active_season_year; // Use the active season template for Sandbox
     }
     $events = [];
     $e = $conn->query("SELECT * FROM gala_events WHERE season_year = $season ORDER BY event_number ASC");
@@ -505,7 +507,7 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $venue_detail_id = intval($_GET['venue_detail_id'] ?? 0);
     $club_id = intval($_GET['club_id'] ?? 0);
     $round = intval($_GET['round'] ?? 0);
-    $season = intval($_GET['season'] ?? 2027);
+    $season = intval($_GET['season'] ?? $active_season_year);
 
     // If venue_detail_id provided directly, use it; otherwise resolve from club_id + round
     if (!$venue_detail_id && $club_id && $round) {

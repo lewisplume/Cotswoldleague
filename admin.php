@@ -228,36 +228,34 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                 class="glass-panel rounded-2xl overflow-hidden border border-white/5 md:col-span-2 xl:col-span-2">
                                 <div
                                     class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">
-                                    Results Calculator</div>
+                                    Digital Scoresheet</div>
                                 <div class="grid grid-cols-1 lg:grid-cols-3">
-                                    <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQAavPrQy9y9S7DWUpvjXmZIAdPgyvNEAZtEnu9i0ISWK5Q?e=5LEDAr"
-                                        target="_blank"
+                                    <a href="teamportal.php"
                                         class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-b-0 lg:border-r transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
-                                                data-lucide="download-cloud" class="text-emerald-500 w-5 h-5"></i></div>
+                                                data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Results Calculator</p>
-                                            <p class="text-xs text-slate-500">Main Software Download</p>
+                                            <p class="text-sm font-medium">Open Team Portal Scoresheet</p>
+                                            <p class="text-xs text-slate-500">Primary gala scoring workflow</p>
                                         </div>
                                     </a>
-                                    <a href="https://docs.google.com/document/d/10CvL07WJMVqDPZJU7LXIhFinBAcUarDiF7jNj03fdb4/edit?usp=sharing"
-                                        target="_blank"
+                                    <a href="teamportal.php"
                                         class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-b-0 lg:border-r transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
                                                 data-lucide="book-open" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Full User Guide</p>
-                                            <p class="text-xs text-slate-500">Comprehensive instructions</p>
+                                            <p class="text-sm font-medium">Scoresheet Guide (Team Portal)</p>
+                                            <p class="text-xs text-slate-500">Use web scoresheet instructions in portal</p>
                                         </div>
                                     </a>
                                     <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing"
                                         target="_blank"
                                         class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
-                                                data-lucide="zap" class="text-emerald-500 w-5 h-5"></i></div>
+                                                data-lucide="life-buoy" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Poolside Quick Guide</p>
-                                            <p class="text-xs text-slate-500">Essential cheat sheet</p>
+                                            <p class="text-sm font-medium">Excel Backup Guide</p>
+                                            <p class="text-xs text-slate-500">Use only as gala contingency backup</p>
                                         </div>
                                     </a>
                                 </div>
@@ -467,19 +465,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500"
                                     data-id="results-calc">
                                 <div>
-                                    <span class="text-slate-200 font-medium block mb-1">Results Calculator</span>
-                                    <span class="text-xs text-slate-500 block">Used to calculate results for each
-                                        gala</span>
+                                    <span class="text-slate-200 font-medium block mb-1">Digital Scoresheet</span>
+                                    <span class="text-xs text-slate-500 block">Use Team Portal scoresheet at galas.
+                                        Keep Excel only as backup.</span>
                                 </div>
                             </label>
                             <div class="flex gap-2 mt-3">
-                                <a href="https://1drv.ms/x/c/7c197ed7ec71ffca/IQAavPrQy9y9S7DWUpvjXmZIAdPgyvNEAZtEnu9i0ISWK5Q?e=5LEDAr"
-                                    target="_blank"
+                                <a href="teamportal.php"
                                     class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
-                                    <i data-lucide="download" class="w-3 h-3"></i> Download
+                                    <i data-lucide="layout-dashboard" class="w-3 h-3"></i> Team Portal
                                 </a>
-                                <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing"
-                                    target="_blank"
+                                <a href="teamportal.php"
                                     class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
                                     <i data-lucide="book" class="w-3 h-3"></i> Guide
                                 </a>

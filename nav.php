@@ -1,6 +1,11 @@
 <?php
+if (!isset($current_season_year)) {
+    include_once 'db.php';
+}
+
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $enableLogoFlair = $currentScript !== 'index.php';
+$navSeasonYear = isset($current_season_year) ? (int)$current_season_year : 2026;
 ?>
 
 <style>
@@ -63,7 +68,7 @@ $enableLogoFlair = $currentScript !== 'index.php';
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <div class="hidden sm:block text-sky-500 font-bold text-sm tracking-wider uppercase">Season 2026</div>
+                <div class="hidden sm:block text-sky-500 font-bold text-sm tracking-wider uppercase">Season <?php echo $navSeasonYear; ?></div>
                 <a href="admin"
                     class="hidden md:inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:bg-sky-400 hover:shadow-sky-400/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2 focus:ring-offset-slate-900">
                     <i data-lucide="lock" class="w-3 h-3"></i> Team Login

@@ -2,6 +2,8 @@
 session_start();
 include 'db.php';
 
+$active_season_year = $current_season_year ?? 2026;
+
 // Handle Logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
@@ -202,9 +204,9 @@ if ($is_logged_in) {
     }
 
     // 3. Fetch My Venues
-    $v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.club_id = ? ORDER BY vd.round_number ASC";
+    $v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.club_id = ? AND vd.season_year = ? ORDER BY vd.round_number ASC";
     $v_stmt = $conn->prepare($v_sql);
-    $v_stmt->bind_param("i", $current_club_id);
+    $v_stmt->bind_param("ii", $current_club_id, $active_season_year);
     $v_stmt->execute();
     $v_res = $v_stmt->get_result();
     if ($v_res->num_rows > 0) {
@@ -222,6 +224,10 @@ if ($is_logged_in) {
                          c2.name AS team2_name, 
                          c3.name AS team3_name, 
                          c4.name AS team4_name,
+                        c5.name AS team5_name,
+                        c6.name AS team6_name,
+                        c7.name AS team7_name,
+                        c8.name AS team8_name,
                          gs.id AS scoresheet_id,
                          gs.status AS scoresheet_status
                   FROM venue_details vd
@@ -230,11 +236,15 @@ if ($is_logged_in) {
                   LEFT JOIN clubs c2 ON vd.team_2_id = c2.id
                   LEFT JOIN clubs c3 ON vd.team_3_id = c3.id
                   LEFT JOIN clubs c4 ON vd.team_4_id = c4.id
+                    LEFT JOIN clubs c5 ON vd.team_5_id = c5.id
+                    LEFT JOIN clubs c6 ON vd.team_6_id = c6.id
+                    LEFT JOIN clubs c7 ON vd.team_7_id = c7.id
+                    LEFT JOIN clubs c8 ON vd.team_8_id = c8.id
                   LEFT JOIN gala_scoresheets gs ON vd.id = gs.venue_detail_id
-                  WHERE vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
+                  WHERE vd.season_year = ? AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ? OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
                   ORDER BY vd.round_number ASC";
     $d_stmt = $conn->prepare($draws_sql);
-    $d_stmt->bind_param("iiiii", $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
+    $d_stmt->bind_param("iiiiiiiiii", $active_season_year, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
     $d_stmt->execute();
     $d_res = $d_stmt->get_result();
     if ($d_res->num_rows > 0) {
@@ -297,7 +307,7 @@ if ($is_logged_in) {
 
     // 5b. Hosted Rounds pulled from venue_details
     $rounds_sql = "SELECT vd.round_number, c.name AS host_name, vd.team_1_id, vd.team_2_id, vd.team_3_id, vd.team_4_id 
-                   FROM venue_details vd JOIN clubs c ON vd.club_id = c.id";
+                   FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $active_season_year";
     $r_res = $conn->query($rounds_sql);
     if ($r_res) {
         while ($row = $r_res->fetch_assoc()) {
@@ -522,7 +532,7 @@ if ($is_logged_in) {
                                     <div>
                                         <h2 class="text-2xl font-bold text-white mb-1">Club Teamsheet</h2>
                                         <p class="text-slate-300 text-sm max-w-md leading-relaxed">Access your personal
-                                            2027 club teamsheet. This is a live Google Sheet — no login or saving required.
+                                            <?php echo $active_season_year; ?> club teamsheet. This is a live Google Sheet — no login or saving required.
                                             All changes are tracked automatically.</p>
                                     </div>
                                 </div>
@@ -881,6 +891,10 @@ if ($is_logged_in) {
                                                 if ($draw['team2_name']) $competing[] = $draw['team2_name'];
                                                 if ($draw['team3_name']) $competing[] = $draw['team3_name'];
                                                 if ($draw['team4_name']) $competing[] = $draw['team4_name'];
+                                                if ($draw['team5_name']) $competing[] = $draw['team5_name'];
+                                                if ($draw['team6_name']) $competing[] = $draw['team6_name'];
+                                                if ($draw['team7_name']) $competing[] = $draw['team7_name'];
+                                                if ($draw['team8_name']) $competing[] = $draw['team8_name'];
                                                 
                                                 $competing = array_unique($competing);
                                                 

@@ -126,7 +126,7 @@ if ($can_build_draw) {
         $v_sql = "SELECT vd.*, c.name AS host_club_name 
                   FROM venue_details vd 
                   JOIN clubs c ON vd.club_id = c.id 
-                  WHERE vd.round_number = $i
+                  WHERE vd.round_number = $i AND vd.season_year = $current_season_year
                   ORDER BY c.name ASC";
         $v_res = $conn->query($v_sql);
         
@@ -154,6 +154,10 @@ if ($can_build_draw) {
                 if (!empty($row['team_2_id']) && isset($club_map[$row['team_2_id']])) $teams[] = $club_map[$row['team_2_id']];
                 if (!empty($row['team_3_id']) && isset($club_map[$row['team_3_id']])) $teams[] = $club_map[$row['team_3_id']];
                 if (!empty($row['team_4_id']) && isset($club_map[$row['team_4_id']])) $teams[] = $club_map[$row['team_4_id']];
+                if (!empty($row['team_5_id']) && isset($club_map[$row['team_5_id']])) $teams[] = $club_map[$row['team_5_id']];
+                if (!empty($row['team_6_id']) && isset($club_map[$row['team_6_id']])) $teams[] = $club_map[$row['team_6_id']];
+                if (!empty($row['team_7_id']) && isset($club_map[$row['team_7_id']])) $teams[] = $club_map[$row['team_7_id']];
+                if (!empty($row['team_8_id']) && isset($club_map[$row['team_8_id']])) $teams[] = $club_map[$row['team_8_id']];
                 
                 // If teams array is empty for some reason, at least list the host so the UI doesn't crash completely.
                 if (empty($teams)) {

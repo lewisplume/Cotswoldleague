@@ -12,6 +12,31 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Create settings table
+$conn->query("CREATE TABLE IF NOT EXISTS global_settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value VARCHAR(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+// Initialize default season if not exists
+$conn->query("INSERT IGNORE INTO global_settings (setting_key, setting_value) VALUES ('current_season_year', '2026')");
+
+// Fetch current season dynamically
+$season_query = $conn->query("SELECT setting_value FROM global_settings WHERE setting_key = 'current_season_year'");
+if ($season_query && $row = $season_query->fetch_assoc()) {
+    $current_season_year = (int)$row['setting_value'];
+} else {
+    $current_season_year = 2026;
+}
+
+// Venue Details Updates for Season & Finals (8 Lanes)
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN season_year INT NOT NULL DEFAULT 2026"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN gala_type ENUM('round','a_final','b_final','c_final') DEFAULT 'round'"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_5_id INT DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_6_id INT DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_7_id INT DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_8_id INT DEFAULT NULL"); } catch (Exception $e) {}
+
 // Add results_file column if it doesn't exist
 try {
     $conn->query("ALTER TABLE venue_details ADD COLUMN results_file VARCHAR(255) DEFAULT NULL");
@@ -20,6 +45,11 @@ try {
 }
 
 // Add teamsheet_link column if it doesn't exist
+try {
+    $conn->query("ALTER TABLE venue_details ADD COLUMN teamsheet_link VARCHAR(500) DEFAULT NULL");
+} catch (Exception $e) {
+    // Column likely already exists
+}
 try {
     $conn->query("ALTER TABLE venue_details ADD COLUMN teamsheet_link VARCHAR(500) DEFAULT NULL");
 } catch (Exception $e) {
