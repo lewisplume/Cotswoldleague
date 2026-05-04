@@ -96,7 +96,7 @@ const GalaEngine = (() => {
      * 1. DQ → 0 points, status='dq'
      * 2. time < cutOff → 0 points, status='too_fast'
      * 3. Valid time → points = (DQ count) + (TooFast count) + (count of teams with time >= this time)
-     * 4. Place = rank by points descending (highest = 1st)
+     * 4. Place = rank by valid time, with dead heats sharing the same place
      */
     function calculateEventScores(entries, cutOffMs) {
         const teamCount = entries.length;
@@ -128,10 +128,15 @@ const GalaEngine = (() => {
             entry.points = dqCount + tooFastCount + sameOrSlower;
         });
 
-        // Step 3: Assign places to valid entries (rank by points descending)
-        const sorted = [...validEntries].sort((a, b) => b.points - a.points);
+        // Step 3: Assign places by time, with ties sharing the same place.
+        // Example: 1st, 2nd, 2nd, 4th.
+        const sorted = [...validEntries].sort((a, b) => a.time_ms - b.time_ms);
         sorted.forEach((entry, idx) => {
-            entry.place = idx + 1;
+            if (idx > 0 && entry.time_ms === sorted[idx - 1].time_ms) {
+                entry.place = sorted[idx - 1].place;
+            } else {
+                entry.place = idx + 1;
+            }
         });
 
         return classified;

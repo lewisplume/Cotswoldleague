@@ -39,7 +39,7 @@ while ($row = $res_clubs->fetch_assoc()) {
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <!-- Include the scoring engine -->
-    <script src="gala_scoresheet.js"></script>
+    <script src="gala_scoresheet.js?v=20260504-deadheat"></script>
     <style>
         body { background-color: #0f172a; }
         .glass-panel { 
@@ -95,18 +95,19 @@ while ($row = $res_clubs->fetch_assoc()) {
     <?php include 'nav.php'; ?>
 
     <!-- INSTALL PWA PROMPT -->
-    <div id="install-prompt" class="hidden glass-panel mx-4 sm:mx-6 xl:mx-auto max-w-[1600px] mt-4 p-4 rounded-xl border border-sky-500/30 flex items-center justify-between bg-sky-900/20">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-sky-500/20 rounded-full flex items-center justify-center shrink-0">
-                <i data-lucide="download-cloud" class="w-5 h-5 text-sky-400"></i>
+    <div id="install-prompt" class="hidden glass-panel mx-4 sm:mx-6 xl:mx-auto max-w-[1600px] mt-4 p-4 rounded-xl border border-amber-400/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-amber-500/10">
+        <div class="flex items-start gap-3">
+            <div class="w-11 h-11 bg-amber-400/20 rounded-full flex items-center justify-center shrink-0 border border-amber-400/30">
+                <i data-lucide="download-cloud" class="w-5 h-5 text-amber-300"></i>
             </div>
             <div>
-                <h3 class="text-sm font-bold text-white">Save for Offline Use</h3>
-                <p class="text-xs text-slate-300" id="install-desc">Bookmark or Add this app to your Home Screen for easy access during the gala.</p>
+                <h3 class="text-base font-black text-white">No internet at the venue?</h3>
+                <p class="text-sm text-amber-50/90 leading-relaxed" id="install-desc">Click <strong class="text-white">Install App</strong> before gala day so this scoresheet can reopen and keep working offline.</p>
+                <p class="text-xs text-slate-300 mt-1">Open this page once while online first so the gala data is saved on this device.</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <button id="btn-install" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2 px-4 rounded-lg transition-colors hidden shadow-lg shadow-sky-900/20 whitespace-nowrap">Install App</button>
+            <button id="btn-install" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-black py-2.5 px-5 rounded-lg transition-colors hidden shadow-lg shadow-amber-900/20 whitespace-nowrap">Install App</button>
             <button onclick="document.getElementById('install-prompt').style.display='none'" class="p-2 text-slate-400 hover:text-white rounded-lg transition-colors bg-slate-800/50 hover:bg-slate-700/50">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
@@ -485,6 +486,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                     if (initParams.is_sandbox) {
                         localStorage.setItem('last_sandbox_id', initParams.scoresheet_id);
                     }
+                    prepareStableOfflineUrl(initParams.scoresheet_id);
                     await loadScoresheetData(initParams.scoresheet_id);
                 } else {
                     showError("Failed to initialize scoresheet.");
@@ -501,6 +503,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                 elSyncStatus.innerHTML = '<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div> Online';
                 elSyncStatus.className = 'flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400';
                 if (initParams.scoresheet_id) {
+                    syncPendingLaneAssignments(initParams.scoresheet_id);
                     GalaEngine.syncToServer(initParams.scoresheet_id);
                 }
             } else {
@@ -514,6 +517,32 @@ while ($row = $res_clubs->fetch_assoc()) {
             lucide.createIcons();
         }
 
+        function stableScoresheetUrl(id) {
+            const params = new URLSearchParams({ id });
+            if (initParams.is_sandbox) params.set('sandbox', '1');
+            return `gala_scoresheet.php?${params.toString()}`;
+        }
+
+        function prepareStableOfflineUrl(id) {
+            if (!id) return;
+
+            const stableUrl = stableScoresheetUrl(id);
+            if (window.location.pathname.endsWith('gala_scoresheet.php') && window.location.search !== `?${stableUrl.split('?')[1]}`) {
+                history.replaceState(null, '', stableUrl);
+            }
+
+            if (navigator.onLine) {
+                // Warm the cache for the exact id URL, so an offline reload has PHP init data.
+                fetch(stableUrl, { credentials: 'same-origin', cache: 'reload' })
+                    .then((response) => {
+                        if (response.ok && 'caches' in window) {
+                            caches.open('gala-scoresheet-v2').then((cache) => cache.put(stableUrl, response.clone()));
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }
+
         // =========================================================
         // DATA LOADING
         // =========================================================
@@ -524,6 +553,7 @@ while ($row = $res_clubs->fetch_assoc()) {
             
             if (findData.scoresheet_id) {
                 initParams.scoresheet_id = findData.scoresheet_id;
+                prepareStableOfflineUrl(initParams.scoresheet_id);
             } else if (findData.venue_detail_id) {
                 // Auto-create: fetch venue info from PHP to get round_number and host_club_id
                 elGalaSubtitle.innerText = 'Creating scoresheet for first use...';
@@ -553,6 +583,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                 
                 if (createData.scoresheet_id) {
                     initParams.scoresheet_id = createData.scoresheet_id;
+                    prepareStableOfflineUrl(initParams.scoresheet_id);
                 } else {
                     showError("Failed to create scoresheet: " + (createData.error || 'Unknown error'));
                     throw new Error("Cannot proceed without scoresheet_id");
@@ -634,6 +665,54 @@ while ($row = $res_clubs->fetch_assoc()) {
                 appState.results = localData.results;
             } else {
                 throw new Error("Offline and no local data found.");
+            }
+        }
+
+        function pendingLanesKey(id) {
+            return `pending_lanes_${id}`;
+        }
+
+        function applyLaneAssignmentsLocally(lanes, recorderName = '') {
+            lanes.forEach((lane) => {
+                const team = appState.teams.find(t => t.club_id === parseInt(lane.club_id));
+                if (team) team.lane_number = parseInt(lane.lane_number);
+            });
+            appState.scoresheet.status = 'in_progress';
+            if (recorderName) appState.scoresheet.recorder_name = recorderName;
+        }
+
+        async function persistCurrentScoresheetLocally() {
+            await GalaEngine.saveToLocal(appState.scoresheet.id, {
+                scoresheet: appState.scoresheet,
+                teams: appState.teams,
+                events: appState.events,
+                results: appState.results
+            });
+        }
+
+        async function postLaneAssignments(id, lanes, recorderName = '') {
+            const fd = new FormData();
+            fd.append('action', 'save_lanes');
+            fd.append('scoresheet_id', id);
+            fd.append('lanes', JSON.stringify(lanes));
+            if (recorderName) fd.append('recorder_name', recorderName);
+
+            const resp = await fetch('gala_scoresheet_api.php', { method: 'POST', body: fd });
+            const result = await resp.json();
+            if (!result.success) throw new Error(result.error || 'Failed to save lanes');
+            return result;
+        }
+
+        async function syncPendingLaneAssignments(id) {
+            const pending = localStorage.getItem(pendingLanesKey(id));
+            if (!pending || !navigator.onLine) return;
+
+            try {
+                const data = JSON.parse(pending);
+                await postLaneAssignments(id, data.lanes, data.recorderName || '');
+                localStorage.removeItem(pendingLanesKey(id));
+            } catch (err) {
+                console.warn('Lane assignment sync failed, will retry:', err);
             }
         }
 
@@ -821,19 +900,12 @@ while ($row = $res_clubs->fetch_assoc()) {
 
                 const recName = document.getElementById('recorder-name').value;
 
-                // Save via API
                 if (appState.online) {
                     btnLockSetup.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Saving...';
                     lucide.createIcons();
-                    
-                    const fd = new FormData();
-                    fd.append('action', 'save_lanes');
-                    fd.append('scoresheet_id', appState.scoresheet.id);
-                    fd.append('lanes', JSON.stringify(lanes));
-                    if (recName) fd.append('recorder_name', recName);
 
                     try {
-                        await fetch('gala_scoresheet_api.php', { method: 'POST', body: fd });
+                        await postLaneAssignments(appState.scoresheet.id, lanes, recName);
                         // Reload data to ensure sync
                         await loadScoresheetData(appState.scoresheet.id);
                     } catch (e) {
@@ -842,7 +914,10 @@ while ($row = $res_clubs->fetch_assoc()) {
                         lucide.createIcons();
                     }
                 } else {
-                    alert("You must be online to complete initial setup.");
+                    applyLaneAssignmentsLocally(lanes, recName);
+                    localStorage.setItem(pendingLanesKey(appState.scoresheet.id), JSON.stringify({ lanes, recorderName: recName }));
+                    await persistCurrentScoresheetLocally();
+                    renderUI();
                 }
             };
         }
@@ -1273,7 +1348,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                 // Detect iOS
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
-                    installDesc.innerHTML = 'Tap the <strong class="text-white">Share</strong> icon at the bottom of Safari, then select <strong class="text-white">Add to Home Screen</strong>.';
+                    installDesc.innerHTML = 'No internet at the venue? Tap the <strong class="text-white">Share</strong> icon in Safari, then choose <strong class="text-white">Add to Home Screen</strong> so this scoresheet can reopen offline.';
                 }
 
                 // Catch Chrome/Android native prompt

@@ -1,7 +1,7 @@
-const CACHE_NAME = 'gala-scoresheet-v1';
+const CACHE_NAME = 'gala-scoresheet-v2';
 const STATIC_ASSETS = [
     'gala_scoresheet.php',
-    'gala_scoresheet.js',
+    'gala_scoresheet.js?v=20260504-deadheat',
     'manifest.json',
     'images/league-logo.svg',
     // We use CDN for tailwind and lucide, we could cache them but browser usually does.

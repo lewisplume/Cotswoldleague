@@ -99,10 +99,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                         <h1 class="text-3xl font-bold">Representative <span class="text-sky-500">Portal</span></h1>
                         <p class="text-slate-500 text-xs uppercase tracking-widest mt-1">Official League Resources <?php echo $current_season_year; ?></p>
                     </div>
-                    <a href="?action=logout"
-                        class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Logout
-                    </a>
+                    <div class="flex flex-wrap justify-center md:justify-end gap-2">
+                        <a href="league_admin.php"
+                            class="bg-slate-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-slate-700 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <i data-lucide="shield" class="w-4 h-4"></i> Super Admin Portal
+                        </a>
+                        <a href="?action=logout"
+                            class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                        </a>
+                    </div>
                 </div>
 
                 <!-- TOP ACTION: CONSOLIDATED TEAM PORTAL -->
