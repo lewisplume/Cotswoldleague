@@ -249,6 +249,198 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             $error_msg = "Failed to reset stats: " . $conn->error;
         }
     }
+
+    // --- GALA EVENT CRUD ---
+    if ($_POST['admin_action'] === 'update_event') {
+        $event_id = intval($_POST['event_id']);
+        $event_name = trim($_POST['event_name']);
+        $distance = trim($_POST['distance']);
+        $age_group = trim($_POST['age_group']);
+        $gender = $_POST['gender'];
+        $event_type = $_POST['event_type'];
+        $cut_off_raw = trim($_POST['cut_off_time']);
+        
+        $a_final_event_name = !empty($_POST['a_final_event_name']) ? trim($_POST['a_final_event_name']) : null;
+        $a_final_distance = !empty($_POST['a_final_distance']) ? trim($_POST['a_final_distance']) : null;
+        $a_final_cut_off_raw = !empty($_POST['a_final_cut_off_time']) ? trim($_POST['a_final_cut_off_time']) : null;
+
+        // Helper: parse "M:SS.xx" or "SS.xx" to milliseconds
+        function parseTimeToMs($str) {
+            if (!$str) return null;
+            $str = trim($str);
+            // MM:SS.xx
+            if (preg_match('/^(\d{1,2}):(\d{1,2})\.?(\d{0,3})$/', $str, $m)) {
+                $min = intval($m[1]);
+                $sec = intval($m[2]);
+                $frac = str_pad(substr($m[3] ?? '0', 0, 3), 3, '0');
+                return ($min * 60 + $sec) * 1000 + intval($frac);
+            }
+            // SS.xx (no colon)
+            if (preg_match('/^(\d{1,4})\.?(\d{0,3})$/', $str, $m)) {
+                $sec = intval($m[1]);
+                $frac = str_pad(substr($m[2] ?? '0', 0, 3), 3, '0');
+                $min = floor($sec / 60);
+                $sec = $sec % 60;
+                return ($min * 60 + $sec) * 1000 + intval($frac);
+            }
+            return null;
+        }
+
+        $cut_off_ms = parseTimeToMs($cut_off_raw);
+        $a_final_cut_off_ms = $a_final_cut_off_raw ? parseTimeToMs($a_final_cut_off_raw) : null;
+
+        if (!$event_name || !$distance || !$cut_off_ms) {
+            $error_msg = "Event name, distance, and a valid cut-off time are required.";
+        } else {
+            $stmt = $conn->prepare("UPDATE gala_events SET 
+                event_name=?, distance=?, age_group=?, gender=?, event_type=?, cut_off_time_ms=?,
+                a_final_event_name=?, a_final_distance=?, a_final_cut_off_time_ms=?
+                WHERE id=?");
+            $stmt->bind_param("sssssisisi", 
+                $event_name, $distance, $age_group, $gender, $event_type, $cut_off_ms,
+                $a_final_event_name, $a_final_distance, $a_final_cut_off_ms, $event_id
+            );
+            if ($stmt->execute()) {
+                $success_msg = "Event #" . intval($_POST['event_number']) . " updated successfully.";
+            } else {
+                $error_msg = "Failed to update event: " . $conn->error;
+            }
+            $stmt->close();
+        }
+    }
+
+    // --- ADD NEW GALA EVENT ---
+    if ($_POST['admin_action'] === 'add_event') {
+        $event_number = intval($_POST['event_number']);
+        $event_name = trim($_POST['event_name']);
+        $distance = trim($_POST['distance']);
+        $age_group = trim($_POST['age_group']);
+        $gender = $_POST['gender'];
+        $event_type = $_POST['event_type'];
+        $cut_off_raw = trim($_POST['cut_off_time']);
+        $season_year = 2027;
+
+        $a_final_event_name = !empty($_POST['a_final_event_name']) ? trim($_POST['a_final_event_name']) : null;
+        $a_final_distance = !empty($_POST['a_final_distance']) ? trim($_POST['a_final_distance']) : null;
+        $a_final_cut_off_raw = !empty($_POST['a_final_cut_off_time']) ? trim($_POST['a_final_cut_off_time']) : null;
+
+        // Reuse the parser (may already be defined from update_event in same request)
+        if (!function_exists('parseTimeToMs')) {
+            function parseTimeToMs($str) {
+                if (!$str) return null;
+                $str = trim($str);
+                if (preg_match('/^(\d{1,2}):(\d{1,2})\.?(\d{0,3})$/', $str, $m)) {
+                    $min = intval($m[1]); $sec = intval($m[2]);
+                    $frac = str_pad(substr($m[3] ?? '0', 0, 3), 3, '0');
+                    return ($min * 60 + $sec) * 1000 + intval($frac);
+                }
+                if (preg_match('/^(\d{1,4})\.?(\d{0,3})$/', $str, $m)) {
+                    $sec = intval($m[1]);
+                    $frac = str_pad(substr($m[2] ?? '0', 0, 3), 3, '0');
+                    $min = floor($sec / 60); $sec = $sec % 60;
+                    return ($min * 60 + $sec) * 1000 + intval($frac);
+                }
+                return null;
+            }
+        }
+
+        $cut_off_ms = parseTimeToMs($cut_off_raw);
+        $a_final_cut_off_ms = $a_final_cut_off_raw ? parseTimeToMs($a_final_cut_off_raw) : null;
+
+        if (!$event_number || !$event_name || !$distance || !$cut_off_ms) {
+            $error_msg = "Event number, name, distance, and a valid cut-off time are required.";
+        } else {
+            // Check for duplicate event number
+            $dup = $conn->prepare("SELECT id FROM gala_events WHERE event_number = ? AND season_year = ?");
+            $dup->bind_param("ii", $event_number, $season_year);
+            $dup->execute();
+            if ($dup->get_result()->num_rows > 0) {
+                $error_msg = "Event #$event_number already exists for this season.";
+            } else {
+                $stmt = $conn->prepare("INSERT INTO gala_events 
+                    (event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms,
+                     a_final_event_name, a_final_distance, a_final_cut_off_time_ms, season_year) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("issssisisii", 
+                    $event_number, $event_name, $distance, $age_group, $gender, $event_type, $cut_off_ms,
+                    $a_final_event_name, $a_final_distance, $a_final_cut_off_ms, $season_year
+                );
+                if ($stmt->execute()) {
+                    $success_msg = "Event #$event_number added successfully.";
+                } else {
+                    $error_msg = "Failed to add event: " . $conn->error;
+                }
+                $stmt->close();
+            }
+            $dup->close();
+        }
+    }
+
+    // --- DELETE GALA EVENT ---
+    if ($_POST['admin_action'] === 'delete_event') {
+        $event_id = intval($_POST['event_id']);
+        
+        // Safety: check if this event has any recorded results
+        $chk = $conn->prepare("SELECT COUNT(*) as cnt FROM gala_results WHERE event_id = ? AND (time_ms IS NOT NULL OR is_dq = 1)");
+        $chk->bind_param("i", $event_id);
+        $chk->execute();
+        $result_count = $chk->get_result()->fetch_assoc()['cnt'];
+        $chk->close();
+
+        if ($result_count > 0) {
+            $error_msg = "Cannot delete this event — it has $result_count recorded result(s). Remove them first.";
+        } else {
+            // Delete any empty result rows first (foreign key constraint)
+            $conn->query("DELETE FROM gala_results WHERE event_id = $event_id");
+            
+            $stmt = $conn->prepare("DELETE FROM gala_events WHERE id = ?");
+            $stmt->bind_param("i", $event_id);
+            if ($stmt->execute()) {
+                $success_msg = "Event deleted successfully.";
+            } else {
+                $error_msg = "Failed to delete event: " . $conn->error;
+            }
+            $stmt->close();
+        }
+    }
+
+    // --- DUPLICATE SEASON ---
+    if ($_POST['admin_action'] === 'duplicate_season') {
+        $source_year = intval($_POST['source_year']);
+        $target_year = intval($_POST['target_year']);
+
+        if (!$source_year || !$target_year || $source_year === $target_year) {
+            $error_msg = "Source and target seasons must be different valid years.";
+        } else {
+            // Check target doesn't already have events
+            $chk = $conn->prepare("SELECT COUNT(*) as cnt FROM gala_events WHERE season_year = ?");
+            $chk->bind_param("i", $target_year);
+            $chk->execute();
+            $existing = $chk->get_result()->fetch_assoc()['cnt'];
+            $chk->close();
+
+            if ($existing > 0) {
+                $error_msg = "Season $target_year already has $existing event(s). Delete them first or choose a different year.";
+            } else {
+                // Copy all events
+                $copy_sql = "INSERT INTO gala_events 
+                    (event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms, 
+                     a_final_event_name, a_final_distance, a_final_cut_off_time_ms, season_year)
+                    SELECT event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms, 
+                           a_final_event_name, a_final_distance, a_final_cut_off_time_ms, ?
+                    FROM gala_events WHERE season_year = ? ORDER BY event_number ASC";
+                $stmt = $conn->prepare($copy_sql);
+                $stmt->bind_param("ii", $target_year, $source_year);
+                if ($stmt->execute()) {
+                    $copied = $stmt->affected_rows;
+                    $success_msg = "Duplicated $copied events from Season $source_year to Season $target_year.";
+                } else {
+                    $error_msg = "Failed to duplicate season: " . $conn->error;
+                }
+                $stmt->close();
+            }
+        }
+    }
 }
 
 // Fetch all necessary data
@@ -396,6 +588,12 @@ if ($is_logged_in) {
                     <button onclick="openTab(event, 'tab-venues')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all text-slate-400 hover:bg-white/5 hover:text-white">
                         <i data-lucide="map-pin" class="w-4 h-4"></i> Host Venues
                     </button>
+                    <button onclick="openTab(event, 'tab-gala-results')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all text-slate-400 hover:bg-white/5 hover:text-white">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Gala Results
+                    </button>
+                    <button onclick="openTab(event, 'tab-events')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all text-slate-400 hover:bg-white/5 hover:text-white">
+                        <i data-lucide="calendar" class="w-4 h-4"></i> Event Management
+                    </button>
                 </div>
 
                 <!-- TAB: QUICK LINKS -->
@@ -439,7 +637,14 @@ if ($is_logged_in) {
                         </form>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <a href="#" onclick="document.querySelector('button[onclick*=\'tab-gala-results\']').click(); return false;" class="glass-panel p-6 rounded-2xl hover:bg-emerald-900/30 transition-all group border border-emerald-500/20">
+                            <div class="h-12 w-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="clipboard-list" class="w-6 h-6 text-emerald-400"></i>
+                            </div>
+                            <h3 class="font-bold text-white">Gala Scoresheets</h3>
+                            <p class="text-xs text-slate-400 mt-1">View all team scoresheets.</p>
+                        </a>
                         <a href="update_scores.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-sky-900/30 transition-all group border border-sky-500/20">
                             <div class="h-12 w-12 bg-sky-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <i data-lucide="calculator" class="w-6 h-6 text-sky-400"></i>
@@ -474,6 +679,13 @@ if ($is_logged_in) {
                             </div>
                             <h3 class="font-bold text-white">Showcase</h3>
                             <p class="text-xs text-slate-400 mt-1">Configure and launch results presentations.</p>
+                        </a>
+                        <a href="gala_scoresheet.php?sandbox=1" class="glass-panel p-6 rounded-2xl hover:bg-amber-900/30 transition-all group border border-amber-500/20">
+                            <div class="h-12 w-12 bg-amber-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="test-tube" class="w-6 h-6 text-amber-400"></i>
+                            </div>
+                            <h3 class="font-bold text-white">Testing Sandbox</h3>
+                            <p class="text-xs text-slate-400 mt-1">Test all scoresheet functions without affecting live data.</p>
                         </a>
                     </div>
                 </div>
@@ -757,6 +969,16 @@ if ($is_logged_in) {
                             <?php endforeach; ?>
                         </div>
                     </div>
+                </div>
+
+                <!-- TAB: GALA RESULTS -->
+                <div id="tab-gala-results" class="tab-content hidden space-y-6">
+                    <?php include 'admin_gala_results.php'; ?>
+                </div>
+
+                <!-- TAB: EVENT MANAGEMENT -->
+                <div id="tab-events" class="tab-content hidden space-y-6">
+                    <?php include 'admin_gala_events.php'; ?>
                 </div>
 
             </div>

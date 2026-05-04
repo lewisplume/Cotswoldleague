@@ -221,13 +221,16 @@ if ($is_logged_in) {
                          c1.name AS team1_name, 
                          c2.name AS team2_name, 
                          c3.name AS team3_name, 
-                         c4.name AS team4_name
+                         c4.name AS team4_name,
+                         gs.id AS scoresheet_id,
+                         gs.status AS scoresheet_status
                   FROM venue_details vd
                   LEFT JOIN clubs c_host ON vd.club_id = c_host.id
                   LEFT JOIN clubs c1 ON vd.team_1_id = c1.id
                   LEFT JOIN clubs c2 ON vd.team_2_id = c2.id
                   LEFT JOIN clubs c3 ON vd.team_3_id = c3.id
                   LEFT JOIN clubs c4 ON vd.team_4_id = c4.id
+                  LEFT JOIN gala_scoresheets gs ON vd.id = gs.venue_detail_id
                   WHERE vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
                   ORDER BY vd.round_number ASC";
     $d_stmt = $conn->prepare($draws_sql);
@@ -578,6 +581,34 @@ if ($is_logged_in) {
                             </div>
                         </div>
 
+                        <!-- GALA SCORESHEET -->
+                        <?php if (!empty($venues)): ?>
+                            <div class="glass-panel p-8 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-900/20 to-transparent relative overflow-hidden group">
+                                <div class="absolute right-0 top-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl group-hover:bg-sky-500/10 transition-colors pointer-events-none"></div>
+
+                                <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                    <div class="flex items-start gap-5">
+                                        <div class="bg-sky-500/20 p-4 rounded-2xl flex-shrink-0 border border-sky-500/30 shadow-inner">
+                                            <i data-lucide="calculator" class="w-8 h-8 text-sky-400"></i>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-2xl font-bold text-white mb-1">Gala Scoresheet</h2>
+                                            <p class="text-slate-300 text-sm max-w-md leading-relaxed">Access the live results calculator for the galas you are hosting. Works offline at the pool.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="w-full sm:w-64 flex-shrink-0 flex flex-col gap-3">
+                                        <?php foreach ($venues as $v): ?>
+                                            <a href="gala_scoresheet.php?venue_id=<?php echo $v['id']; ?>" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2">
+                                                <span>Round <?php echo $v['round_number']; ?> Scoresheet</span>
+                                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- VENUE MANAGEMENT -->
                         <div class="glass-panel p-6 rounded-2xl border border-white/5">
                             <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
@@ -866,9 +897,14 @@ if ($is_logged_in) {
                                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> View Teamsheets
                                             </a>
                                         <?php endif; ?>
-                                        <?php if (!empty($draw['results_file'])): ?>
+                                        
+                                        <?php if (!empty($draw['scoresheet_id']) && $draw['scoresheet_status'] === 'published'): ?>
+                                            <a href="gala_scoresheet.php?id=<?php echo htmlspecialchars($draw['scoresheet_id']); ?>" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20">
+                                                <i data-lucide="bar-chart" class="w-3.5 h-3.5"></i> Web Results
+                                            </a>
+                                        <?php elseif (!empty($draw['results_file'])): ?>
                                             <a href="uploads/results/<?php echo htmlspecialchars($draw['results_file']); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
-                                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results
+                                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Excel Results
                                             </a>
                                         <?php else: ?>
                                             <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
