@@ -227,10 +227,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                             <div class="glass-panel rounded-2xl overflow-hidden border border-white/5">
                                 <div
                                     class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">
-                                    Digital Scoresheet</div>
-                                <div>
+                                    Digital Scoresheet & Results</div>
+                                <div class="p-3">
                                     <a href="teamportal.php"
-                                        class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
+                                        class="flex items-center p-3 hover:bg-white/5 rounded-xl border border-white/5 transition-colors group">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
                                                 data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
