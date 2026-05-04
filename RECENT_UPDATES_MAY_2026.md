@@ -8,12 +8,17 @@ Previously, the system treated 2026 as the single source of truth. We have now t
 *   **Global State Management**: 
     *   Created a new `global_settings` table to securely track system-wide configurations, specifically the `current_season_year`.
     *   The `db.php` initiation script inherently seeks this active state, falling back to 2026 if necessary, and securely passing `$current_season_year` instantly to the rest of the application.
+    *   The active-season setter in `league_admin.php` now saves the selected year with a prepared upsert, so the shared setting is updated safely even if the row already exists.
 *   **Venue Schema Modernisation**: 
     *   Implemented non-destructive automatic migrations inside `db.php` and `season_data.php` to append `season_year` and 8-lane structures to the `venue_details` table inline, without manual SQL setups across different platform instances.
 *   **Super Admin Toggler**: 
     *   Integrated a global "Active Season" selection tool in `league_admin.php` inside the Admin Shortcuts block. Changing this year dynamically rewires what stats, what league tables, and which venues load across the administrator portal.
+    *   The season dropdown now spans the full supported admin range rather than a short fixed set of years, so future season rollover does not require code edits.
 *   **Public League Standings**: 
     *   Appended `WHERE season_year = $current_season_year` across `table.php` and reporting logic to completely partition data – 2026 results stay in 2026, 2027 operates on its own clean slate.
+*   **Season-Aware Admin APIs**:
+    *   `gala_admin_api.php` now defaults to the active season from `db.php` and filters venue rows by both `round_number` and `season_year`, preventing mixed-season round lists.
+    *   `gala_scoresheet_api.php` now validates that a venue belongs to the selected season before it creates a scoresheet, and its `find_by_venue` lookup also respects season scoping.
 
 ## 2. Dynamic 8-lane Finals Support
 In order to host 8-lane showcase finals, the fundamental standard 4-lane schema had to be heavily upgraded both visually and mechanically.
@@ -44,13 +49,19 @@ Spinning up an entirely blank 2027 season resulted in an empty page. We needed a
     *   Created a direct UI tool positioned next to the 'Auto-Gen Finals' button allowing administrators to generate a new blank Venue Card. 
     *   It includes a drop-down allowing the Admin to choose exactly which slot to create (e.g., Round 1 Slot, Round 2 Slot, Finals Slot).
     *   The backend triggers an `INSERT INTO venue_details` generating the row and pinning it precisely to the toggled `$current_season_year`.
+    *   The inserted gala type now uses the valid `round` enum value, fixing a MySQL enum mismatch that could block the insert on stricter databases.
 *   **Direct Deletion Safety**: 
     *   Realised that testing configurations or drafting mistakes required physical database interventions to fix. Introduced an inline red Trash/Delete button to every individual Venue scheduling card.
     *   Built an explicit `DELETE FROM` endpoint connected to `admin_action = delete_venue` with a JS confirmation popup to completely remove a draw setup from existence cleanly without going into phpMyAdmin.
+*   **Admin Season Control Hardening**:
+    *   The active-season control in `league_admin.php` now updates the shared global setting with a prepared statement instead of raw string interpolation.
+    *   The selected year is now applied immediately to the page state so the remainder of the admin screen refreshes in the new season without needing a second navigation step.
 
 ## 5. Digital Scoresheet Integration Audit
-*   Conducted a complete review of the newly deployed digital scoresheet application dependencies, file allocations (including `fetch_sheet.php`, `gala_scoresheet.php`, `gala_scoresheet_api.php`, and the `gala_scoresheet.js` worker logic).
+*   Conducted a complete review of the newly deployed digital scoresheet application dependencies, file allocations (including `gala_scoresheet.php`, `gala_scoresheet_api.php`, `gala_scoresheet.js`, and `sw.js`).
 *   Verified that offline manifesto systems, Service Worker (PWA caching) functionality, and the database hooks are properly in order without overlapping or conflicting with the new global variables.
+*   The install prompt on the first scoresheet page now explicitly tells hosts to install before gala day if the venue may not have internet.
+*   Once the scoresheet id is known, the page now rewrites to a stable `gala_scoresheet.php?id=...` URL and warms the cache so the same gala can reopen offline later.
 
 ## 6. Season Isolation Hardening (Post-Implementation Alignment Pass)
 After the initial multi-season release, an additional hardening pass was completed to ensure all active pages and APIs are consistently tied to the selected `current_season_year`.
@@ -83,6 +94,7 @@ After the initial multi-season release, an additional hardening pass was complet
 *   Draw card SQL joins were expanded to resolve club names for `team5_name` through `team8_name`.
 *   Portal rendering now lists competing teams from lanes 1-8 (where present).
 *   Teamsheet copy text was updated from hardcoded “2027” to dynamic active-season wording.
+*   Venue edits in the portal are now restricted to the logged-in club and active season, which prevents cross-season or cross-club updates through a crafted request.
 
 ### 6.5 Scoresheet API Active-Season Defaults
 *   `gala_scoresheet_api.php` was aligned to use active season defaults (`$active_season_year`) instead of hardcoded 2027 in operational flows.
@@ -96,9 +108,19 @@ After the initial multi-season release, an additional hardening pass was complet
 *   Scoresheet creation from venue draw (`action=create`) now imports participants from lanes 1-8 (where present), not only lanes 1-4.
 *   This ensures `gala_teams` and prebuilt `gala_results` rows align with finals structures and future 8-lane configurations.
 
-### 6.7 Navigation and Public Labels
+### 6.7 Scoresheet Offline Resilience
+*   Lane assignments can now be completed offline after the gala has been opened once online, and those assignments are queued for sync when the device reconnects.
+*   The service worker cache was bumped to a new version so updated scoring and prompt code reaches installed devices instead of being trapped behind stale assets.
+*   The install banner copy on the first scoresheet page was rewritten to explain the offline venue workflow in plain language.
+
+### 6.8 Dead-Heat Scoring Fix
+*   Valid dead-heats now share the same place label in the UI, so tied swims display as `2nd, 2nd` rather than moving the later tied swimmer to the next ordinal.
+*   The points calculation already matched gala scoring rules; this pass fixed the visible placings and cache versioning so the corrected logic is what devices actually run.
+
+### 6.9 Navigation and Public Labels
 *   `nav.php` already displays active season dynamically in header badge; this was preserved.
 *   Additional stale hardcoded year strings were removed from public pages where they conflicted with active-season display behavior.
+*   Season-sensitive support pages such as the announcer, officials, and timekeeper printouts now render the active season dynamically instead of hardcoding 2026.
 
 ## 7. Admin Workflow Updates for Future Seasons
 Further improvements were made to support your chosen operating model: activate a future season and build that season manually from scratch.
@@ -116,7 +138,16 @@ Further improvements were made to support your chosen operating model: activate 
 
 ### 7.3 Year Range Behavior
 *   Active Season setter validates years up to 2099.
-*   Current dropdown UI displays 2026-2035 options; backend supports wider range.
+*   The dropdown UI now matches the backend range, so the admin can select supported future seasons without code changes.
+
+## 8. Scoresheet Scoring Fixes
+The poolside scoring engine received two important correctness updates during this pass.
+
+*   **Dead-Heat Placings**:
+    *   Equal times now keep the same place label, including the expected gala pattern of `1st, 2nd, 2nd, 4th` in a four-team race.
+    *   Points remain correct while the visible placings now match standard dead-heat rules.
+*   **Offline Cache Buster**:
+    *   The scoresheet shell and service worker cache now use versioned asset names, so updated scoring code is not trapped inside an older installed cache.
 
 ## 9. Season Event Propagation & Import Utility
 To streamline the setup of new seasons, we implemented a sophisticated event management toolset.
@@ -125,6 +156,7 @@ To streamline the setup of new seasons, we implemented a sophisticated event man
 *   **Bulk Propagation**: Integrated multi-target support via checkboxes, enabling the event list to be pushed to 2028, 2029, and 2030 simultaneously.
 *   **Smart "Empty Season" Assistant**: Implemented a dynamic UI card that appears when a season has no events, providing a one-click "Import from 2027" shortcut and other setup quick-actions.
 *   **Conflict Prevention**: Enhanced the backend handler to strictly prevent overwriting existing data, providing a detailed report of successful copies vs. skipped years.
+*   **Blank Season Bootstrap**: The empty-season helper now gives administrators a clearer path to seed a new year from a source season instead of starting from scratch.
 
 ## 10. Geospatial Club Directory
 Modernized the club management system to include interactive mapping and location-aware data.
@@ -155,6 +187,10 @@ Improved the way live digital resources are linked to specific gala venues.
 - [x] Scoresheet API defaults aligned to active season.
 - [x] Scoresheet creation now auto-loads team lanes 1-8.
 - [x] Residual hardcoded public season labels removed/aligned.
+- [x] Active season dropdown now writes safely and supports the full backend year range.
+- [x] Scoresheet install banner now clearly explains the offline workflow.
+- [x] Scoresheet page now stays usable offline after an online open, even before lanes are assigned.
+- [x] Dead-heat placings now display correctly in the scoresheet UI.
 - [x] Season Event Propagation tool with bulk copy support implemented.
 - [x] Smart "Empty Season" UI helper deployed.
 - [x] Geocoding and interactive club mapping integrated.

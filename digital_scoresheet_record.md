@@ -13,15 +13,19 @@ The goal was to transform the static, pre-defined gala results system into a **F
 - **Lanes 1–8 Support**: Expanded the scoresheet grid from 4 to 8 lanes to support preliminary rounds and Finals seamlessly.
 - **Mark Absent**: Hosts can instantly remove a team from the setup, shifting lanes automatically.
 - **Add Extra Team**: Hosts can inject a new team into the gala on-the-fly, which dynamically expands the grid and creates database entries for their results.
+- **Offline First-Use Path**: Teams can open the scoresheet online before gala day, install it as a PWA, and then reopen the same gala offline at the venue.
+- **Offline Lane Setup**: If lanes have not been assigned before connectivity drops, setup can now be completed locally and synced when the device returns online.
 
 ### 🛠️ Super Admin Tools
 - **Virtual Team Swap**: A powerful tool in `admin_gala_results.php` that allows admins to "move" results between venues if a team accidentally swims at the wrong location (common in Round 1).
 - **Testing Sandbox**: A dedicated, isolated environment (`gala_scoresheet.php?sandbox=1`) where admins can test all scoresheet functions without affecting live 2026/2027 data.
 - **Publishing Engine**: A one-click verification system that migrates digital scoresheet data into the official league tables.
+- **Season-Safe Verification**: The admin results API now scopes venues and scoresheets to the active season, preventing one year from mixing into another during verification or publishing.
 
 ### 📥 Data Management & View Controls
 - **Team Portal Integration**: Added a "Web Results" button to the Team Portal, appearing automatically once results are published.
 - **Zoom Controls**: Added a "View Controls" toolbar allowing users to Zoom Out (70%), Zoom In (130%), or Reset the scoresheet display to fit more teams on a single screen.
+- **Install Prompt Copy**: The first-view install banner now explicitly tells hosts to install the app before gala day when there may be no internet at the venue.
 
 ---
 
@@ -33,7 +37,7 @@ The goal was to transform the static, pre-defined gala results system into a **F
 | `gala_scoresheets` | Added `status` (Draft/Published), `season_year`, `team_count`, and `venue_detail_id`. |
 | `gala_teams` | Added `is_absent` flag and `lane_number`. |
 | `gala_results` | Added `source_type` and `source_scoresheet_id` for virtual swaps. |
-| `venue_details` | (Planned) Expansion to `gala_type` and Teams 5-8. |
+| `venue_details` | Expanded to include `gala_type`, `season_year`, and Teams 5-8 for finals and future rounds. |
 
 ### API Layer (`gala_scoresheet_api.php`)
 - `substitute_team`: Swaps a team placeholder with a real club.
@@ -41,12 +45,16 @@ The goal was to transform the static, pre-defined gala results system into a **F
 - `add_team`: Injects a new club into the current scoresheet.
 - `create_sandbox`: Generates an isolated test gala under `season_year = 9999`.
 - `swap_teams`: Handles complex multi-record transactions for the Virtual Swap tool.
+- `find_by_venue`: Resolves the correct scoresheet for the active season before the page creates or resumes a gala.
+- `save_lanes` and `save_batch`: Persist lane assignments and timing updates, with offline queueing handled in the browser and synchronization when the device reconnects.
 
 ### Frontend Engine (`gala_scoresheet.js`)
 - **Offline Persistence**: Uses IndexedDB to save results locally in real-time.
 - **Sync Manager**: Automatically pushes local changes to the server whenever a connection is detected.
 - **Scoring Algorithm**: A JavaScript implementation of the original Excel formulas for points and places (handling DQs and "Too Fast" cut-offs).
 - **Unified Master Grid**: Implemented a single CSS Grid with `display: contents` to enable simultaneous horizontal and vertical sticky positioning (frozen row and column headers).
+- **Dead-Heat Placings**: Equal swim times now share the same place label while still receiving the correct points for standard gala scoring.
+- **Versioned Cache Busting**: The scoresheet shell and worker script are versioned so updated logic is not trapped behind an older installed cache.
 
 ---
 
@@ -59,11 +67,15 @@ The goal was to transform the static, pre-defined gala results system into a **F
 - **DQ Visibility**: Added "Did Not Start" to the DQ reason list per user request.
 - **Sync Visuals**: Added a glowing "Online/Offline" indicator to reassure hosts of their connection status.
 - **Venue Draw Sync**: Fixed a bug where scoresheets weren't automatically pulling the pre-defined host venue from the season draw.
+- **Dead-Heat UI Fix**: Corrected the visible place display so tied times now show the same place number instead of advancing to the next ordinal.
+- **Offline Reopen Fix**: Ensured the app rewrites and caches the stable scoresheet URL once the scoresheet id is known, allowing the installed app to reopen the correct gala offline.
+- **Service Worker Refresh**: Bumped the PWA cache version so updated scoresheet logic and prompt copy are delivered to installed devices instead of stale assets.
 
 ## 5. System Maturity & Scalability
 - **Finals Automation**: COMPLETED. The system now features an "Auto-Generate Finals Draw" algorithm that ranks teams across 4 rounds and builds the A, B, and C final venues automatically.
 - **Season Rollover**: COMPLETED & ENHANCED. The platform is fully multi-season aware. Furthermore, a **Season Propagation Tool** was added in May 2026 to allow bulk copying of event templates between years (e.g., propagating the 2027 master list to future seasons).
 - **Geocoding**: COMPLETED. Club locations are now geocoded and displayed on an interactive league map.
+- **Offline Gala Readiness**: The scoresheet can now be installed and reopened at the venue with cached data, then syncs lane changes and results back to the server when connectivity returns.
 
 ---
 
