@@ -4,7 +4,7 @@
  * Included within league_admin.php "Event Management" tab.
  * Provides full inline editing of gala events via a slide-out modal.
  */
-$season = 2027;
+$season = isset($current_season_year) ? (int)$current_season_year : 2026;
 
 // Fetch all events
 $e_sql = "SELECT * FROM gala_events WHERE season_year = ? ORDER BY event_number ASC";
@@ -285,7 +285,7 @@ $events_json = json_encode(array_map(function($e) {
                     <h3 class="text-lg font-bold text-white flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-400"></i> Add New Event
                     </h3>
-                    <p class="text-xs text-slate-500 mt-1">Season 2027</p>
+                    <p class="text-xs text-slate-500 mt-1">Season <?php echo $season; ?></p>
                 </div>
                 <button type="button" onclick="closeAddEvent()" class="text-slate-400 hover:text-white p-2 hover:bg-slate-800 rounded-lg transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
