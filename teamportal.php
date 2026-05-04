@@ -490,7 +490,11 @@ if ($is_logged_in) {
                         </div>
                     </div>
 
-                    <div class="relative z-10">
+                    <div class="relative z-10 flex flex-wrap justify-center gap-2">
+                        <a href="admin.php"
+                            class="bg-slate-800 hover:bg-sky-500/10 hover:text-sky-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Club Rep Portal
+                        </a>
                         <a href="?action=logout"
                             class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i data-lucide="log-out" class="w-4 h-4"></i> Logout
