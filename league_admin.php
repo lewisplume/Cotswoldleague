@@ -88,8 +88,8 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             $new_club_id = $conn->insert_id;
             // Create a stub entry in club_contacts
             $conn->query("INSERT INTO club_contacts (club_id, club_name, access_pin) VALUES ($new_club_id, '" . $conn->real_escape_string($name) . "', '0000')");
-            // Create a stub entry in results
-            $conn->query("INSERT INTO results (club_id) VALUES ($new_club_id)");
+            // Create a stub entry in results for the active season
+            $conn->query("INSERT INTO results (club_id, season_year) VALUES ($new_club_id, $current_season_year)");
             
             $success_msg = "Club '$name' added successfully.";
         } else {

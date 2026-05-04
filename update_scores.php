@@ -19,16 +19,31 @@ if ($authenticated && isset($_POST['update_scores'])) {
         $r3 = intval($rounds[3]);
         $r4 = intval($rounds[4]);
         
-        $stmt = $conn->prepare("UPDATE results SET round_1=?, round_2=?, round_3=?, round_4=? WHERE club_id=?");
-        $stmt->bind_param("iiiii", $r1, $r2, $r3, $r4, $club_id);
-        $stmt->execute();
+        // Check if record exists for this season
+        $check = $conn->prepare("SELECT id FROM results WHERE club_id = ? AND season_year = ?");
+        $check->bind_param("ii", $club_id, $current_season_year);
+        $check->execute();
+        $res = $check->get_result();
+        
+        if ($res->num_rows > 0) {
+            $stmt = $conn->prepare("UPDATE results SET round_1=?, round_2=?, round_3=?, round_4=?, total = (? + ? + ? + ?) WHERE club_id=? AND season_year=?");
+            $stmt->bind_param("iiiiiiiiii", $r1, $r2, $r3, $r4, $r1, $r2, $r3, $r4, $club_id, $current_season_year);
+            $stmt->execute();
+        } else {
+            $total = $r1 + $r2 + $r3 + $r4;
+            $stmt = $conn->prepare("INSERT INTO results (club_id, season_year, round_1, round_2, round_3, round_4, total) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iiiiiii", $club_id, $current_season_year, $r1, $r2, $r3, $r4, $total);
+            $stmt->execute();
+        }
     }
     $message = "Scores Updated Successfully!";
 }
 
 // Fetch Current Data
-$sql = "SELECT c.id, c.name, r.round_1, r.round_2, r.round_3, r.round_4 
-        FROM results r JOIN clubs c ON r.club_id = c.id 
+// Fetch Current Data (Left Join to ensure all clubs appear for new seasons)
+$sql = "SELECT c.id, c.name, COALESCE(r.round_1, 0) as round_1, COALESCE(r.round_2, 0) as round_2, COALESCE(r.round_3, 0) as round_3, COALESCE(r.round_4, 0) as round_4 
+        FROM clubs c 
+        LEFT JOIN results r ON c.id = r.club_id AND r.season_year = $current_season_year
         ORDER BY c.name ASC";
 $result = $conn->query($sql);
 ?>
@@ -55,7 +70,10 @@ $result = $conn->query($sql);
 
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">Update Scores</h1>
+            <div>
+                <h1 class="text-3xl font-bold">Update Scores</h1>
+                <p class="text-sky-400 font-bold uppercase tracking-widest text-xs mt-1">Active Season: <?php echo $current_season_year; ?></p>
+            </div>
             <a href="index" class="text-slate-400 hover:text-white">Back to Site</a>
         </div>
 
