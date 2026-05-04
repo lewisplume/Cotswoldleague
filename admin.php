@@ -200,7 +200,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                         <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-emerald-400">
                             <i data-lucide="calculator" class="w-5 h-5"></i> Teamsheets & Results
                         </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                             <!-- Teamsheets Card -->
                             <div class="glass-panel rounded-2xl overflow-hidden border border-white/5">
@@ -214,8 +214,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                                 data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
                                             <p class="text-sm font-medium">Manage in Team Portal</p>
-                                            <p class="text-xs text-slate-500">Teamsheets are now handled in the Team Portal
-                                                dashboard.</p>
+                                            <p class="text-xs text-slate-500">For 2027, teamsheets are handled in the Team
+                                                Portal.</p>
                                         </div>
                                     </a>
                                 </div>
@@ -224,38 +224,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 
 
                             <!-- Results Calculator Card -->
-                            <div
-                                class="glass-panel rounded-2xl overflow-hidden border border-white/5 md:col-span-2 xl:col-span-2">
+                            <div class="glass-panel rounded-2xl overflow-hidden border border-white/5">
                                 <div
                                     class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">
                                     Digital Scoresheet</div>
-                                <div class="grid grid-cols-1 lg:grid-cols-3">
+                                <div>
                                     <a href="teamportal.php"
-                                        class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-b-0 lg:border-r transition-colors group h-full">
+                                        class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
                                                 data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Open Team Portal Scoresheet</p>
-                                            <p class="text-xs text-slate-500">Primary gala scoring workflow</p>
-                                        </div>
-                                    </a>
-                                    <a href="teamportal.php"
-                                        class="flex items-center p-3 hover:bg-white/5 border-b border-white/5 lg:border-b-0 lg:border-r transition-colors group h-full">
-                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
-                                                data-lucide="book-open" class="text-emerald-500 w-5 h-5"></i></div>
-                                        <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Scoresheet Guide (Team Portal)</p>
-                                            <p class="text-xs text-slate-500">Use web scoresheet instructions in portal</p>
-                                        </div>
-                                    </a>
-                                    <a href="https://docs.google.com/document/d/1ReJU7dmTqPgHe9ICvgy8jYD1mhccBx7g94E6izE5YLM/edit?usp=sharing"
-                                        target="_blank"
-                                        class="flex items-center p-3 hover:bg-white/5 transition-colors group h-full">
-                                        <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
-                                                data-lucide="life-buoy" class="text-emerald-500 w-5 h-5"></i></div>
-                                        <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Excel Backup Guide</p>
-                                            <p class="text-xs text-slate-500">Use only as gala contingency backup</p>
+                                            <p class="text-sm font-medium">Manage in Team Portal</p>
+                                            <p class="text-xs text-slate-500">For 2027, scoresheets and results are handled
+                                                in the Team Portal.</p>
                                         </div>
                                     </a>
                                 </div>
@@ -466,20 +447,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     data-id="results-calc">
                                 <div>
                                     <span class="text-slate-200 font-medium block mb-1">Digital Scoresheet</span>
-                                    <span class="text-xs text-slate-500 block">Use Team Portal scoresheet at galas.
-                                        Keep Excel only as backup.</span>
+                                    <span class="text-xs text-slate-500 block">For 2027, scoresheets and results are
+                                        handled in the Team Portal.</span>
                                 </div>
                             </label>
-                            <div class="flex gap-2 mt-3">
-                                <a href="teamportal.php"
-                                    class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
-                                    <i data-lucide="layout-dashboard" class="w-3 h-3"></i> Team Portal
-                                </a>
-                                <a href="teamportal.php"
-                                    class="flex-1 flex items-center justify-center py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-1">
-                                    <i data-lucide="book" class="w-3 h-3"></i> Guide
-                                </a>
-                            </div>
+                            <a href="teamportal.php"
+                                class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                                <i data-lucide="layout-dashboard" class="w-3 h-3"></i> Team Portal
+                            </a>
                         </div>
 
                         <!-- Officials Sign-In -->
