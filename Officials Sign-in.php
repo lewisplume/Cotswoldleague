@@ -310,7 +310,7 @@
         <!-- Original Controls Removed (Use Nav Bar above) -->
 
         <header>
-            <h1>Cotswold Swimming League 2026</h1>
+            <h1>Cotswold Swimming League <?php echo $current_season_year; ?></h1>
             <h2>Host Team Officials Sign-In List</h2>
         </header>
 

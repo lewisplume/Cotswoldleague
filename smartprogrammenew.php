@@ -286,7 +286,7 @@ $sheetId = $_GET['sheet_id'] ?? null;
     <div class="sheet-container">
         <div class="main-header">
             <h1>THE COTSWOLD LEAGUE</h1>
-            <h2 id="programmeTitle">Coach & Team Manager Programme 2027</h2>
+            <h2 id="programmeTitle">Coach & Team Manager Programme <?php echo $current_season_year; ?></h2>
             <p>Under SE Laws and SE Technical Rules &bull; Sponsored by Wyvern Swimwear</p>
         </div>
 
@@ -1405,7 +1405,7 @@ $sheetId = $_GET['sheet_id'] ?? null;
                 programmeTitle.textContent = `${prefix} - ${cleanName}`;
                 page2Title.textContent = `${prefix} - ${cleanName} (Page 2)`;
             } else {
-                programmeTitle.textContent = `${prefix} 2027`;
+                programmeTitle.textContent = `${prefix} <?php echo (int)$current_season_year; ?>`;
                 page2Title.textContent = `${prefix} (Page 2)`;
             }
         }

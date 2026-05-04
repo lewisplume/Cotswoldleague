@@ -233,7 +233,7 @@ foreach ($clubs as $c) {
         
         <!-- The actual printable content -->
         <div class="bg-white text-black p-8 sm:p-12 rounded-lg shadow-lg" id="script-container">
-            <h2 class="text-2xl font-bold text-gray-900 text-center mb-2 border-b-2 border-slate-200 pb-4">Cotswold Swimming League <span id="year-span">2026</span>: Announcer’s Guide & Script</h2>
+            <h2 class="text-2xl font-bold text-gray-900 text-center mb-2 border-b-2 border-slate-200 pb-4">Cotswold Swimming League <span id="year-span"><?php echo $current_season_year; ?></span>: Announcer’s Guide & Script</h2>
             <p class="text-sm text-gray-600 text-center mb-8"><strong>Welcome to the Cotswold League!</strong> As the announcer, you are the voice of the gala. Your role is to keep the event moving, keep the spectators informed, and—most importantly—create a positive, encouraging atmosphere for the children.</p>
             
             <div id="script-content" class="space-y-6"></div>

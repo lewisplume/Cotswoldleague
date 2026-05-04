@@ -506,9 +506,16 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
     if ($_POST['admin_action'] === 'set_active_season') {
         $new_season = intval($_POST['new_season']);
         if ($new_season >= 2020 && $new_season <= 2099) {
-            $conn->query("UPDATE global_settings SET setting_value = '$new_season' WHERE setting_key = 'current_season_year'");
-            $current_season_year = $new_season;
-            $success_msg = "Active Season successfully changed to $new_season.";
+            $setting_key = 'current_season_year';
+            $new_season_value = (string)$new_season;
+            $stmt = $conn->prepare("INSERT INTO global_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            $stmt->bind_param("ss", $setting_key, $new_season_value);
+            if ($stmt->execute()) {
+                $current_season_year = $new_season;
+                $success_msg = "Active Season successfully changed to $new_season.";
+            } else {
+                $error_msg = "Failed to update active season.";
+            }
         } else {
             $error_msg = "Invalid season year selected.";
         }
@@ -736,7 +743,7 @@ if ($is_logged_in) {
                             <form method="POST" class="flex gap-2">
                                 <input type="hidden" name="admin_action" value="set_active_season">
                                 <select name="new_season" class="bg-slate-900 border border-slate-700 rounded-lg py-1 px-3 text-sm focus:outline-none focus:border-indigo-500 text-white">
-                                    <?php for($y=2026; $y<=2035; $y++): ?>
+                                    <?php for($y=2020; $y<=2099; $y++): ?>
                                         <option value="<?php echo $y; ?>" <?php if($current_season_year == $y) echo 'selected'; ?>><?php echo $y; ?></option>
                                     <?php endfor; ?>
                                 </select>

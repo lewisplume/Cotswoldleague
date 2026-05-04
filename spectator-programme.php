@@ -200,7 +200,7 @@
             <div class="text-center mb-2 block-divider pb-2 relative">
                 <h1 class="text-3xl font-black uppercase tracking-tight text-slate-800">The Cotswold League</h1>
                 <h2 id="programmeSubtitle" class="text-lg font-bold text-slate-500 mt-0.5 uppercase tracking-widest">
-                    Rounds Programme - 2026</h2>
+                    Rounds Programme - <?php echo $current_season_year; ?></h2>
                 <div
                     class="mt-1.5 inline-block bg-sky-50 print-bg-sky-50 text-sky-800 print-text-sky-800 font-bold px-4 py-1 rounded-full text-xs border border-sky-200">
                     Official Programme Sponsored by Wyvern Swimwear
@@ -345,24 +345,25 @@
         function generateProgramme() {
             const type = document.getElementById('galaType').value;
 
+            const activeSeasonYear = <?php echo (int)$current_season_year; ?>;
             let subtitle = "";
             let dist11u = "25m";
             let teamCount = 4; // Default to Rounds
 
             if (type === 'round') {
-                subtitle = `Rounds Programme - 2026 Season`;
+                subtitle = `Rounds Programme - ${activeSeasonYear} Season`;
                 dist11u = "25m";
                 teamCount = 4;
             } else if (type === 'final_a') {
-                subtitle = `A Final Programme - 2026 Season`;
+                subtitle = `A Final Programme - ${activeSeasonYear} Season`;
                 dist11u = "50m"; // A Final is 50m for 11/u
                 teamCount = 8;
             } else if (type === 'final_b') {
-                subtitle = `B Final Programme - 2026 Season`;
+                subtitle = `B Final Programme - ${activeSeasonYear} Season`;
                 dist11u = "25m";
                 teamCount = 6;
             } else if (type === 'final_c') {
-                subtitle = `C Final Programme - 2026 Season`;
+                subtitle = `C Final Programme - ${activeSeasonYear} Season`;
                 dist11u = "25m";
                 teamCount = 6;
             }

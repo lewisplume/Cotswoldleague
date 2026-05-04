@@ -178,7 +178,7 @@
                 <h1 class="text-3xl font-black uppercase text-center tracking-tight text-slate-900 mb-6 print:mb-2">
                     Cotswold Swimming League
                     <span class="text-slate-500 font-bold text-xl block mt-1 print:text-base">
-                        2026 Season - Official Timekeeper Record
+                        <?php echo $current_season_year; ?> Season - Official Timekeeper Record
                     </span>
                 </h1>
 

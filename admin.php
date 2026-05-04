@@ -97,7 +97,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                 <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 text-center md:text-left">
                     <div>
                         <h1 class="text-3xl font-bold">Representative <span class="text-sky-500">Portal</span></h1>
-                        <p class="text-slate-500 text-xs uppercase tracking-widest mt-1">Official League Resources 2026</p>
+                        <p class="text-slate-500 text-xs uppercase tracking-widest mt-1">Official League Resources <?php echo $current_season_year; ?></p>
                     </div>
                     <a href="?action=logout"
                         class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
@@ -648,7 +648,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         endif; ?>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+            &copy; <?php echo $current_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume
         </footer>
     </div>
 
