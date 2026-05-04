@@ -123,7 +123,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Action: Update Venue
     if (isset($_POST['action']) && $_POST['action'] === 'update_venue') {
-        $venue_id = $_POST['venue_id'];
+        $venue_id = intval($_POST['venue_id']);
         $venue_name = $_POST['venue_name'];
         $address = $_POST['address'];
         $warm_up = $_POST['warmup_time'];
@@ -133,48 +133,52 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $target_host_name = $_POST['target_host_name']; // Extracted from form for log
 
         // Audit check old values
-        $old_sql = "SELECT * FROM venue_details WHERE id = ?";
+        $old_sql = "SELECT * FROM venue_details WHERE id = ? AND club_id = ? AND season_year = ?";
         $old_stmt = $conn->prepare($old_sql);
-        $old_stmt->bind_param("i", $venue_id);
+        $old_stmt->bind_param("iii", $venue_id, $current_club_id, $active_season_year);
         $old_stmt->execute();
         $old_res = $old_stmt->get_result();
         $old_row = $old_res->fetch_assoc();
 
-        $changes = [];
-        if ($old_row['venue_name'] != $venue_name)
-            $changes[] = "Name: '{$old_row['venue_name']}' -> '$venue_name'";
-        if ($old_row['address'] != $address)
-            $changes[] = "Address: '{$old_row['address']}' -> '$address'";
-        if ($old_row['warmup_time'] != $warm_up)
-            $changes[] = "WarmUp: '{$old_row['warmup_time']}' -> '$warm_up'";
-        if ($old_row['start_time'] != $start_time)
-            $changes[] = "Start: '{$old_row['start_time']}' -> '$start_time'";
-        if ($old_row['payment_info'] != $payment)
-            $changes[] = "Payment: '{$old_row['payment_info']}' -> '$payment'";
-        if ($old_row['parking_info'] != $parking)
-            $changes[] = "Parking: '{$old_row['parking_info']}' -> '$parking'";
-
-        if (empty($changes)) {
-            $error_msg = "No changes detected for the venue.";
+        if (!$old_row) {
+            $error_msg = "Venue not found for your club in the active season.";
         } else {
-            $update_sql = "UPDATE venue_details SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=? WHERE id=?";
-            $stmt = $conn->prepare($update_sql);
-            $stmt->bind_param("ssssssi", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $venue_id);
+            $changes = [];
+            if ($old_row['venue_name'] != $venue_name)
+                $changes[] = "Name: '{$old_row['venue_name']}' -> '$venue_name'";
+            if ($old_row['address'] != $address)
+                $changes[] = "Address: '{$old_row['address']}' -> '$address'";
+            if ($old_row['warmup_time'] != $warm_up)
+                $changes[] = "WarmUp: '{$old_row['warmup_time']}' -> '$warm_up'";
+            if ($old_row['start_time'] != $start_time)
+                $changes[] = "Start: '{$old_row['start_time']}' -> '$start_time'";
+            if ($old_row['payment_info'] != $payment)
+                $changes[] = "Payment: '{$old_row['payment_info']}' -> '$payment'";
+            if ($old_row['parking_info'] != $parking)
+                $changes[] = "Parking: '{$old_row['parking_info']}' -> '$parking'";
 
-            if ($stmt->execute()) {
-                $success_msg = "Venue details updated successfully.";
-
-                // Audit Log
-                $rep_name = $current_club_name . " Rep";
-                $change_str = "[$target_host_name] " . implode(", ", $changes);
-                $log_sql = "INSERT INTO audit_log (club_name, action, change_details, timestamp) VALUES (?, 'Venue Update', ?, NOW())";
-                $log_stmt = $conn->prepare($log_sql);
-                if ($log_stmt) {
-                    $log_stmt->bind_param("ss", $rep_name, $change_str);
-                    $log_stmt->execute();
-                }
+            if (empty($changes)) {
+                $error_msg = "No changes detected for the venue.";
             } else {
-                $error_msg = "Database Error updating venue.";
+                $update_sql = "UPDATE venue_details SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=? WHERE id=? AND club_id=? AND season_year=?";
+                $stmt = $conn->prepare($update_sql);
+                $stmt->bind_param("ssssssiii", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $venue_id, $current_club_id, $active_season_year);
+
+                if ($stmt->execute()) {
+                    $success_msg = "Venue details updated successfully.";
+
+                    // Audit Log
+                    $rep_name = $current_club_name . " Rep";
+                    $change_str = "[$target_host_name] " . implode(", ", $changes);
+                    $log_sql = "INSERT INTO audit_log (club_name, action, change_details, timestamp) VALUES (?, 'Venue Update', ?, NOW())";
+                    $log_stmt = $conn->prepare($log_sql);
+                    if ($log_stmt) {
+                        $log_stmt->bind_param("ss", $rep_name, $change_str);
+                        $log_stmt->execute();
+                    }
+                } else {
+                    $error_msg = "Database Error updating venue.";
+                }
             }
         }
     }

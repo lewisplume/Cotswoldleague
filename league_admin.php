@@ -136,7 +136,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $placeholder_club = ($first_club_res && $first_club_res->num_rows > 0) ? $first_club_res->fetch_assoc()['id'] : 1;
         $round_num = isset($_POST['new_round']) ? intval($_POST['new_round']) : 1;
         
-        $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, season_year, gala_type) VALUES (?, 'TBC', ?, ?, 'standard')");
+        $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, season_year, gala_type) VALUES (?, 'TBC', ?, ?, 'round')");
         $stmt->bind_param("iii", $placeholder_club, $round_num, $current_season_year);
         if ($stmt->execute()) {
             $success_msg = "Blank venue added for Round $round_num (Season $current_season_year).";

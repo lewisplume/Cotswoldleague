@@ -10,6 +10,7 @@ header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $is_super_admin = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
+$active_season_year = isset($current_season_year) ? (int)$current_season_year : 2026;
 
 if (!$is_super_admin) {
     echo json_encode(['error' => 'Unauthorized']);
@@ -21,7 +22,7 @@ if (!$is_super_admin) {
 // =====================================================
 if ($action === 'list_scoresheets' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $round = intval($_GET['round'] ?? 0);
-    $season = intval($_GET['season'] ?? 2027);
+    $season = intval($_GET['season'] ?? $active_season_year);
 
     // Get all venues for this round
     $sql = "SELECT vd.id as venue_detail_id, c.name as host_club_name, c.logo as host_club_logo,
@@ -37,10 +38,10 @@ if ($action === 'list_scoresheets' && $_SERVER['REQUEST_METHOD'] === 'GET') {
             LEFT JOIN clubs t3 ON vd.team_3_id = t3.id
             LEFT JOIN clubs t4 ON vd.team_4_id = t4.id
             LEFT JOIN gala_scoresheets gs ON vd.id = gs.venue_detail_id AND gs.season_year = ?
-            WHERE vd.round_number = ?";
+            WHERE vd.round_number = ? AND vd.season_year = ?";
             
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $season, $round);
+    $stmt->bind_param("iii", $season, $round, $season);
     $stmt->execute();
     $res = $stmt->get_result();
 
@@ -110,15 +111,15 @@ if ($action === 'reject' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // =====================================================
 if ($action === 'publish_round' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $round = intval($_POST['round'] ?? 0);
-    $season = intval($_POST['season'] ?? 2027);
+    $season = intval($_POST['season'] ?? $active_season_year);
 
     // 1. Check if all scoresheets for this round are verified
     $check_sql = "SELECT gs.id, gs.status, gs.total_points_json 
                   FROM venue_details vd 
                   LEFT JOIN gala_scoresheets gs ON vd.id = gs.venue_detail_id AND gs.season_year = ?
-                  WHERE vd.round_number = ?";
+                  WHERE vd.round_number = ? AND vd.season_year = ?";
     $c_stmt = $conn->prepare($check_sql);
-    $c_stmt->bind_param("ii", $season, $round);
+    $c_stmt->bind_param("iii", $season, $round, $season);
     $c_stmt->execute();
     $c_res = $c_stmt->get_result();
 

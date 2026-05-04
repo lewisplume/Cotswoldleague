@@ -71,6 +71,37 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $gala_date = $_POST['gala_date'] ?? null;
     $team_count = intval($_POST['team_count'] ?? 4);
     $season_year = intval($_POST['season_year'] ?? $active_season_year);
+    $venue_row = null;
+
+    if ($venue_detail_id > 0) {
+        $v_stmt = $conn->prepare("SELECT round_number, gala_type, club_id, season_year, team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id FROM venue_details WHERE id = ?");
+        $v_stmt->bind_param("i", $venue_detail_id);
+        $v_stmt->execute();
+        $v_res = $v_stmt->get_result();
+        $venue_row = $v_res->fetch_assoc();
+        $v_stmt->close();
+
+        if (!$venue_row) {
+            echo json_encode(['error' => 'Venue not found']);
+            exit;
+        }
+
+        if ((int)$venue_row['season_year'] !== $season_year) {
+            echo json_encode(['error' => 'Venue does not belong to the selected season']);
+            exit;
+        }
+
+        $round_number = (int)$venue_row['round_number'];
+        $gala_type = $venue_row['gala_type'] ?: $gala_type;
+        $host_club_id = (int)$venue_row['club_id'];
+        $team_count = 0;
+        for ($i = 1; $i <= 8; $i++) {
+            if (!empty($venue_row["team_{$i}_id"])) {
+                $team_count++;
+            }
+        }
+        $team_count = $team_count ?: intval($_POST['team_count'] ?? 4);
+    }
 
     if (!$host_club_id || !$round_number) {
         echo json_encode(['error' => 'Missing required fields']);
@@ -100,19 +131,16 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->close();
 
     // Auto-populate teams from venue_details draw
-    if ($venue_detail_id > 0) {
-        $v = $conn->query("SELECT team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id FROM venue_details WHERE id = $venue_detail_id");
-        if ($v && $row = $v->fetch_assoc()) {
+    if ($venue_row) {
             $team_stmt = $conn->prepare("INSERT INTO gala_teams (scoresheet_id, club_id) VALUES (?, ?)");
             for ($i = 1; $i <= 8; $i++) {
-                $tid = $row["team_{$i}_id"];
+                $tid = $venue_row["team_{$i}_id"];
                 if ($tid) {
                     $team_stmt->bind_param("ii", $scoresheet_id, $tid);
                     $team_stmt->execute();
                 }
             }
             $team_stmt->close();
-        }
     }
 
     // Pre-create result rows for all events × all teams
@@ -511,8 +539,8 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // If venue_detail_id provided directly, use it; otherwise resolve from club_id + round
     if (!$venue_detail_id && $club_id && $round) {
-        $v = $conn->prepare("SELECT id FROM venue_details WHERE club_id = ? AND round_number = ?");
-        $v->bind_param("ii", $club_id, $round);
+        $v = $conn->prepare("SELECT id FROM venue_details WHERE club_id = ? AND round_number = ? AND season_year = ?");
+        $v->bind_param("iii", $club_id, $round, $season);
         $v->execute();
         $vr = $v->get_result();
 
@@ -529,6 +557,16 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['error' => 'Missing venue_detail_id or club_id/round']);
         exit;
     }
+
+    $v_check = $conn->prepare("SELECT id FROM venue_details WHERE id = ? AND season_year = ?");
+    $v_check->bind_param("ii", $venue_detail_id, $season);
+    $v_check->execute();
+    $v_check_res = $v_check->get_result();
+    if ($v_check_res->num_rows === 0) {
+        echo json_encode(['error' => 'Venue not found for this season']);
+        exit;
+    }
+    $v_check->close();
 
     // Check if scoresheet exists
     $s = $conn->prepare("SELECT id, status FROM gala_scoresheets WHERE venue_detail_id = ? AND season_year = ?");
