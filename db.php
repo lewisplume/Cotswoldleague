@@ -139,6 +139,83 @@ $conn->query("CREATE TABLE IF NOT EXISTS gala_results (
     UNIQUE KEY uk_scoresheet_event_club (scoresheet_id, event_id, club_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+// =====================================================
+// DIGITAL TEAMSHEETS - Parallel beta module
+// =====================================================
+
+$conn->query("CREATE TABLE IF NOT EXISTS club_swimmers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    club_id INT NOT NULL,
+    season_year INT NOT NULL,
+    swimmer_name VARCHAR(120) NOT NULL,
+    age_group VARCHAR(20) DEFAULT '',
+    pb_free_25 VARCHAR(20) DEFAULT '',
+    pb_back_25 VARCHAR(20) DEFAULT '',
+    pb_breast_25 VARCHAR(20) DEFAULT '',
+    pb_fly_25 VARCHAR(20) DEFAULT '',
+    pb_free_50 VARCHAR(20) DEFAULT '',
+    pb_back_50 VARCHAR(20) DEFAULT '',
+    pb_breast_50 VARCHAR(20) DEFAULT '',
+    pb_fly_50 VARCHAR(20) DEFAULT '',
+    pb_im VARCHAR(20) DEFAULT '',
+    pb_free_100 VARCHAR(20) DEFAULT '',
+    pb_back_100 VARCHAR(20) DEFAULT '',
+    pb_breast_100 VARCHAR(20) DEFAULT '',
+    pb_fly_100 VARCHAR(20) DEFAULT '',
+    availability_json TEXT DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_swimmer_club_season_name (club_id, season_year, swimmer_name),
+    INDEX idx_swimmer_club_season (club_id, season_year),
+    FOREIGN KEY (club_id) REFERENCES clubs(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS club_teamsheets (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    club_id INT NOT NULL,
+    season_year INT NOT NULL,
+    round_key VARCHAR(20) NOT NULL,
+    gala_type ENUM('round','b_final','c_final','a_final') DEFAULT 'round',
+    venue_detail_id INT DEFAULT NULL,
+    status ENUM('draft','submitted') DEFAULT 'draft',
+    submitted_at TIMESTAMP NULL DEFAULT NULL,
+    submitted_by VARCHAR(120) DEFAULT NULL,
+    last_reason VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_teamsheet_club_round (club_id, season_year, round_key),
+    INDEX idx_teamsheet_round (season_year, round_key, venue_detail_id),
+    FOREIGN KEY (club_id) REFERENCES clubs(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS club_teamsheet_entries (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    teamsheet_id INT NOT NULL,
+    event_id INT NOT NULL,
+    selected_swimmers_json TEXT DEFAULT NULL,
+    pb_snapshot VARCHAR(255) DEFAULT '',
+    notes VARCHAR(255) DEFAULT '',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_teamsheet_event (teamsheet_id, event_id),
+    FOREIGN KEY (teamsheet_id) REFERENCES club_teamsheets(id) ON DELETE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES gala_events(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS club_teamsheet_audit (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    teamsheet_id INT NOT NULL,
+    club_id INT NOT NULL,
+    changed_by VARCHAR(120) DEFAULT NULL,
+    reason VARCHAR(255) DEFAULT NULL,
+    change_summary TEXT DEFAULT NULL,
+    snapshot_json MEDIUMTEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_teamsheet_audit (teamsheet_id, created_at),
+    FOREIGN KEY (teamsheet_id) REFERENCES club_teamsheets(id) ON DELETE CASCADE,
+    FOREIGN KEY (club_id) REFERENCES clubs(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 // Auto-seed events if the table is empty
 $event_check = $conn->query("SELECT COUNT(*) as cnt FROM gala_events");
 if ($event_check) {

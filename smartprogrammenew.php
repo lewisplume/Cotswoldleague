@@ -1,6 +1,7 @@
 <?php
 include_once 'db.php';
 $sheetId = $_GET['sheet_id'] ?? null;
+$digitalTeamsheetId = isset($_GET['digital_teamsheet_id']) ? (int)$_GET['digital_teamsheet_id'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -233,7 +234,7 @@ $sheetId = $_GET['sheet_id'] ?? null;
             </select>
         </div>
 
-        <?php if ($sheetId): ?>
+        <?php if ($sheetId || $digitalTeamsheetId): ?>
             <div id="loadingStatus" class="text-center border-t border-yellow-200 pt-4 w-full">
                 <h3 class="text-lg font-bold text-yellow-900">Importing Data...</h3>
                 <p class="text-sm text-yellow-800">Please wait while your Teamsheet is loaded.</p>
@@ -254,7 +255,8 @@ $sheetId = $_GET['sheet_id'] ?? null;
             </button>
             <script>
                 window.addEventListener('load', () => {
-                    fetchAndProcessSheet('<?php echo htmlspecialchars($sheetId); ?>').then(() => {
+                    const loader = <?php echo $digitalTeamsheetId ? "fetchAndProcessDigitalTeamsheet(" . (int)$digitalTeamsheetId . ")" : "fetchAndProcessSheet('" . htmlspecialchars($sheetId) . "')"; ?>;
+                    loader.then(() => {
                         document.getElementById('loadingStatus').classList.add('hidden');
                         document.getElementById('loadedStatus').classList.remove('hidden');
                         document.getElementById('printBtn').classList.remove('hidden');
@@ -1276,6 +1278,38 @@ $sheetId = $_GET['sheet_id'] ?? null;
         const page2Title = document.getElementById('page2Title');
 
         let workbook = null;
+
+        async function fetchAndProcessDigitalTeamsheet(teamsheetId) {
+            try {
+                const response = await fetch('digital_teamsheet_export.php?id=' + encodeURIComponent(teamsheetId));
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.arrayBuffer();
+                workbook = XLSX.read(data, { type: 'array' });
+
+                document.querySelectorAll('#workbookNameDisplay').forEach(el => {
+                    el.textContent = 'Digital Teamsheet';
+                    el.classList.remove('hidden');
+                });
+
+                sheetSelector.innerHTML = '<option value="">-- Select a Sheet --</option>';
+                workbook.SheetNames.forEach(sheetName => {
+                    const option = document.createElement('option');
+                    option.value = sheetName;
+                    option.textContent = sheetName;
+                    sheetSelector.appendChild(option);
+                });
+
+                sheetSelectContainer.classList.remove('hidden');
+                if (workbook.SheetNames.length === 1) {
+                    sheetSelector.value = workbook.SheetNames[0];
+                    sheetSelector.dispatchEvent(new Event('change'));
+                }
+            } catch (error) {
+                console.error('Error fetching digital teamsheet:', error);
+                alert('Failed to load Digital Teamsheet data.');
+            }
+        }
 
         async function fetchAndProcessSheet(sheetId) {
             try {

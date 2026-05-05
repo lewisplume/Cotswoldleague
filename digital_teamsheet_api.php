@@ -1,0 +1,516 @@
+<?php
+session_start();
+include 'db.php';
+
+header('Content-Type: application/json');
+
+$active_season_year = $current_season_year ?? 2026;
+$is_logged_in = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'] === true;
+$is_super_admin = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
+$current_club_id = (int)($_SESSION['club_id'] ?? 0);
+$current_club_name = $_SESSION['club_name'] ?? 'Club User';
+
+if (!$is_logged_in && !$is_super_admin) {
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+function json_input($key, $default = [])
+{
+    $raw = $_POST[$key] ?? null;
+    if ($raw === null) {
+        return $default;
+    }
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : $default;
+}
+
+function format_ms_time($ms)
+{
+    if ($ms === null || $ms === '') {
+        return '';
+    }
+    $ms = (int)$ms;
+    $minutes = intdiv($ms, 60000);
+    $seconds = intdiv($ms % 60000, 1000);
+    $hundredths = intdiv($ms % 1000, 10);
+    if ($minutes > 0) {
+        return sprintf('%d:%02d.%02d', $minutes, $seconds, $hundredths);
+    }
+    return sprintf('%d.%02d', $seconds, $hundredths);
+}
+
+function get_round_options($conn, $club_id, $season)
+{
+    $sql = "SELECT vd.id, vd.round_number, vd.gala_type, vd.club_id AS host_club_id,
+                   c_host.name AS host_name,
+                   c1.name AS team1_name, c2.name AS team2_name, c3.name AS team3_name, c4.name AS team4_name,
+                   c5.name AS team5_name, c6.name AS team6_name, c7.name AS team7_name, c8.name AS team8_name
+            FROM venue_details vd
+            LEFT JOIN clubs c_host ON vd.club_id = c_host.id
+            LEFT JOIN clubs c1 ON vd.team_1_id = c1.id
+            LEFT JOIN clubs c2 ON vd.team_2_id = c2.id
+            LEFT JOIN clubs c3 ON vd.team_3_id = c3.id
+            LEFT JOIN clubs c4 ON vd.team_4_id = c4.id
+            LEFT JOIN clubs c5 ON vd.team_5_id = c5.id
+            LEFT JOIN clubs c6 ON vd.team_6_id = c6.id
+            LEFT JOIN clubs c7 ON vd.team_7_id = c7.id
+            LEFT JOIN clubs c8 ON vd.team_8_id = c8.id
+            WHERE vd.season_year = ?
+              AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
+                   OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
+            ORDER BY vd.round_number ASC, c_host.name ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iiiiiiiiii", $season, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rounds = [];
+    while ($row = $res->fetch_assoc()) {
+        $teams = array_values(array_filter([
+            $row['host_name'],
+            $row['team1_name'],
+            $row['team2_name'],
+            $row['team3_name'],
+            $row['team4_name'],
+            $row['team5_name'],
+            $row['team6_name'],
+            $row['team7_name'],
+            $row['team8_name'],
+        ]));
+        $gala_type = $row['gala_type'] ?: 'round';
+        $round_key = $gala_type === 'round' ? 'round_' . (int)$row['round_number'] : $gala_type;
+        $rounds[] = [
+            'venue_detail_id' => (int)$row['id'],
+            'round_number' => (int)$row['round_number'],
+            'round_key' => $round_key,
+            'gala_type' => $gala_type,
+            'host_name' => $row['host_name'],
+            'teams' => array_values(array_unique($teams)),
+            'label' => ($gala_type === 'round' ? 'Round ' . (int)$row['round_number'] : strtoupper(str_replace('_', ' ', $gala_type))) . ' - ' . $row['host_name'],
+        ];
+    }
+    $stmt->close();
+    return $rounds;
+}
+
+function can_view_teamsheet($conn, $viewer_club_id, $teamsheet)
+{
+    if ((int)$teamsheet['club_id'] === (int)$viewer_club_id) {
+        return true;
+    }
+    if ($teamsheet['status'] !== 'submitted') {
+        return false;
+    }
+    if (empty($teamsheet['venue_detail_id'])) {
+        return false;
+    }
+    $stmt = $conn->prepare("SELECT id FROM venue_details
+        WHERE id = ? AND (club_id = ? OR team_1_id = ? OR team_2_id = ? OR team_3_id = ? OR team_4_id = ?
+        OR team_5_id = ? OR team_6_id = ? OR team_7_id = ? OR team_8_id = ?)");
+    $venue_id = (int)$teamsheet['venue_detail_id'];
+    $stmt->bind_param("iiiiiiiiii", $venue_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id);
+    $stmt->execute();
+    $ok = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    return $ok;
+}
+
+function load_teamsheet_payload($conn, $teamsheet_id, $viewer_club_id)
+{
+    $stmt = $conn->prepare("SELECT ts.*, c.name AS club_name FROM club_teamsheets ts JOIN clubs c ON ts.club_id = c.id WHERE ts.id = ?");
+    $stmt->bind_param("i", $teamsheet_id);
+    $stmt->execute();
+    $teamsheet = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$teamsheet || !can_view_teamsheet($conn, $viewer_club_id, $teamsheet)) {
+        return null;
+    }
+
+    $entries = [];
+    $e_stmt = $conn->prepare("SELECT e.*, ge.event_number, ge.event_name, ge.event_type, ge.distance, ge.cut_off_time_ms,
+                                     ge.a_final_event_name, ge.a_final_distance, ge.a_final_cut_off_time_ms
+                              FROM club_teamsheet_entries e
+                              JOIN gala_events ge ON e.event_id = ge.id
+                              WHERE e.teamsheet_id = ?
+                              ORDER BY ge.event_number ASC");
+    $e_stmt->bind_param("i", $teamsheet_id);
+    $e_stmt->execute();
+    $res = $e_stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        $is_a_final = $teamsheet['gala_type'] === 'a_final' && $row['a_final_event_name'];
+        $entries[] = [
+            'event_id' => (int)$row['event_id'],
+            'event_number' => (int)$row['event_number'],
+            'event_name' => $is_a_final ? $row['a_final_event_name'] : $row['event_name'],
+            'event_type' => $row['event_type'],
+            'distance' => $is_a_final ? $row['a_final_distance'] : $row['distance'],
+            'cut_off' => format_ms_time($is_a_final ? $row['a_final_cut_off_time_ms'] : $row['cut_off_time_ms']),
+            'selected_swimmers' => json_decode($row['selected_swimmers_json'] ?: '[]', true) ?: [],
+            'pb_snapshot' => $row['pb_snapshot'],
+            'notes' => $row['notes'],
+        ];
+    }
+    $e_stmt->close();
+
+    $audit = [];
+    $a_stmt = $conn->prepare("SELECT changed_by, reason, change_summary, created_at FROM club_teamsheet_audit WHERE teamsheet_id = ? ORDER BY created_at DESC LIMIT 12");
+    $a_stmt->bind_param("i", $teamsheet_id);
+    $a_stmt->execute();
+    $a_res = $a_stmt->get_result();
+    while ($row = $a_res->fetch_assoc()) {
+        $audit[] = $row;
+    }
+    $a_stmt->close();
+
+    return [
+        'teamsheet' => [
+            'id' => (int)$teamsheet['id'],
+            'club_id' => (int)$teamsheet['club_id'],
+            'club_name' => $teamsheet['club_name'],
+            'season_year' => (int)$teamsheet['season_year'],
+            'round_key' => $teamsheet['round_key'],
+            'gala_type' => $teamsheet['gala_type'],
+            'venue_detail_id' => $teamsheet['venue_detail_id'] ? (int)$teamsheet['venue_detail_id'] : null,
+            'status' => $teamsheet['status'],
+            'submitted_at' => $teamsheet['submitted_at'],
+            'updated_at' => $teamsheet['updated_at'],
+            'last_reason' => $teamsheet['last_reason'],
+            'can_edit' => (int)$teamsheet['club_id'] === (int)$viewer_club_id,
+        ],
+        'entries' => $entries,
+        'audit' => $audit,
+    ];
+}
+
+if ($action === 'load') {
+    $season = (int)($_GET['season'] ?? $active_season_year);
+    $club_id = $is_super_admin && isset($_GET['club_id']) ? (int)$_GET['club_id'] : $current_club_id;
+
+    $swimmers = [];
+    $stmt = $conn->prepare("SELECT * FROM club_swimmers WHERE club_id = ? AND season_year = ? AND is_active = 1 ORDER BY swimmer_name ASC");
+    $stmt->bind_param("ii", $club_id, $season);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        $row['id'] = (int)$row['id'];
+        $row['availability'] = json_decode($row['availability_json'] ?: '{}', true) ?: [];
+        unset($row['availability_json']);
+        $swimmers[] = $row;
+    }
+    $stmt->close();
+
+    $rounds = get_round_options($conn, $club_id, $season);
+
+    $events = [];
+    $e_stmt = $conn->prepare("SELECT * FROM gala_events WHERE season_year = ? ORDER BY event_number ASC");
+    $e_stmt->bind_param("i", $season);
+    $e_stmt->execute();
+    $e_res = $e_stmt->get_result();
+    while ($row = $e_res->fetch_assoc()) {
+        $events[] = [
+            'id' => (int)$row['id'],
+            'event_number' => (int)$row['event_number'],
+            'event_name' => $row['event_name'],
+            'distance' => $row['distance'],
+            'age_group' => $row['age_group'],
+            'gender' => $row['gender'],
+            'event_type' => $row['event_type'],
+            'cut_off' => format_ms_time($row['cut_off_time_ms']),
+            'a_final_event_name' => $row['a_final_event_name'],
+            'a_final_distance' => $row['a_final_distance'],
+            'a_final_cut_off' => format_ms_time($row['a_final_cut_off_time_ms']),
+        ];
+    }
+    $e_stmt->close();
+
+    $teamsheets = [];
+    $ts_stmt = $conn->prepare("SELECT id, round_key, venue_detail_id, status, submitted_at, updated_at FROM club_teamsheets WHERE club_id = ? AND season_year = ?");
+    $ts_stmt->bind_param("ii", $club_id, $season);
+    $ts_stmt->execute();
+    $ts_res = $ts_stmt->get_result();
+    while ($row = $ts_res->fetch_assoc()) {
+        $teamsheets[$row['round_key']] = [
+            'id' => (int)$row['id'],
+            'round_key' => $row['round_key'],
+            'venue_detail_id' => $row['venue_detail_id'] ? (int)$row['venue_detail_id'] : null,
+            'status' => $row['status'],
+            'submitted_at' => $row['submitted_at'],
+            'updated_at' => $row['updated_at'],
+        ];
+    }
+    $ts_stmt->close();
+
+    $shared = [];
+    if (!empty($rounds)) {
+        $venue_ids = array_values(array_unique(array_filter(array_map(fn($r) => (int)$r['venue_detail_id'], $rounds))));
+        if (!empty($venue_ids)) {
+            $in = implode(',', array_map('intval', $venue_ids));
+            $res = $conn->query("SELECT ts.id, ts.club_id, ts.round_key, ts.venue_detail_id, ts.status, ts.submitted_at, ts.updated_at, c.name AS club_name
+                FROM club_teamsheets ts JOIN clubs c ON ts.club_id = c.id
+                WHERE ts.season_year = $season AND ts.venue_detail_id IN ($in) AND ts.status = 'submitted'
+                ORDER BY ts.round_key ASC, c.name ASC");
+            while ($row = $res->fetch_assoc()) {
+                $shared[] = [
+                    'id' => (int)$row['id'],
+                    'club_id' => (int)$row['club_id'],
+                    'club_name' => $row['club_name'],
+                    'round_key' => $row['round_key'],
+                    'venue_detail_id' => (int)$row['venue_detail_id'],
+                    'status' => $row['status'],
+                    'submitted_at' => $row['submitted_at'],
+                    'updated_at' => $row['updated_at'],
+                    'is_mine' => (int)$row['club_id'] === (int)$club_id,
+                ];
+            }
+        }
+    }
+
+    echo json_encode([
+        'season' => $season,
+        'club_id' => $club_id,
+        'swimmers' => $swimmers,
+        'rounds' => $rounds,
+        'events' => $events,
+        'teamsheets' => $teamsheets,
+        'shared' => $shared,
+    ]);
+    exit;
+}
+
+if ($action === 'copy_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $source_year = (int)($_POST['source_year'] ?? 0);
+    $target_year = (int)($_POST['target_year'] ?? $active_season_year);
+    if (!$source_year || !$target_year) {
+        echo json_encode(['error' => 'Missing source or target season']);
+        exit;
+    }
+
+    $sql = "INSERT IGNORE INTO club_swimmers
+        (club_id, season_year, swimmer_name, age_group, pb_free_25, pb_back_25, pb_breast_25, pb_fly_25,
+         pb_free_50, pb_back_50, pb_breast_50, pb_fly_50, pb_im, pb_free_100, pb_back_100, pb_breast_100, pb_fly_100, availability_json)
+        SELECT club_id, ?, swimmer_name, age_group, pb_free_25, pb_back_25, pb_breast_25, pb_fly_25,
+               pb_free_50, pb_back_50, pb_breast_50, pb_fly_50, pb_im, pb_free_100, pb_back_100, pb_breast_100, pb_fly_100, '{}'
+        FROM club_swimmers
+        WHERE club_id = ? AND season_year = ? AND is_active = 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("iii", $target_year, $current_club_id, $source_year);
+    $stmt->execute();
+    $copied = $stmt->affected_rows;
+    $stmt->close();
+
+    echo json_encode(['success' => true, 'copied' => $copied]);
+    exit;
+}
+
+if ($action === 'save_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $season = (int)($_POST['season'] ?? $active_season_year);
+    $swimmers = json_input('swimmers');
+    $seen_ids = [];
+
+    $stmt = $conn->prepare("INSERT INTO club_swimmers
+        (id, club_id, season_year, swimmer_name, age_group, pb_free_25, pb_back_25, pb_breast_25, pb_fly_25,
+         pb_free_50, pb_back_50, pb_breast_50, pb_fly_50, pb_im, pb_free_100, pb_back_100, pb_breast_100, pb_fly_100, availability_json, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        ON DUPLICATE KEY UPDATE
+            id = LAST_INSERT_ID(id),
+            swimmer_name = VALUES(swimmer_name), age_group = VALUES(age_group),
+            pb_free_25 = VALUES(pb_free_25), pb_back_25 = VALUES(pb_back_25), pb_breast_25 = VALUES(pb_breast_25), pb_fly_25 = VALUES(pb_fly_25),
+            pb_free_50 = VALUES(pb_free_50), pb_back_50 = VALUES(pb_back_50), pb_breast_50 = VALUES(pb_breast_50), pb_fly_50 = VALUES(pb_fly_50),
+            pb_im = VALUES(pb_im), pb_free_100 = VALUES(pb_free_100), pb_back_100 = VALUES(pb_back_100), pb_breast_100 = VALUES(pb_breast_100), pb_fly_100 = VALUES(pb_fly_100),
+            availability_json = VALUES(availability_json), is_active = 1");
+
+    $saved_swimmers = [];
+    foreach ($swimmers as $swimmer) {
+        $name = trim($swimmer['swimmer_name'] ?? '');
+        if ($name === '') {
+            continue;
+        }
+        $id = (int)($swimmer['id'] ?? 0);
+        $age = trim($swimmer['age_group'] ?? '');
+        $availability = json_encode($swimmer['availability'] ?? []);
+        $vals = [];
+        foreach (['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'] as $field) {
+            $vals[$field] = trim($swimmer[$field] ?? '');
+        }
+        $stmt->bind_param(
+            "iiissssssssssssssss",
+            $id,
+            $current_club_id,
+            $season,
+            $name,
+            $age,
+            $vals['pb_free_25'],
+            $vals['pb_back_25'],
+            $vals['pb_breast_25'],
+            $vals['pb_fly_25'],
+            $vals['pb_free_50'],
+            $vals['pb_back_50'],
+            $vals['pb_breast_50'],
+            $vals['pb_fly_50'],
+            $vals['pb_im'],
+            $vals['pb_free_100'],
+            $vals['pb_back_100'],
+            $vals['pb_breast_100'],
+            $vals['pb_fly_100'],
+            $availability
+        );
+        $stmt->execute();
+        $saved_id = $id ?: $conn->insert_id;
+        $seen_ids[] = $saved_id;
+        $saved_swimmers[] = [
+            'id' => $saved_id,
+            'swimmer_name' => $name
+        ];
+    }
+    $stmt->close();
+
+    if (!empty($seen_ids)) {
+        $id_list = implode(',', array_map('intval', array_filter($seen_ids)));
+        if ($id_list !== '') {
+            $conn->query("UPDATE club_swimmers SET is_active = 0 WHERE club_id = $current_club_id AND season_year = $season AND id NOT IN ($id_list)");
+        }
+    } else {
+        $conn->query("UPDATE club_swimmers SET is_active = 0 WHERE club_id = $current_club_id AND season_year = $season");
+    }
+
+    echo json_encode(['success' => true, 'swimmers' => $saved_swimmers]);
+    exit;
+}
+
+if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $season = (int)($_POST['season'] ?? $active_season_year);
+    $round_key = $_POST['round_key'] ?? '';
+    $gala_type = $_POST['gala_type'] ?? 'round';
+    $venue_detail_id = (int)($_POST['venue_detail_id'] ?? 0);
+    $entries = json_input('entries');
+    $reason = trim($_POST['reason'] ?? '');
+
+    if ($round_key === '' || empty($entries)) {
+        echo json_encode(['error' => 'Missing teamsheet data']);
+        exit;
+    }
+
+    $existing = null;
+    $check = $conn->prepare("SELECT * FROM club_teamsheets WHERE club_id = ? AND season_year = ? AND round_key = ?");
+    $check->bind_param("iis", $current_club_id, $season, $round_key);
+    $check->execute();
+    $existing = $check->get_result()->fetch_assoc();
+    $check->close();
+
+    if ($existing && $existing['status'] === 'submitted' && $reason === '') {
+        echo json_encode(['error' => 'A reason is required when editing a submitted teamsheet.']);
+        exit;
+    }
+
+    if (!$existing) {
+        $stmt = $conn->prepare("INSERT INTO club_teamsheets (club_id, season_year, round_key, gala_type, venue_detail_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("iissi", $current_club_id, $season, $round_key, $gala_type, $venue_detail_id);
+        $stmt->execute();
+        $teamsheet_id = $conn->insert_id;
+        $stmt->close();
+    } else {
+        $teamsheet_id = (int)$existing['id'];
+        $stmt = $conn->prepare("UPDATE club_teamsheets SET gala_type = ?, venue_detail_id = ?, last_reason = NULLIF(?, '') WHERE id = ?");
+        $stmt->bind_param("sisi", $gala_type, $venue_detail_id, $reason, $teamsheet_id);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    $old_snapshot = [];
+    if ($existing && $existing['status'] === 'submitted') {
+        $old_payload = load_teamsheet_payload($conn, $teamsheet_id, $current_club_id);
+        $old_snapshot = $old_payload['entries'] ?? [];
+    }
+
+    $entry_stmt = $conn->prepare("INSERT INTO club_teamsheet_entries (teamsheet_id, event_id, selected_swimmers_json, pb_snapshot, notes)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE selected_swimmers_json = VALUES(selected_swimmers_json), pb_snapshot = VALUES(pb_snapshot), notes = VALUES(notes)");
+    foreach ($entries as $entry) {
+        $event_id = (int)($entry['event_id'] ?? 0);
+        if (!$event_id) {
+            continue;
+        }
+        $selected = json_encode(array_values($entry['selected_swimmers'] ?? []));
+        $pb = trim($entry['pb_snapshot'] ?? '');
+        $notes = trim($entry['notes'] ?? '');
+        $entry_stmt->bind_param("iisss", $teamsheet_id, $event_id, $selected, $pb, $notes);
+        $entry_stmt->execute();
+    }
+    $entry_stmt->close();
+
+    if ($existing && $existing['status'] === 'submitted') {
+        $before_by_event = [];
+        foreach ($old_snapshot as $old_entry) {
+            $before_by_event[(int)$old_entry['event_id']] = [
+                'event_number' => $old_entry['event_number'] ?? '',
+                'selected' => implode(', ', $old_entry['selected_swimmers'] ?? []),
+                'notes' => $old_entry['notes'] ?? '',
+            ];
+        }
+        $changed_events = [];
+        foreach ($entries as $new_entry) {
+            $event_id = (int)($new_entry['event_id'] ?? 0);
+            $before = $before_by_event[$event_id] ?? null;
+            $new_selected = implode(', ', $new_entry['selected_swimmers'] ?? []);
+            $new_notes = $new_entry['notes'] ?? '';
+            if (!$before || $before['selected'] !== $new_selected || $before['notes'] !== $new_notes) {
+                $changed_events[] = $before['event_number'] ?? '#' . $event_id;
+            }
+        }
+        $summary = 'Post-submission edit';
+        if (!empty($changed_events)) {
+            $summary .= ': events ' . implode(', ', array_slice($changed_events, 0, 12));
+            if (count($changed_events) > 12) {
+                $summary .= ' +' . (count($changed_events) - 12) . ' more';
+            }
+        }
+        $snapshot = json_encode(['before' => $old_snapshot, 'after' => $entries]);
+        $audit = $conn->prepare("INSERT INTO club_teamsheet_audit (teamsheet_id, club_id, changed_by, reason, change_summary, snapshot_json) VALUES (?, ?, ?, ?, ?, ?)");
+        $audit->bind_param("iissss", $teamsheet_id, $current_club_id, $current_club_name, $reason, $summary, $snapshot);
+        $audit->execute();
+        $audit->close();
+    }
+
+    echo json_encode(['success' => true, 'teamsheet_id' => $teamsheet_id]);
+    exit;
+}
+
+if ($action === 'submit_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $teamsheet_id = (int)($_POST['teamsheet_id'] ?? 0);
+    if (!$teamsheet_id) {
+        echo json_encode(['error' => 'Missing teamsheet id']);
+        exit;
+    }
+    $stmt = $conn->prepare("UPDATE club_teamsheets SET status = 'submitted', submitted_at = COALESCE(submitted_at, NOW()), submitted_by = ? WHERE id = ? AND club_id = ?");
+    $stmt->bind_param("sii", $current_club_name, $teamsheet_id, $current_club_id);
+    $stmt->execute();
+    $ok = $stmt->affected_rows >= 0;
+    $stmt->close();
+
+    $snapshot = load_teamsheet_payload($conn, $teamsheet_id, $current_club_id);
+    $summary = 'Teamsheet submitted to league';
+    $snap_json = json_encode($snapshot);
+    $audit = $conn->prepare("INSERT INTO club_teamsheet_audit (teamsheet_id, club_id, changed_by, reason, change_summary, snapshot_json) VALUES (?, ?, ?, '', ?, ?)");
+    $audit->bind_param("iisss", $teamsheet_id, $current_club_id, $current_club_name, $summary, $snap_json);
+    $audit->execute();
+    $audit->close();
+
+    echo json_encode(['success' => $ok]);
+    exit;
+}
+
+if ($action === 'teamsheet') {
+    $teamsheet_id = (int)($_GET['id'] ?? 0);
+    $payload = $teamsheet_id ? load_teamsheet_payload($conn, $teamsheet_id, $current_club_id) : null;
+    if (!$payload) {
+        echo json_encode(['error' => 'Teamsheet not found or not shared yet']);
+        exit;
+    }
+    echo json_encode($payload);
+    exit;
+}
+
+echo json_encode(['error' => 'Unknown action']);

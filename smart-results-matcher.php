@@ -2,6 +2,7 @@
 session_start();
 include 'db.php';
 $sheetId = $_GET['sheet_id'] ?? null;
+$digitalTeamsheetId = isset($_GET['digital_teamsheet_id']) ? (int)$_GET['digital_teamsheet_id'] : 0;
 $current_club_id = $_SESSION['club_id'] ?? null;
 
 $available_results = [];
@@ -271,7 +272,7 @@ if ($current_club_id) {
         <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Cotswold League Smart Results Matcher</h1>
 
         <div class="control-group">
-            <?php if ($sheetId): ?>
+            <?php if ($sheetId || $digitalTeamsheetId): ?>
                 <div id="loadingStatus" class="text-center py-4">
                     <h3 class="text-lg font-bold text-blue-900 mb-2">Step 1: Importing Teamsheet...</h3>
                     <p class="text-sm text-gray-600">Please wait while your Teamsheet is loaded from Google Sheets.</p>
@@ -418,14 +419,39 @@ if ($current_club_id) {
         document.getElementById('teamSheetSelector').addEventListener('change', (e) => processTeamsheet(e.target.workbook, e.target.value));
 
         // Auto-load if sheetId supplied
-        <?php if ($sheetId): ?>
+        <?php if ($sheetId || $digitalTeamsheetId): ?>
         window.addEventListener('load', () => {
-            fetchAndProcessSheet('<?php echo htmlspecialchars($sheetId); ?>').then(() => {
+            const loader = <?php echo $digitalTeamsheetId ? "fetchAndProcessDigitalTeamsheet(" . (int)$digitalTeamsheetId . ")" : "fetchAndProcessSheet('" . htmlspecialchars($sheetId) . "')"; ?>;
+            loader.then(() => {
                 document.getElementById('loadingStatus').classList.add('hidden');
                 document.getElementById('loadedStatus').classList.remove('hidden');
             });
         });
         <?php endif; ?>
+
+        async function fetchAndProcessDigitalTeamsheet(teamsheetId) {
+            try {
+                const response = await fetch('digital_teamsheet_export.php?id=' + encodeURIComponent(teamsheetId));
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                document.getElementById('sheetSelectContainer').classList.remove('hidden');
+                const titleEl = document.getElementById('workbookNameDisplay');
+                if(titleEl) {
+                    titleEl.textContent = 'Digital Teamsheet';
+                    titleEl.classList.remove('hidden');
+                }
+
+                setupSheetSelector(workbook, 'teamSheetSelector', (wb, sheet) => processTeamsheet(wb, sheet));
+
+                step2.classList.remove('opacity-50', 'pointer-events-none');
+            } catch (error) {
+                console.error('Error fetching digital teamsheet:', error);
+                alert('Failed to load Digital Teamsheet data.');
+            }
+        }
 
         async function fetchAndProcessSheet(sheetId) {
             try {

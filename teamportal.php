@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $is_logged_in = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'] === true;
 $current_club_id = $_SESSION['club_id'] ?? 0;
 $current_club_name = $_SESSION['club_name'] ?? '';
+$digital_teamsheets_standalone = defined('DIGITAL_TEAMSHEETS_STANDALONE') && DIGITAL_TEAMSHEETS_STANDALONE;
 
 // HANDLE AUTHENTICATED ACTIONS
 if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -486,14 +487,14 @@ if ($is_logged_in) {
                             <h1 class="text-3xl font-bold text-white mb-1">
                                 <?php echo htmlspecialchars($my_club_data['club_name']); ?>
                             </h1>
-                            <p class="text-sky-400 text-sm font-medium">Team Dashboard</p>
+                            <p class="text-sky-400 text-sm font-medium"><?php echo $digital_teamsheets_standalone ? 'Digital Teamsheets' : 'Team Dashboard'; ?></p>
                         </div>
                     </div>
 
                     <div class="relative z-10 flex flex-wrap justify-center gap-2">
-                        <a href="admin.php"
+                        <a href="<?php echo $digital_teamsheets_standalone ? 'teamportal.php' : 'admin.php'; ?>"
                             class="bg-slate-800 hover:bg-sky-500/10 hover:text-sky-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
-                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Club Rep Portal
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> <?php echo $digital_teamsheets_standalone ? 'Team Portal' : 'Club Rep Portal'; ?>
                         </a>
                         <a href="?action=logout"
                             class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
@@ -518,12 +519,13 @@ if ($is_logged_in) {
                     </div>
                 <?php endif; ?>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 <?php echo $digital_teamsheets_standalone ? '' : 'lg:grid-cols-3'; ?> gap-8">
 
                     <!-- LEFT COLUMN (Spans 2): Teamsheets & Venues -->
-                    <div class="lg:col-span-2 space-y-8">
+                    <div class="<?php echo $digital_teamsheets_standalone ? '' : 'lg:col-span-2'; ?> space-y-8">
 
                         <!-- TEAMSHEET PORTAL -->
+                        <?php if (!$digital_teamsheets_standalone): ?>
                         <div
                             class="glass-panel p-8 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-900/20 to-transparent relative overflow-hidden group">
                             <div
@@ -598,8 +600,211 @@ if ($is_logged_in) {
                                 </p>
                             </div>
                         </div>
+                        <?php endif; ?>
+
+                        <!-- DIGITAL TEAMSHEETS BETA -->
+                        <?php if ($digital_teamsheets_standalone): ?>
+                        <div id="digital-teamsheets"
+                            class="glass-panel p-8 rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 to-transparent relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                            <div class="relative z-10 flex flex-col gap-6">
+                                <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+                                    <div class="flex items-start gap-5">
+                                        <div class="bg-cyan-500/20 p-4 rounded-2xl flex-shrink-0 border border-cyan-500/30 shadow-inner">
+                                            <i data-lucide="clipboard-list" class="w-8 h-8 text-cyan-300"></i>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-3 mb-1">
+                                                <h2 class="text-2xl font-bold text-white">Digital Teamsheets</h2>
+                                                <span class="bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">Beta</span>
+                                            </div>
+                                            <p class="text-slate-300 text-sm max-w-2xl leading-relaxed">
+                                                Build swimmer lists and round teamsheets inside the portal while the existing Google Sheet links stay available.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row xl:flex-col gap-2 min-w-[220px]">
+                                        <button type="button" onclick="loadDigitalTeamsheets(true)"
+                                            class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh
+                                        </button>
+                                        <button type="button" onclick="copyPreviousSeasonSwimmers()"
+                                            class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20 flex items-center justify-center gap-2 text-sm">
+                                            <i data-lucide="copy" class="w-4 h-4"></i> Copy Previous Season
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="dts-alert" class="hidden rounded-xl px-4 py-3 text-sm font-semibold"></div>
+
+                                <div class="bg-slate-950/40 border border-white/5 rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
+                                    <button type="button" data-dts-tab="swimmers" onclick="switchDtsTab('swimmers')"
+                                        class="dts-tab-btn flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+                                        <i data-lucide="users" class="w-4 h-4"></i> Swimmer List
+                                    </button>
+                                    <button type="button" data-dts-tab="builder" onclick="switchDtsTab('builder')"
+                                        class="dts-tab-btn flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+                                        <i data-lucide="list-checks" class="w-4 h-4"></i> Teamsheet Builder
+                                    </button>
+                                    <button type="button" data-dts-tab="shared" onclick="switchDtsTab('shared')"
+                                        class="dts-tab-btn flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+                                        <i data-lucide="share-2" class="w-4 h-4"></i> Shared Teamsheets
+                                    </button>
+                                </div>
+
+                                <section id="dts-tab-swimmers" class="dts-tab-panel bg-slate-950/40 border border-white/5 rounded-2xl overflow-hidden">
+                                    <div class="p-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                                <i data-lucide="users" class="w-5 h-5 text-cyan-300"></i> Swimmer List
+                                            </h3>
+                                            <p class="text-xs text-slate-400 mt-1">Edit names, age groups, PBs, and availability in one place.</p>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button type="button" onclick="addSwimmerRow()"
+                                                class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Swimmer
+                                            </button>
+                                            <button type="button" onclick="saveSwimmers()"
+                                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                                <i data-lucide="save" class="w-3.5 h-3.5"></i> Save List
+                                            </button>
+                                            <span id="dts-swimmers-autosave-status" class="hidden self-center text-[11px] font-semibold text-slate-500"></span>
+                                        </div>
+                                    </div>
+                                    <div class="overflow-auto max-h-[68vh]">
+                                        <table class="min-w-[1680px] w-full text-xs text-slate-300 border-separate border-spacing-0">
+                                            <thead class="bg-slate-900/95 text-slate-400 uppercase tracking-wider sticky top-0 z-10">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left w-72 sticky left-0 z-30 bg-slate-900/95 border-r border-white/10">Swimmer Name</th>
+                                                    <th class="px-3 py-2 text-left w-28">Age Group</th>
+                                                    <th class="px-3 py-2">25 Free</th>
+                                                    <th class="px-3 py-2">25 Back</th>
+                                                    <th class="px-3 py-2">25 Breast</th>
+                                                    <th class="px-3 py-2">25 Fly</th>
+                                                    <th class="px-3 py-2">50 Free</th>
+                                                    <th class="px-3 py-2">50 Back</th>
+                                                    <th class="px-3 py-2">50 Breast</th>
+                                                    <th class="px-3 py-2">50 Fly</th>
+                                                    <th class="px-3 py-2">IM</th>
+                                                    <th class="px-3 py-2">100 Free</th>
+                                                    <th class="px-3 py-2">100 Back</th>
+                                                    <th class="px-3 py-2">100 Breast</th>
+                                                    <th class="px-3 py-2">100 Fly</th>
+                                                    <th class="px-3 py-2 normal-case leading-tight">Round 1<br><span class="text-[10px] text-slate-500 uppercase">Available</span></th>
+                                                    <th class="px-3 py-2 normal-case leading-tight">Round 2<br><span class="text-[10px] text-slate-500 uppercase">Available</span></th>
+                                                    <th class="px-3 py-2 normal-case leading-tight">Round 3<br><span class="text-[10px] text-slate-500 uppercase">Available</span></th>
+                                                    <th class="px-3 py-2 normal-case leading-tight">Round 4<br><span class="text-[10px] text-slate-500 uppercase">Available</span></th>
+                                                    <th class="px-3 py-2 normal-case leading-tight">Final<br><span class="text-[10px] text-slate-500 uppercase">Available</span></th>
+                                                    <th class="px-3 py-2"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dts-swimmers-body" class="divide-y divide-white/5"></tbody>
+                                        </table>
+                                    </div>
+                                </section>
+
+                                <section id="dts-tab-builder" class="dts-tab-panel bg-slate-950/40 border border-white/5 rounded-2xl overflow-hidden hidden">
+                                    <div class="p-4 border-b border-white/5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                                <i data-lucide="list-checks" class="w-5 h-5 text-cyan-300"></i> Teamsheet Builder
+                                            </h3>
+                                            <p class="text-xs text-slate-400 mt-1">Choose a round, select swimmers, save as draft, then submit when ready.</p>
+                                        </div>
+                                        <div class="flex flex-col sm:flex-row gap-2">
+                                            <select id="dts-round-select" onchange="selectDigitalRound()"
+                                                class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white min-w-[260px] focus:outline-none focus:border-cyan-400">
+                                            </select>
+                                            <button type="button" onclick="saveTeamsheet(false)"
+                                                class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                                                <i data-lucide="save" class="w-4 h-4"></i> Save Draft
+                                            </button>
+                                            <button type="button" onclick="saveTeamsheet(true)"
+                                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                                                <i data-lucide="send" class="w-4 h-4"></i> Submit
+                                            </button>
+                                            <span id="dts-teamsheet-autosave-status" class="hidden self-center text-[11px] font-semibold text-slate-500"></span>
+                                        </div>
+                                    </div>
+
+                                    <div id="dts-teamsheet-meta" class="px-4 py-3 bg-slate-900/40 border-b border-white/5 text-xs text-slate-400"></div>
+                                    <div id="dts-audit-list" class="hidden px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-100"></div>
+
+                                    <div class="overflow-auto max-h-[68vh]">
+                                        <table class="min-w-[1050px] w-full text-xs text-slate-300">
+                                            <thead class="bg-slate-900/95 text-slate-400 uppercase tracking-wider sticky top-0 z-10">
+                                                <tr>
+                                                    <th class="px-3 py-2 w-14 text-center">No</th>
+                                                    <th class="px-3 py-2 text-left">Event</th>
+                                                    <th class="px-3 py-2 w-24 text-center">Cut Off</th>
+                                                    <th class="px-3 py-2 w-[360px] text-left">Swimmer(s)</th>
+                                                    <th class="px-3 py-2 w-32 text-left">PB</th>
+                                                    <th class="px-3 py-2 w-52 text-left">Host Notes</th>
+                                                    <th class="px-3 py-2 w-28 text-center">Warnings</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dts-events-body" class="divide-y divide-white/5"></tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="p-4 border-t border-white/5 flex flex-wrap gap-2">
+                                        <a id="dts-export-link" href="#" target="_blank"
+                                            class="hidden bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 font-bold py-2 px-3 rounded-lg text-xs items-center gap-1.5">
+                                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
+                                        </a>
+                                        <a id="dts-programme-link" href="#" target="_blank"
+                                            class="hidden bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded-lg text-xs items-center gap-1.5">
+                                            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Smart Programme
+                                        </a>
+                                        <a id="dts-matcher-link" href="#" target="_blank"
+                                            class="hidden bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-3 rounded-lg text-xs items-center gap-1.5">
+                                            <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Smart Results Matcher
+                                        </a>
+                                    </div>
+                                </section>
+
+                                <section id="dts-tab-shared" class="dts-tab-panel bg-slate-950/40 border border-white/5 rounded-2xl overflow-hidden hidden">
+                                    <div class="p-4 border-b border-white/5">
+                                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                            <i data-lucide="share-2" class="w-5 h-5 text-cyan-300"></i> Shared Teamsheets
+                                        </h3>
+                                        <p class="text-xs text-slate-400 mt-1">Submitted teamsheets from clubs in your galas appear here.</p>
+                                    </div>
+                                    <div id="dts-shared-list" class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+                                </section>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <div class="glass-panel p-8 rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 to-transparent relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl group-hover:bg-cyan-500/10 transition-colors pointer-events-none"></div>
+                            <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                <div class="flex items-start gap-5">
+                                    <div class="bg-cyan-500/20 p-4 rounded-2xl flex-shrink-0 border border-cyan-500/30 shadow-inner">
+                                        <i data-lucide="clipboard-list" class="w-8 h-8 text-cyan-300"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-3 mb-1">
+                                            <h2 class="text-2xl font-bold text-white">Digital Teamsheets</h2>
+                                            <span class="bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">Beta</span>
+                                        </div>
+                                        <p class="text-slate-300 text-sm max-w-md leading-relaxed">
+                                            Manage swimmer lists, round selections, submissions, shared sheets, and audit history in a dedicated workspace.
+                                        </p>
+                                    </div>
+                                </div>
+                                <a href="digital-teamsheets.php"
+                                    class="w-full sm:w-64 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-3">
+                                    <span>Open Digital Teamsheets</span>
+                                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
 
                         <!-- GALA SCORESHEET -->
+                        <?php if (!$digital_teamsheets_standalone): ?>
                         <?php if (!empty($venues)): ?>
                             <div class="glass-panel p-8 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-900/20 to-transparent relative overflow-hidden group">
                                 <div class="absolute right-0 top-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl group-hover:bg-sky-500/10 transition-colors pointer-events-none"></div>
@@ -753,12 +958,14 @@ if ($is_logged_in) {
                                 </div>
                             <?php endif; ?>
                         </div>
+                        <?php endif; ?>
 
 
 
                     </div>
 
                     <!-- RIGHT COLUMN: Contacts & Security -->
+                    <?php if (!$digital_teamsheets_standalone): ?>
                     <div class="space-y-8">
 
                         <!-- EDIT CONTACTS -->
@@ -858,10 +1065,12 @@ if ($is_logged_in) {
                             </div>
                         </form>
                     </div>
+                    <?php endif; ?>
 
                 </div>
 
                 <!-- ROUND DRAWS FULL WIDTH -->
+                <?php if (!$digital_teamsheets_standalone): ?>
                 <div class="glass-panel p-6 rounded-3xl overflow-hidden border border-white/5 mb-8">
                     <h2 class="text-xl font-bold flex items-center gap-2 mb-6">
                         <i data-lucide="calendar-days" class="w-6 h-6 text-purple-400"></i> My Round Draws & Results
@@ -1124,6 +1333,7 @@ if ($is_logged_in) {
                         </table>
                     </div>
                 </div>
+                <?php endif; ?>
 
             </div>
         <?php endif; ?>
@@ -1132,6 +1342,656 @@ if ($is_logged_in) {
 
     <script>
         lucide.createIcons();
+
+        const dtsState = {
+            season: <?php echo (int)$active_season_year; ?>,
+            clubId: <?php echo (int)$current_club_id; ?>,
+            swimmers: [],
+            rounds: [],
+            events: [],
+            teamsheets: {},
+            shared: [],
+            selectedRound: null,
+            activeTeamsheet: null,
+            loadedEntries: {}
+        };
+
+        const dtsAutosave = {
+            swimmerTimer: null,
+            teamsheetTimer: null,
+            swimmerSaving: false,
+            teamsheetSaving: false,
+            swimmerDirty: false,
+            teamsheetDirty: false,
+            postSubmitReason: ''
+        };
+
+        const dtsPbMap = {
+            '25m|Freestyle': 'pb_free_25',
+            '25m|Backstroke': 'pb_back_25',
+            '25m|Breaststroke': 'pb_breast_25',
+            '25m|Butterfly': 'pb_fly_25',
+            '50m|Freestyle': 'pb_free_50',
+            '50m|Backstroke': 'pb_back_50',
+            '50m|Breaststroke': 'pb_breast_50',
+            '50m|Butterfly': 'pb_fly_50',
+            '100m|Freestyle': 'pb_free_100',
+            '100m|Backstroke': 'pb_back_100',
+            '100m|Breaststroke': 'pb_breast_100',
+            '100m|Butterfly': 'pb_fly_100'
+        };
+
+        function dtsEscape(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            }[ch]));
+        }
+
+        function showDtsAlert(message, type = 'info') {
+            const el = document.getElementById('dts-alert');
+            if (!el) return;
+            const classes = {
+                info: 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-200',
+                success: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300',
+                error: 'bg-red-500/10 border border-red-500/20 text-red-300',
+                warn: 'bg-amber-500/10 border border-amber-500/20 text-amber-200'
+            };
+            el.className = `rounded-xl px-4 py-3 text-sm font-semibold ${classes[type] || classes.info}`;
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+
+        function showAutosaveStatus(target, message, type = 'info') {
+            const el = document.getElementById(target === 'swimmers' ? 'dts-swimmers-autosave-status' : 'dts-teamsheet-autosave-status');
+            if (!el) return;
+            const classes = {
+                info: 'text-slate-500',
+                saving: 'text-cyan-300',
+                saved: 'text-emerald-300',
+                warn: 'text-amber-300',
+                error: 'text-red-300'
+            };
+            el.className = `self-center text-[11px] font-semibold ${classes[type] || classes.info}`;
+            el.textContent = message;
+            el.classList.toggle('hidden', !message);
+        }
+
+        function scheduleSwimmerAutosave() {
+            dtsAutosave.swimmerDirty = true;
+            window.clearTimeout(dtsAutosave.swimmerTimer);
+            showAutosaveStatus('swimmers', 'Unsaved changes...', 'info');
+            dtsAutosave.swimmerTimer = window.setTimeout(runSwimmerAutosave, 1500);
+        }
+
+        async function runSwimmerAutosave() {
+            if (dtsAutosave.swimmerSaving) return;
+            if (!dtsAutosave.swimmerDirty) return;
+            dtsAutosave.swimmerSaving = true;
+            dtsAutosave.swimmerDirty = false;
+            showAutosaveStatus('swimmers', 'Autosaving...', 'saving');
+            try {
+                await saveSwimmers({ silent: true, reload: false });
+                showAutosaveStatus('swimmers', 'Autosaved', 'saved');
+            } catch (err) {
+                dtsAutosave.swimmerDirty = true;
+                showAutosaveStatus('swimmers', 'Autosave failed', 'error');
+            } finally {
+                dtsAutosave.swimmerSaving = false;
+                if (dtsAutosave.swimmerDirty) scheduleSwimmerAutosave();
+            }
+        }
+
+        function scheduleTeamsheetAutosave() {
+            if (!dtsState.selectedRound) return;
+            dtsAutosave.teamsheetDirty = true;
+            window.clearTimeout(dtsAutosave.teamsheetTimer);
+            showAutosaveStatus('teamsheet', 'Unsaved changes...', 'info');
+            dtsAutosave.teamsheetTimer = window.setTimeout(runTeamsheetAutosave, 1800);
+        }
+
+        async function runTeamsheetAutosave() {
+            if (dtsAutosave.teamsheetSaving) return;
+            if (!dtsAutosave.teamsheetDirty) return;
+            dtsAutosave.teamsheetSaving = true;
+            dtsAutosave.teamsheetDirty = false;
+            showAutosaveStatus('teamsheet', 'Autosaving...', 'saving');
+            let reschedule = true;
+            try {
+                let reason = '';
+                if (dtsState.activeTeamsheet?.status === 'submitted') {
+                    reason = dtsAutosave.postSubmitReason || prompt('Reason for editing this submitted teamsheet:') || '';
+                    if (!reason.trim()) {
+                        dtsAutosave.teamsheetDirty = true;
+                        reschedule = false;
+                        showAutosaveStatus('teamsheet', 'Reason needed to autosave submitted changes', 'warn');
+                        return;
+                    }
+                    dtsAutosave.postSubmitReason = reason.trim();
+                }
+                await saveTeamsheet(false, { silent: true, reload: false, reason });
+                showAutosaveStatus('teamsheet', 'Autosaved', 'saved');
+            } catch (err) {
+                dtsAutosave.teamsheetDirty = true;
+                showAutosaveStatus('teamsheet', 'Autosave failed', 'error');
+            } finally {
+                dtsAutosave.teamsheetSaving = false;
+                if (dtsAutosave.teamsheetDirty && reschedule) scheduleTeamsheetAutosave();
+            }
+        }
+
+        function switchDtsTab(tabName) {
+            if (tabName !== 'builder' && !document.getElementById('dts-tab-builder')?.classList.contains('hidden')) {
+                cacheCurrentTeamsheetEntries();
+            }
+            if (tabName === 'builder' && document.getElementById('dts-tab-builder')?.classList.contains('hidden')) {
+                dtsState.swimmers = collectSwimmers();
+                renderTeamsheetRows();
+            }
+            document.querySelectorAll('.dts-tab-panel').forEach(panel => {
+                panel.classList.toggle('hidden', panel.id !== `dts-tab-${tabName}`);
+            });
+            document.querySelectorAll('.dts-tab-btn').forEach(button => {
+                const isActive = button.dataset.dtsTab === tabName;
+                button.classList.toggle('bg-cyan-600', isActive);
+                button.classList.toggle('text-white', isActive);
+                button.classList.toggle('shadow-lg', isActive);
+                button.classList.toggle('shadow-cyan-900/20', isActive);
+                button.classList.toggle('text-slate-300', !isActive);
+                button.classList.toggle('hover:bg-slate-800', !isActive);
+            });
+        }
+
+        async function dtsApi(action, data = null, method = 'GET') {
+            const opts = { method };
+            let url = `digital_teamsheet_api.php?action=${encodeURIComponent(action)}`;
+            if (method === 'POST') {
+                opts.body = data instanceof FormData ? data : new FormData();
+            } else if (data) {
+                url += '&' + new URLSearchParams(data).toString();
+            }
+            const response = await fetch(url, opts);
+            const payload = await response.json();
+            if (payload.error) throw new Error(payload.error);
+            return payload;
+        }
+
+        async function loadDigitalTeamsheets(showMessage = false) {
+            if (!document.getElementById('digital-teamsheets')) return;
+            try {
+                const data = await dtsApi('load', { season: dtsState.season });
+                Object.assign(dtsState, data, { loadedEntries: {} });
+                renderSwimmerList();
+                renderRoundSelect();
+                renderSharedSheets();
+                if (!dtsState.selectedRound && dtsState.rounds.length) {
+                    dtsState.selectedRound = dtsState.rounds[0];
+                }
+                await selectDigitalRound();
+                if (showMessage) showDtsAlert('Digital teamsheets refreshed.', 'success');
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not load digital teamsheets.', 'error');
+            }
+        }
+
+        function renderSwimmerList() {
+            const body = document.getElementById('dts-swimmers-body');
+            if (!body) return;
+            body.innerHTML = '';
+            dtsState.swimmers.forEach(swimmer => body.appendChild(buildSwimmerRow(swimmer)));
+            if (dtsState.swimmers.length === 0) {
+                addSwimmerRow();
+            }
+            lucide.createIcons();
+        }
+
+        function buildSwimmerRow(swimmer = {}) {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-800/40';
+            tr.dataset.id = swimmer.id || '';
+            const fields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+            const ageGroups = ['11/U', '13/U', '15/U', 'Open'];
+            const currentAgeGroup = String(swimmer.age_group || '').toLowerCase();
+            tr.innerHTML = `
+                <td class="px-2 py-2 sticky left-0 z-20 bg-slate-950 border-r border-white/10"><input data-field="swimmer_name" value="${dtsEscape(swimmer.swimmer_name || '')}" class="dts-swimmer-field w-64 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></td>
+                <td class="px-2 py-2">
+                    <select data-field="age_group" class="dts-swimmer-field w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white">
+                        <option value="">-</option>
+                        ${ageGroups.map(age => `<option value="${age}" ${currentAgeGroup === age.toLowerCase() || (age === 'Open' && currentAgeGroup === 'opens') ? 'selected' : ''}>${age}</option>`).join('')}
+                    </select>
+                </td>
+                ${fields.map(field => `<td class="px-2 py-2"><input data-field="${field}" value="${dtsEscape(swimmer[field] || '')}" class="dts-swimmer-field w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-mono"></td>`).join('')}
+                ${[
+                    ['round_1', 'Round 1 available'],
+                    ['round_2', 'Round 2 available'],
+                    ['round_3', 'Round 3 available'],
+                    ['round_4', 'Round 4 available'],
+                    ['final', 'Final available']
+                ].map(([key, label]) => `<td class="px-2 py-2 text-center"><label class="inline-flex items-center justify-center" title="${label}"><span class="sr-only">${label}</span><input type="checkbox" aria-label="${label}" data-availability="${key}" ${(swimmer.availability && swimmer.availability[key]) ? 'checked' : ''} class="rounded border-slate-700 bg-slate-900 text-cyan-500"></label></td>`).join('')}
+                <td class="px-2 py-2 text-center"><button type="button" onclick="removeSwimmerRow(this)" class="text-slate-500 hover:text-red-400 p-1 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+            `;
+            return tr;
+        }
+
+        function addSwimmerRow() {
+            const body = document.getElementById('dts-swimmers-body');
+            if (!body) return;
+            body.appendChild(buildSwimmerRow({ availability: {} }));
+            lucide.createIcons();
+        }
+
+        function removeSwimmerRow(button) {
+            button.closest('tr')?.remove();
+            scheduleSwimmerAutosave();
+        }
+
+        function collectSwimmers() {
+            return Array.from(document.querySelectorAll('#dts-swimmers-body tr')).map(row => {
+                const swimmer = { id: row.dataset.id ? parseInt(row.dataset.id, 10) : 0, availability: {} };
+                row.querySelectorAll('.dts-swimmer-field').forEach(input => {
+                    swimmer[input.dataset.field] = input.value.trim();
+                });
+                row.querySelectorAll('[data-availability]').forEach(input => {
+                    swimmer.availability[input.dataset.availability] = input.checked;
+                });
+                return swimmer;
+            }).filter(swimmer => swimmer.swimmer_name);
+        }
+
+        async function saveSwimmers(options = {}) {
+            const { silent = false, reload = true } = options;
+            try {
+                if (!silent) {
+                    window.clearTimeout(dtsAutosave.swimmerTimer);
+                    dtsAutosave.swimmerDirty = false;
+                }
+                const fd = new FormData();
+                fd.append('season', dtsState.season);
+                fd.append('swimmers', JSON.stringify(collectSwimmers()));
+                const res = await dtsApi('save_swimmers', fd, 'POST');
+                if (Array.isArray(res.swimmers)) {
+                    const idsByName = new Map(res.swimmers.map(swimmer => [swimmer.swimmer_name, swimmer.id]));
+                    document.querySelectorAll('#dts-swimmers-body tr').forEach(row => {
+                        const name = row.querySelector('[data-field="swimmer_name"]')?.value.trim();
+                        if (name && idsByName.has(name)) row.dataset.id = idsByName.get(name);
+                    });
+                }
+                dtsState.swimmers = collectSwimmers();
+                if (!silent) showDtsAlert('Swimmer list saved.', 'success');
+                if (reload) await loadDigitalTeamsheets(false);
+                return res;
+            } catch (err) {
+                if (!silent) showDtsAlert(err.message || 'Could not save swimmer list.', 'error');
+                throw err;
+            }
+        }
+
+        async function copyPreviousSeasonSwimmers() {
+            const sourceYear = dtsState.season - 1;
+            if (!confirm(`Copy active swimmers from ${sourceYear} into ${dtsState.season}? Existing swimmers with the same name will be left alone.`)) return;
+            try {
+                const fd = new FormData();
+                fd.append('source_year', sourceYear);
+                fd.append('target_year', dtsState.season);
+                const res = await dtsApi('copy_swimmers', fd, 'POST');
+                showDtsAlert(`Copied ${res.copied || 0} swimmers from ${sourceYear}.`, 'success');
+                await loadDigitalTeamsheets(false);
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not copy swimmers.', 'error');
+            }
+        }
+
+        function renderRoundSelect() {
+            const select = document.getElementById('dts-round-select');
+            if (!select) return;
+            select.innerHTML = dtsState.rounds.length
+                ? dtsState.rounds.map((round, index) => `<option value="${index}">${dtsEscape(round.label)}</option>`).join('')
+                : '<option value="">No rounds found for this club</option>';
+        }
+
+        async function selectDigitalRound() {
+            const select = document.getElementById('dts-round-select');
+            if (!select || dtsState.rounds.length === 0) {
+                renderTeamsheetRows();
+                return;
+            }
+            if (dtsState.selectedRound && dtsAutosave.teamsheetDirty && !dtsAutosave.teamsheetSaving) {
+                await runTeamsheetAutosave();
+            }
+            const index = select.value === '' ? 0 : parseInt(select.value, 10);
+            dtsState.selectedRound = dtsState.rounds[index] || dtsState.rounds[0];
+            select.value = String(dtsState.rounds.indexOf(dtsState.selectedRound));
+            dtsState.activeTeamsheet = dtsState.teamsheets[dtsState.selectedRound.round_key] || null;
+            dtsState.loadedEntries = {};
+            if (dtsState.activeTeamsheet?.id) {
+                try {
+                    const payload = await dtsApi('teamsheet', { id: dtsState.activeTeamsheet.id });
+                    payload.entries.forEach(entry => dtsState.loadedEntries[entry.event_id] = entry);
+                    dtsState.activeTeamsheet = payload.teamsheet;
+                    renderAudit(payload.audit || []);
+                } catch (err) {
+                    renderAudit([]);
+                }
+            } else {
+                renderAudit([]);
+            }
+            renderTeamsheetRows();
+        }
+
+        function getEventName(event) {
+            if (dtsState.selectedRound?.gala_type === 'a_final' && event.a_final_event_name) {
+                return event.a_final_event_name;
+            }
+            return event.event_name;
+        }
+
+        function getEventCutOff(event) {
+            if (event.event_type === 'Cannon') return 'No Limit';
+            if (dtsState.selectedRound?.gala_type === 'a_final' && event.a_final_cut_off) {
+                return event.a_final_cut_off;
+            }
+            return event.cut_off;
+        }
+
+        function getPbField(event) {
+            if (event.event_type !== 'Individual') return '';
+            const name = getEventName(event);
+            const stroke = ['Freestyle', 'Backstroke', 'Breaststroke', 'Butterfly'].find(s => name.includes(s));
+            const distance = (dtsState.selectedRound?.gala_type === 'a_final' && event.a_final_distance) ? event.a_final_distance : event.distance;
+            if (!stroke) return name.includes('Individual Medley') ? 'pb_im' : '';
+            return dtsPbMap[`${distance}|${stroke}`] || '';
+        }
+
+        function swimmerOptions(selected = '') {
+            return dtsState.swimmers.map(swimmer => `<option value="${dtsEscape(swimmer.swimmer_name)}" ${selected === swimmer.swimmer_name ? 'selected' : ''}>${dtsEscape(swimmer.swimmer_name)}</option>`).join('');
+        }
+
+        function buildSwimmerPickerHtml(limit, selected) {
+            if (limit === 1) {
+                return `
+                    <select onchange="updateTeamsheetRow(this.closest('tr'))"
+                        class="dts-event-swimmers w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-400">
+                        <option value="">- Select swimmer -</option>
+                        ${swimmerOptions(selected[0] || '')}
+                    </select>
+                    <div class="text-[10px] text-slate-500 mt-1">Select 1 swimmer</div>
+                `;
+            }
+
+            return `
+                <div class="dts-relay-picker space-y-2">
+                    ${Array.from({ length: limit }, (_, index) => `
+                        <div class="grid grid-cols-[4.5rem_1fr] gap-2 items-center">
+                            <label class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">${limit === 8 ? 'Cannon' : 'Leg'} ${index + 1}</label>
+                            <select onchange="updateTeamsheetRow(this.closest('tr'))"
+                                class="dts-event-swimmers w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-400">
+                                <option value="">- Select swimmer -</option>
+                                ${swimmerOptions(selected[index] || '')}
+                            </select>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="text-[10px] text-slate-500 mt-1">Select ${limit} swimmers in order</div>
+            `;
+        }
+
+        function renderTeamsheetRows() {
+            const body = document.getElementById('dts-events-body');
+            const meta = document.getElementById('dts-teamsheet-meta');
+            if (!body || !meta) return;
+            if (!dtsState.selectedRound) {
+                body.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">No round draw found for this season.</td></tr>';
+                meta.textContent = 'Digital teamsheets will appear once the season draw is available.';
+                return;
+            }
+            const status = dtsState.activeTeamsheet?.status || 'draft';
+            const submitted = dtsState.activeTeamsheet?.submitted_at ? `Submitted ${dtsState.activeTeamsheet.submitted_at}` : 'Not submitted yet';
+            meta.innerHTML = `<strong class="text-cyan-300">${dtsEscape(dtsState.selectedRound.label)}</strong> · ${dtsEscape(status.toUpperCase())} · ${dtsEscape(submitted)} · Shared with: ${dtsEscape(dtsState.selectedRound.teams.join(', '))}`;
+            body.innerHTML = dtsState.events.map(event => {
+                const loaded = dtsState.loadedEntries[event.id] || {};
+                const selected = loaded.selected_swimmers || [];
+                const isRelay = event.event_type === 'Relay';
+                const isCannon = event.event_type === 'Cannon';
+                const limit = isCannon ? 8 : (isRelay ? 4 : 1);
+                const pbField = getPbField(event);
+                const isTeamEvent = limit > 1;
+                const pbValue = isTeamEvent ? '' : (loaded.pb_snapshot || '');
+                return `
+                    <tr data-event-id="${event.id}" data-pb-field="${pbField}" data-limit="${limit}" class="hover:bg-slate-800/30">
+                        <td class="px-3 py-2 text-center font-bold text-slate-500">${event.event_number}</td>
+                        <td class="px-3 py-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="font-semibold text-white">${dtsEscape(getEventName(event))}</div>
+                                    <div class="text-[10px] text-slate-500">${dtsEscape(event.event_type)} · ${dtsEscape((dtsState.selectedRound.gala_type === 'a_final' && event.a_final_distance) || event.distance)}</div>
+                                </div>
+                                <button type="button" onclick="toggleTeamsheetEvent(this.closest('tr'))"
+                                    class="dts-collapse-btn shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1"
+                                    title="Minimise event">
+                                    <i data-lucide="chevron-up" class="w-3 h-3"></i> Minimise
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2 text-center font-mono text-red-300">${dtsEscape(getEventCutOff(event))}</td>
+                        <td class="dts-collapsible-cell px-3 py-2">${buildSwimmerPickerHtml(limit, selected)}</td>
+                        <td class="dts-collapsible-cell px-3 py-2"><input value="${dtsEscape(pbValue)}" ${isTeamEvent ? 'readonly aria-readonly="true" placeholder="No PB needed"' : ''} class="dts-event-pb w-full border rounded px-2 py-1 font-mono ${isTeamEvent ? 'bg-slate-800/70 border-slate-700 text-slate-500 cursor-not-allowed placeholder:text-slate-500' : 'bg-slate-900 border-slate-700 text-white'}"></td>
+                        <td class="dts-collapsible-cell px-3 py-2"><input value="${dtsEscape(loaded.notes || '')}" class="dts-event-notes w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></td>
+                        <td class="dts-collapsible-cell px-3 py-2 text-center"><span class="dts-event-warning text-[10px]"></span></td>
+                    </tr>
+                `;
+            }).join('');
+            document.querySelectorAll('#dts-events-body tr').forEach(updateTeamsheetRow);
+            lucide.createIcons();
+            updateTeamsheetLinks();
+        }
+
+        function toggleTeamsheetEvent(row) {
+            if (!row) return;
+            const isCollapsed = row.classList.toggle('bg-slate-900/60');
+            row.querySelectorAll('.dts-collapsible-cell').forEach(cell => {
+                cell.classList.toggle('hidden', isCollapsed);
+            });
+            const button = row.querySelector('.dts-collapse-btn');
+            if (button) {
+                button.innerHTML = isCollapsed
+                    ? '<i data-lucide="chevron-down" class="w-3 h-3"></i> Expand'
+                    : '<i data-lucide="chevron-up" class="w-3 h-3"></i> Minimise';
+                button.title = isCollapsed ? 'Expand event' : 'Minimise event';
+                lucide.createIcons();
+            }
+        }
+
+        function updateTeamsheetRow(row) {
+            if (!row || !row.dataset.eventId) return;
+	            const selected = Array.from(row.querySelectorAll('.dts-event-swimmers')).map(select => select.value).filter(Boolean);
+            const limit = parseInt(row.dataset.limit, 10);
+            const pbField = row.dataset.pbField;
+            const pbInput = row.querySelector('.dts-event-pb');
+            if (pbField && selected.length === 1) {
+                const swimmer = dtsState.swimmers.find(s => s.swimmer_name === selected[0]);
+                if (swimmer && !pbInput.value) pbInput.value = swimmer[pbField] || '';
+            }
+            const warning = row.querySelector('.dts-event-warning');
+            const availabilityKey = dtsState.selectedRound?.round_key?.startsWith('round_') ? dtsState.selectedRound.round_key : 'final';
+            const unavailable = selected.filter(name => {
+                const swimmer = dtsState.swimmers.find(s => s.swimmer_name === name);
+                return swimmer?.availability && swimmer.availability[availabilityKey] === false;
+            });
+	            const duplicateCount = selected.length - new Set(selected).size;
+	            const messages = [];
+	            if (selected.length && selected.length !== limit) messages.push(`${selected.length}/${limit}`);
+	            if (duplicateCount > 0) messages.push('duplicate');
+	            if (unavailable.length) messages.push('availability');
+            warning.textContent = messages.join(', ');
+            warning.className = messages.length ? 'dts-event-warning text-[10px] text-amber-300 font-bold' : 'dts-event-warning text-[10px] text-slate-600';
+        }
+
+        function collectTeamsheetEntries() {
+            return Array.from(document.querySelectorAll('#dts-events-body tr[data-event-id]')).map(row => ({
+                event_id: parseInt(row.dataset.eventId, 10),
+	                selected_swimmers: Array.from(row.querySelectorAll('.dts-event-swimmers')).map(select => select.value).filter(Boolean),
+                pb_snapshot: row.querySelector('.dts-event-pb').value.trim(),
+                notes: row.querySelector('.dts-event-notes').value.trim()
+            }));
+        }
+
+        function cacheCurrentTeamsheetEntries() {
+            collectTeamsheetEntries().forEach(entry => {
+                dtsState.loadedEntries[entry.event_id] = entry;
+            });
+        }
+
+        async function saveTeamsheet(shouldSubmit, options = {}) {
+            const { silent = false, reload = true, reason: suppliedReason = '' } = options;
+            if (!dtsState.selectedRound) return;
+            try {
+                if (!silent) {
+                    window.clearTimeout(dtsAutosave.teamsheetTimer);
+                    dtsAutosave.teamsheetDirty = false;
+                }
+                let reason = suppliedReason;
+                if (dtsState.activeTeamsheet?.status === 'submitted') {
+                    reason = reason || prompt('Reason for editing this submitted teamsheet:') || '';
+                    if (!reason.trim()) {
+                        if (!silent) showDtsAlert('A reason is required for post-submission changes.', 'warn');
+                        return;
+                    }
+                }
+                const fd = new FormData();
+                fd.append('season', dtsState.season);
+                fd.append('round_key', dtsState.selectedRound.round_key);
+                fd.append('gala_type', dtsState.selectedRound.gala_type);
+                fd.append('venue_detail_id', dtsState.selectedRound.venue_detail_id);
+                fd.append('reason', reason);
+                fd.append('entries', JSON.stringify(collectTeamsheetEntries()));
+                const saved = await dtsApi('save_teamsheet', fd, 'POST');
+                cacheCurrentTeamsheetEntries();
+                const previousStatus = dtsState.activeTeamsheet?.status || 'draft';
+                dtsState.activeTeamsheet = {
+                    ...(dtsState.activeTeamsheet || {}),
+                    id: saved.teamsheet_id,
+                    status: previousStatus,
+                    round_key: dtsState.selectedRound.round_key,
+                    gala_type: dtsState.selectedRound.gala_type,
+                    venue_detail_id: dtsState.selectedRound.venue_detail_id
+                };
+                dtsState.teamsheets[dtsState.selectedRound.round_key] = dtsState.activeTeamsheet;
+                updateTeamsheetLinks();
+                if (shouldSubmit) {
+                    const submitFd = new FormData();
+                    submitFd.append('teamsheet_id', saved.teamsheet_id);
+                    await dtsApi('submit_teamsheet', submitFd, 'POST');
+                    dtsState.activeTeamsheet.status = 'submitted';
+                    if (!silent) showDtsAlert('Teamsheet submitted and shared with the clubs in this gala.', 'success');
+                } else {
+                    if (!silent) showDtsAlert('Teamsheet draft saved.', 'success');
+                }
+                if (reload) {
+                    await loadDigitalTeamsheets(false);
+                    const index = dtsState.rounds.findIndex(round => round.round_key === fd.get('round_key') && String(round.venue_detail_id) === String(fd.get('venue_detail_id')));
+                    if (index >= 0) {
+                        document.getElementById('dts-round-select').value = String(index);
+                        await selectDigitalRound();
+                    }
+                }
+                return saved;
+            } catch (err) {
+                if (!silent) showDtsAlert(err.message || 'Could not save teamsheet.', 'error');
+                throw err;
+            }
+        }
+
+        function renderAudit(audit) {
+            const el = document.getElementById('dts-audit-list');
+            if (!el) return;
+            if (!audit.length) {
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
+            }
+            el.innerHTML = `<div class="font-bold mb-2">Recent teamsheet audit</div>` + audit.map(item =>
+                `<div class="py-1 border-t border-amber-500/10">${dtsEscape(item.created_at)} · ${dtsEscape(item.changed_by || 'Unknown')} · ${dtsEscape(item.change_summary || '')}${item.reason ? ` · ${dtsEscape(item.reason)}` : ''}</div>`
+            ).join('');
+            el.classList.remove('hidden');
+        }
+
+        function renderSharedSheets() {
+            const el = document.getElementById('dts-shared-list');
+            if (!el) return;
+            if (!dtsState.shared.length) {
+                el.innerHTML = '<div class="text-sm text-slate-500 border border-dashed border-slate-700 rounded-xl p-4 text-center">No submitted shared teamsheets yet.</div>';
+                return;
+            }
+            el.innerHTML = dtsState.shared.map(sheet => `
+                <div class="bg-slate-900/70 border border-white/5 rounded-xl p-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-sm font-bold text-white">${dtsEscape(sheet.club_name)}${sheet.is_mine ? ' <span class="text-cyan-300">(you)</span>' : ''}</div>
+                            <div class="text-[11px] text-slate-500">${dtsEscape(sheet.round_key.replace('_', ' ').toUpperCase())} · ${dtsEscape(sheet.submitted_at || 'Submitted')}</div>
+                        </div>
+                        <button type="button" onclick="viewSharedTeamsheet(${sheet.id})" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">View</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function viewSharedTeamsheet(id) {
+            try {
+                const payload = await dtsApi('teamsheet', { id });
+                const lines = payload.entries.map(entry => `${entry.event_number}. ${entry.event_name}: ${entry.selected_swimmers.join(', ') || '-'}`);
+                alert(`${payload.teamsheet.club_name}\n${payload.teamsheet.round_key}\n\n${lines.join('\n')}`);
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not open shared teamsheet.', 'error');
+            }
+        }
+
+        function updateTeamsheetLinks() {
+            const id = dtsState.activeTeamsheet?.id;
+            const exportLink = document.getElementById('dts-export-link');
+            const programmeLink = document.getElementById('dts-programme-link');
+            const matcherLink = document.getElementById('dts-matcher-link');
+            [exportLink, programmeLink, matcherLink].forEach(link => {
+                if (!link) return;
+                link.classList.toggle('hidden', !id);
+                link.classList.toggle('inline-flex', !!id);
+            });
+            if (id) {
+                exportLink.href = `digital_teamsheet_export.php?id=${id}`;
+                programmeLink.href = `smartprogrammenew.php?digital_teamsheet_id=${id}`;
+                matcherLink.href = `smart-results-matcher.php?digital_teamsheet_id=${id}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            switchDtsTab('swimmers');
+            loadDigitalTeamsheets(false);
+            const swimmerBody = document.getElementById('dts-swimmers-body');
+            if (swimmerBody) {
+                swimmerBody.addEventListener('input', event => {
+                    if (event.target.matches('.dts-swimmer-field')) scheduleSwimmerAutosave();
+                });
+                swimmerBody.addEventListener('change', event => {
+                    if (event.target.matches('.dts-swimmer-field, [data-availability]')) scheduleSwimmerAutosave();
+                });
+            }
+            const teamsheetBody = document.getElementById('dts-events-body');
+            if (teamsheetBody) {
+                teamsheetBody.addEventListener('input', event => {
+                    if (event.target.matches('.dts-event-pb, .dts-event-notes')) scheduleTeamsheetAutosave();
+                });
+                teamsheetBody.addEventListener('change', event => {
+                    if (event.target.matches('.dts-event-swimmers')) {
+                        updateTeamsheetRow(event.target.closest('tr'));
+                        scheduleTeamsheetAutosave();
+                    }
+                });
+            }
+            window.addEventListener('beforeunload', event => {
+                if (dtsAutosave.swimmerDirty || dtsAutosave.teamsheetDirty || dtsAutosave.swimmerSaving || dtsAutosave.teamsheetSaving) {
+                    event.preventDefault();
+                    event.returnValue = '';
+                }
+            });
+        });
 
         // Checkbox Logic for Directory
         function toggleAll(source) {
