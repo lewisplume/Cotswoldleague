@@ -26,6 +26,7 @@ $is_logged_in = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_ad
 // Variables for alerts
 $success_msg = '';
 $error_msg = '';
+$active_admin_tab = 'tab-links';
 
 if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_action'])) {
     
@@ -159,6 +160,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
 
     // --- VENUE CRUD ---
     if ($_POST['admin_action'] === 'update_venue') {
+        $active_admin_tab = 'tab-venues';
         $id = $_POST['venue_id'];
         $round_num = $_POST['round_number'] ?? null;
         $host_id = $_POST['host_club_id'] ?? null;
@@ -227,8 +229,29 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
 
     // --- FINALS RESULTS UPLOAD ---
     if ($_POST['admin_action'] === 'upload_final_results') {
+        $active_admin_tab = 'tab-venues';
         $tier = $_POST['final_tier']; // A, B, or C
         $success_msgs = [];
+
+        if (isset($_POST['finals_date']) && trim($_POST['finals_date']) !== '') {
+            $finals_date = trim($_POST['finals_date']);
+            $setting_key = 'finals_date_' . $current_season_year;
+            $stmt_setting = $conn->prepare("INSERT INTO global_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            $stmt_setting->bind_param("ss", $setting_key, $finals_date);
+            if (!$stmt_setting->execute()) {
+                $error_msg = "Failed to save finals date.";
+            }
+            $stmt_setting->close();
+
+            $stmt_date = $conn->prepare("UPDATE venue_details SET round_date=? WHERE season_year=? AND (round_number=99 OR gala_type IN ('a_final','b_final','c_final'))");
+            $stmt_date->bind_param("si", $finals_date, $current_season_year);
+            if (empty($error_msg) && $stmt_date->execute()) {
+                $success_msgs[] = "Finals date saved.";
+            } else {
+                $error_msg = "Failed to save finals date.";
+            }
+            $stmt_date->close();
+        }
         
         // Handle Teamsheet Link
         if (isset($_POST['teamsheet_link']) && trim($_POST['teamsheet_link']) !== '') {
@@ -267,8 +290,8 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         
         if (!empty($success_msgs)) {
             $success_msg = implode(" ", $success_msgs);
-        } elseif (empty($error_msg) && empty($_FILES['results_file']['name']) && empty($_POST['teamsheet_link'])) {
-            $error_msg = "No file or link provided.";
+        } elseif (empty($error_msg) && empty($_FILES['results_file']['name']) && empty($_POST['teamsheet_link']) && empty($_POST['finals_date'])) {
+            $error_msg = "No file, link, or finals date provided.";
         }
     }
 
@@ -1121,6 +1144,22 @@ if ($is_logged_in) {
                             <?php 
                             $finals_links_file = 'uploads/results/finals_teamsheets.json';
                             $finals_links = file_exists($finals_links_file) ? json_decode(file_get_contents($finals_links_file), true) : [];
+                            $finals_date_value = '';
+                            $finals_setting_key = 'finals_date_' . $current_season_year;
+                            $finals_setting_stmt = $conn->prepare("SELECT setting_value FROM global_settings WHERE setting_key=? LIMIT 1");
+                            $finals_setting_stmt->bind_param("s", $finals_setting_key);
+                            $finals_setting_stmt->execute();
+                            if ($finals_setting_row = $finals_setting_stmt->get_result()->fetch_assoc()) {
+                                $finals_date_value = $finals_setting_row['setting_value'] ?? '';
+                            }
+                            $finals_setting_stmt->close();
+                            $finals_date_stmt = $conn->prepare("SELECT round_date FROM venue_details WHERE season_year=? AND (round_number=99 OR gala_type IN ('a_final','b_final','c_final')) AND round_date IS NOT NULL AND round_date != '' ORDER BY round_date DESC LIMIT 1");
+                            $finals_date_stmt->bind_param("i", $current_season_year);
+                            $finals_date_stmt->execute();
+                            if ($finals_date_value === '' && $finals_date_row = $finals_date_stmt->get_result()->fetch_assoc()) {
+                                $finals_date_value = $finals_date_row['round_date'] ?? '';
+                            }
+                            $finals_date_stmt->close();
                             foreach(['A', 'B', 'C'] as $tier): 
                                 $existing = glob('uploads/results/Final_' . $tier . '_Results.*');
                                 $has_file = count($existing) > 0;
@@ -1137,6 +1176,11 @@ if ($is_logged_in) {
                                             <?php else: ?>
                                                 <span class="bg-slate-500/20 text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">No Results</span>
                                             <?php endif; ?>
+                                        </div>
+
+                                        <div>
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Finals Date</label>
+                                            <input type="text" name="finals_date" placeholder="DD/MM/YYYY" value="<?php echo htmlspecialchars($finals_date_value); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
                                         </div>
                                         
                                         <div>
@@ -1195,7 +1239,10 @@ if ($is_logged_in) {
         
         // Ensure first tab works dynamically
         <?php if ($is_logged_in): ?>
-            document.getElementById("defaultOpen").click();
+            const initialAdminTab = <?php echo json_encode($active_admin_tab); ?>;
+            const initialAdminButton = Array.from(document.querySelectorAll(".tab-btn"))
+                .find(button => (button.getAttribute("onclick") || "").includes(`'${initialAdminTab}'`));
+            (initialAdminButton || document.getElementById("defaultOpen")).click();
         <?php endif; ?>
     </script>
 </body>

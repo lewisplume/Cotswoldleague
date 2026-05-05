@@ -179,6 +179,8 @@ The Google Sheets teamsheet workflow was migrated into a dedicated in-portal bet
 *   **Portal Simplification**: `teamportal.php` now shows a compact launch card instead of the full teamsheet UI so the main dashboard stays lighter.
 *   **Tabbed Interface**: Added tabs for `Swimmer List`, `Teamsheet Builder`, and `Shared Teamsheets` so each area gets full width and the workflow feels less crowded.
 *   **Swimmer List Improvements**: Age groups are dropdowns with `11/U`, `13/U`, `15/U`, and `Open`; availability boxes are explicitly labelled; the swimmer name column is wider and sticky/frozen; and previous season swimmers can be copied forward and adjusted.
+*   **TeamUnify Import**: Added a preview-first CSV importer for TeamUnify `Top Times` exports, mapping supported best-time events into league PB fields and leaving age groups blank when no reliable finals date can be parsed.
+*   **Finals Date Entry**: Added a finals date field to the Finals Results & Teamsheets Upload cards in `league_admin.php` so age groups can be calculated from DOB against the league finals date.
 *   **Teamsheet Builder Improvements**: Relay and cannon entries now use per-position dropdowns instead of a browser multiselect; relay and cannon PB fields are greyed out because those events do not use PBs; and each event row has a minimise/expand control so completed events can be collapsed.
 *   **Sharing, Editing, and Safety**: Submitted teamsheets are shared automatically with the clubs in the same gala group; post-submission edits are allowed but require a reason and are written to an audit log; and autosave now covers both swimmer list and teamsheet editing.
 *   **Downstream Compatibility**: `smartprogrammenew.php` and `smart-results-matcher.php` now accept portal-generated digital teamsheet exports alongside the legacy Google Sheet import path, and `digital_teamsheet_export.php` provides a CSV export route for the new workflow.
@@ -216,6 +218,7 @@ A dedicated handoff note was created for future maintainers and LLMs.
 - [x] Dedicated digital teamsheets workspace created.
 - [x] Tabbed teamsheet UI implemented.
 - [x] Swimmer list copy-forward and autosave added.
+- [x] TeamUnify best-times CSV importer added.
 - [x] Shared teamsheet visibility and audit logging added.
 - [x] Relay/cannon selection corrected to ordered dropdowns.
 - [x] Relay/cannon PB fields greyed out.

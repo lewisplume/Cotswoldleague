@@ -62,7 +62,37 @@ The swimmer list is intentionally spreadsheet-like:
 - availability has clear labels for each round and final
 - the list supports adding/removing swimmers inline
 - previous season swimmers can be copied forward and then adjusted
+- TeamUnify best-times CSV exports can be previewed and imported
 - autosave is enabled so edits do not vanish if the user forgets to press save
+
+### TeamUnify Import
+
+The TeamUnify importer was added after inspecting an untouched `Top Times` CSV export. The export format is block-based:
+- swimmer header rows contain name, DOB, and TeamUnify age metadata
+- event rows contain rank, event label, best time, pool/course marker, date, and meet name
+
+The importer:
+- accepts CSV upload from the Swimmer List tab
+- parses TeamUnify names from `Surname, Firstname` into `Firstname Surname`
+- strips the trailing `S` from best-time values
+- maps league-supported events into existing PB columns
+- ignores unsupported longer-distance events while reporting them in the preview
+- calculates league age group from DOB when a parseable finals date exists
+- leaves age group blank when no reliable finals date is available
+- previews new/matched swimmers before applying anything to the active swimmer grid
+
+Operational detail:
+- the finals date can be entered on the `Finals Results & Teamsheets Upload` cards in `league_admin.php`
+- saving the date there writes it to finals venue rows for the active season
+- the importer reads that stored `round_date` when calculating age groups
+
+Mapped TeamUnify events:
+- `25 Free`, `25 Back`, `25 Breast`, `25 Fly`
+- `50 Free`, `50 Back`, `50 Breast`, `50 Fly`
+- `100 Free`, `100 Back`, `100 Breast`, `100 Fly`
+- `100 IM`
+
+Unsupported rows such as `200 Free`, `400 Free`, `800 Free`, `1500 Free`, `200 IM`, and `400 IM` are deliberately ignored because the current swimmer table has no columns for them.
 
 ### Teamsheet Builder
 
@@ -123,7 +153,8 @@ That keeps the rest of the gala pipeline usable while the teamsheet workflow mig
 9. Relay and cannon PBs were greyed out because they do not exist.
 10. Event rows gained a minimise button so completed events can be collapsed.
 11. Autosave was added for both swimmer list and teamsheet edits.
-12. This handoff note and the monthly update log were requested to preserve the design and implementation history.
+12. A TeamUnify CSV import preview/apply flow was added to speed up swimmer-list setup.
+13. This handoff note and the monthly update log were requested to preserve the design and implementation history.
 
 ## Current Status
 
@@ -136,6 +167,7 @@ The digital teamsheets module is now a functioning beta feature inside the porta
 - autosave
 - relay/cannon selection fixes
 - collapse controls
+- TeamUnify best-times import preview
 
 ## Things To Watch Going Forward
 
@@ -143,4 +175,3 @@ The digital teamsheets module is now a functioning beta feature inside the porta
 - Because autosave is now present, be careful when changing event navigation or tab switching so unsaved state is not accidentally dropped.
 - The audit trail and shared visibility rules should stay aligned with gala membership and season scoping.
 - If additional event types appear, the swimmer-picker and PB logic should be checked carefully before assuming they behave like current individual events.
-

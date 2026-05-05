@@ -42,6 +42,180 @@ function format_ms_time($ms)
     return sprintf('%d.%02d', $seconds, $hundredths);
 }
 
+function parse_teamunify_date($value)
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return null;
+    }
+    foreach (['d/m/Y', 'd/m/y', 'Y-m-d'] as $format) {
+        $date = DateTime::createFromFormat($format, $value);
+        if ($date instanceof DateTime) {
+            return $date;
+        }
+    }
+    return null;
+}
+
+function find_finals_date($conn, $season)
+{
+    $setting_key = 'finals_date_' . $season;
+    $setting_stmt = $conn->prepare("SELECT setting_value FROM global_settings WHERE setting_key = ? LIMIT 1");
+    $setting_stmt->bind_param("s", $setting_key);
+    $setting_stmt->execute();
+    $setting_row = $setting_stmt->get_result()->fetch_assoc();
+    $setting_stmt->close();
+    $date = parse_teamunify_date($setting_row['setting_value'] ?? '');
+    if ($date) {
+        return $date;
+    }
+
+    $stmt = $conn->prepare("SELECT round_date FROM venue_details WHERE season_year = ? AND (round_number = 99 OR gala_type IN ('a_final','b_final','c_final')) ORDER BY round_date DESC LIMIT 1");
+    $stmt->bind_param("i", $season);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$row) {
+        return null;
+    }
+    return parse_teamunify_date($row['round_date'] ?? '');
+}
+
+function league_age_group_from_dob($dob, $finals_date)
+{
+    if (!$dob || !$finals_date) {
+        return '';
+    }
+    $age = $dob->diff($finals_date)->y;
+    if ($age <= 11) {
+        return '11/U';
+    }
+    if ($age <= 13) {
+        return '13/U';
+    }
+    if ($age <= 15) {
+        return '15/U';
+    }
+    return 'Open';
+}
+
+function normalise_teamunify_name($name)
+{
+    $name = trim((string)$name);
+    if (strpos($name, ',') !== false) {
+        [$surname, $forenames] = array_map('trim', explode(',', $name, 2));
+        $name = trim($forenames . ' ' . $surname);
+    }
+    return preg_replace('/\s+/', ' ', $name);
+}
+
+function normalise_teamunify_time($time)
+{
+    $time = strtoupper(trim((string)$time));
+    return rtrim($time, 'S');
+}
+
+function teamunify_event_field($event)
+{
+    $event = strtolower(trim((string)$event));
+    $map = [
+        '25 free' => 'pb_free_25',
+        '25 back' => 'pb_back_25',
+        '25 breast' => 'pb_breast_25',
+        '25 fly' => 'pb_fly_25',
+        '50 free' => 'pb_free_50',
+        '50 back' => 'pb_back_50',
+        '50 breast' => 'pb_breast_50',
+        '50 fly' => 'pb_fly_50',
+        '100 free' => 'pb_free_100',
+        '100 back' => 'pb_back_100',
+        '100 breast' => 'pb_breast_100',
+        '100 fly' => 'pb_fly_100',
+        '100 im' => 'pb_im',
+    ];
+    return $map[$event] ?? '';
+}
+
+function parse_teamunify_csv($path, $finals_date)
+{
+    $handle = fopen($path, 'r');
+    if (!$handle) {
+        return ['error' => 'Could not read uploaded CSV.'];
+    }
+
+    $header = fgetcsv($handle);
+    if (!$header || count($header) < 3) {
+        fclose($handle);
+        return ['error' => 'The TeamUnify CSV header was not recognised.'];
+    }
+
+    $swimmers = [];
+    $current_key = null;
+    $ignored_events = [];
+    $mapped_rows = 0;
+    $event_rows = 0;
+
+    $pb_fields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+
+    while (($row = fgetcsv($handle)) !== false) {
+        $rank = trim($row[0] ?? '');
+        $event = trim($row[1] ?? '');
+        $best_time = normalise_teamunify_time($row[2] ?? '');
+
+        if ($rank !== '' && preg_match('/^(.+):\s*(\d{1,2}\/\d{1,2}\/\d{2,4})\s*\(([^)]+)\)/', $rank, $matches)) {
+            $dob = parse_teamunify_date($matches[2]);
+            $name = normalise_teamunify_name($matches[1]);
+            if ($name === '') {
+                $current_key = null;
+                continue;
+            }
+            $current_key = strtolower($name);
+            if (!isset($swimmers[$current_key])) {
+                $swimmer = [
+                    'id' => 0,
+                    'swimmer_name' => $name,
+                    'age_group' => league_age_group_from_dob($dob, $finals_date),
+                    'availability' => [],
+                    'import_meta' => [
+                        'dob' => $dob ? $dob->format('d/m/Y') : '',
+                        'teamunify_group' => trim($matches[3] ?? ''),
+                    ],
+                ];
+                foreach ($pb_fields as $field) {
+                    $swimmer[$field] = '';
+                }
+                $swimmers[$current_key] = $swimmer;
+            }
+            continue;
+        }
+
+        if ($current_key && preg_match('/^\d+$/', $rank) && $event !== '' && $best_time !== '') {
+            $event_rows++;
+            $field = teamunify_event_field($event);
+            if ($field !== '') {
+                $swimmers[$current_key][$field] = $best_time;
+                $mapped_rows++;
+            } else {
+                $ignored_events[$event] = ($ignored_events[$event] ?? 0) + 1;
+            }
+        }
+    }
+    fclose($handle);
+
+    ksort($ignored_events);
+    return [
+        'swimmers' => array_values($swimmers),
+        'summary' => [
+            'swimmer_count' => count($swimmers),
+            'event_rows' => $event_rows,
+            'mapped_rows' => $mapped_rows,
+            'ignored_events' => $ignored_events,
+            'finals_date' => $finals_date ? $finals_date->format('d/m/Y') : '',
+            'age_groups_calculated' => $finals_date ? true : false,
+        ],
+    ];
+}
+
 function get_round_options($conn, $club_id, $season)
 {
     $sql = "SELECT vd.id, vd.round_number, vd.gala_type, vd.club_id AS host_club_id,
@@ -302,6 +476,35 @@ if ($action === 'copy_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->close();
 
     echo json_encode(['success' => true, 'copied' => $copied]);
+    exit;
+}
+
+if ($action === 'preview_teamunify_import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $season = (int)($_POST['season'] ?? $active_season_year);
+    if (empty($_FILES['teamunify_csv']) || ($_FILES['teamunify_csv']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        echo json_encode(['error' => 'Please choose a TeamUnify CSV export to import.']);
+        exit;
+    }
+
+    $file = $_FILES['teamunify_csv'];
+    $name = strtolower($file['name'] ?? '');
+    if (substr($name, -4) !== '.csv') {
+        echo json_encode(['error' => 'The TeamUnify import must be a CSV file.']);
+        exit;
+    }
+
+    $finals_date = find_finals_date($conn, $season);
+    $parsed = parse_teamunify_csv($file['tmp_name'], $finals_date);
+    if (!empty($parsed['error'])) {
+        echo json_encode(['error' => $parsed['error']]);
+        exit;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'swimmers' => $parsed['swimmers'],
+        'summary' => $parsed['summary'],
+    ]);
     exit;
 }
 

@@ -661,7 +661,12 @@ if ($is_logged_in) {
                                             </h3>
                                             <p class="text-xs text-slate-400 mt-1">Edit names, age groups, PBs, and availability in one place.</p>
                                         </div>
-                                        <div class="flex gap-2">
+                                        <div class="flex flex-wrap gap-2">
+                                            <input id="dts-teamunify-file" type="file" accept=".csv,text/csv" class="hidden" onchange="previewTeamunifyImport(this.files[0])">
+                                            <button type="button" onclick="document.getElementById('dts-teamunify-file').click()"
+                                                class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Import TeamUnify CSV
+                                            </button>
                                             <button type="button" onclick="addSwimmerRow()"
                                                 class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
                                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Swimmer
@@ -673,6 +678,7 @@ if ($is_logged_in) {
                                             <span id="dts-swimmers-autosave-status" class="hidden self-center text-[11px] font-semibold text-slate-500"></span>
                                         </div>
                                     </div>
+                                    <div id="dts-teamunify-preview" class="hidden border-b border-sky-500/20 bg-sky-500/10 p-4"></div>
                                     <div class="overflow-auto max-h-[68vh]">
                                         <table class="min-w-[1680px] w-full text-xs text-slate-300 border-separate border-spacing-0">
                                             <thead class="bg-slate-900/95 text-slate-400 uppercase tracking-wider sticky top-0 z-10">
@@ -1366,6 +1372,8 @@ if ($is_logged_in) {
             postSubmitReason: ''
         };
 
+        let dtsTeamunifyPreview = null;
+
         const dtsPbMap = {
             '25m|Freestyle': 'pb_free_25',
             '25m|Backstroke': 'pb_back_25',
@@ -1595,6 +1603,148 @@ if ($is_logged_in) {
                 });
                 return swimmer;
             }).filter(swimmer => swimmer.swimmer_name);
+        }
+
+        async function previewTeamunifyImport(file) {
+            const input = document.getElementById('dts-teamunify-file');
+            if (!file) return;
+            try {
+                const fd = new FormData();
+                fd.append('season', dtsState.season);
+                fd.append('teamunify_csv', file);
+                dtsTeamunifyPreview = await dtsApi('preview_teamunify_import', fd, 'POST');
+                renderTeamunifyPreview();
+            } catch (err) {
+                dtsTeamunifyPreview = null;
+                renderTeamunifyPreview();
+                showDtsAlert(err.message || 'Could not read the TeamUnify CSV.', 'error');
+            } finally {
+                if (input) input.value = '';
+            }
+        }
+
+        function renderTeamunifyPreview() {
+            const el = document.getElementById('dts-teamunify-preview');
+            if (!el) return;
+            if (!dtsTeamunifyPreview?.swimmers?.length) {
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
+            }
+
+            const summary = dtsTeamunifyPreview.summary || {};
+            const existingNames = new Set(collectSwimmers().map(swimmer => swimmer.swimmer_name.toLowerCase()));
+            const updateCount = dtsTeamunifyPreview.swimmers.filter(swimmer => existingNames.has(swimmer.swimmer_name.toLowerCase())).length;
+            const newCount = dtsTeamunifyPreview.swimmers.length - updateCount;
+            const ignored = Object.entries(summary.ignored_events || {});
+            const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+            const ageText = summary.age_groups_calculated
+                ? `Age groups calculated from finals date ${dtsEscape(summary.finals_date)}`
+                : 'Age groups left blank: no parseable finals date found';
+            const previewRows = dtsTeamunifyPreview.swimmers.map(swimmer => {
+                const pbCount = pbFields.filter(field => swimmer[field]).length;
+                const isMatch = existingNames.has(swimmer.swimmer_name.toLowerCase());
+                return `
+                    <tr class="border-t border-white/5">
+                        <td class="px-3 py-2 font-semibold text-white">${dtsEscape(swimmer.swimmer_name)}</td>
+                        <td class="px-3 py-2 text-slate-300">${dtsEscape(swimmer.import_meta?.dob || '-')}</td>
+                        <td class="px-3 py-2 text-slate-300">${dtsEscape(swimmer.age_group || '-')}</td>
+                        <td class="px-3 py-2 text-slate-300">${pbCount}</td>
+                        <td class="px-3 py-2">
+                            <span class="${isMatch ? 'text-amber-200 bg-amber-500/10 border-amber-500/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-500/20'} border rounded-md px-2 py-0.5 text-[10px] font-bold uppercase">
+                                ${isMatch ? 'Update' : 'New'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div class="space-y-2">
+                            <div class="text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="file-check-2" class="w-4 h-4 text-sky-300"></i>
+                                TeamUnify import preview
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${dtsTeamunifyPreview.swimmers.length}</strong> swimmers</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${newCount}</strong> new</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${updateCount}</strong> matched</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${summary.mapped_rows || 0}</strong> PBs mapped</span>
+                            </div>
+                            <div class="text-xs text-slate-300">${ageText}</div>
+                            ${ignored.length ? `<div class="text-[11px] text-amber-200">Ignored unsupported events: ${ignored.map(([event, count]) => `${dtsEscape(event)} (${count})`).join(', ')}</div>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="applyTeamunifyImport()"
+                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i> Apply Import
+                            </button>
+                            <button type="button" onclick="clearTeamunifyPreview()"
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="max-h-72 overflow-auto rounded-lg border border-white/10 bg-slate-950/40">
+                        <table class="w-full min-w-[640px] text-xs text-left">
+                            <thead class="sticky top-0 bg-slate-900 text-slate-400 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-3 py-2">Swimmer</th>
+                                    <th class="px-3 py-2">DOB</th>
+                                    <th class="px-3 py-2">Age Group</th>
+                                    <th class="px-3 py-2">PBs</th>
+                                    <th class="px-3 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${previewRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            el.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function clearTeamunifyPreview() {
+            dtsTeamunifyPreview = null;
+            renderTeamunifyPreview();
+        }
+
+        async function applyTeamunifyImport() {
+            if (!dtsTeamunifyPreview?.swimmers?.length) return;
+            try {
+                const current = collectSwimmers();
+                const byName = new Map(current.map(swimmer => [swimmer.swimmer_name.toLowerCase(), swimmer]));
+                const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+
+                dtsTeamunifyPreview.swimmers.forEach(imported => {
+                    const key = imported.swimmer_name.toLowerCase();
+                    const existing = byName.get(key) || {
+                        id: 0,
+                        swimmer_name: imported.swimmer_name,
+                        age_group: '',
+                        availability: {}
+                    };
+                    if (imported.age_group) existing.age_group = imported.age_group;
+                    pbFields.forEach(field => {
+                        if (imported[field]) existing[field] = imported[field];
+                    });
+                    byName.set(key, existing);
+                });
+
+                dtsState.swimmers = Array.from(byName.values()).sort((a, b) => a.swimmer_name.localeCompare(b.swimmer_name));
+                renderSwimmerList();
+                clearTeamunifyPreview();
+                await saveSwimmers({ silent: true, reload: false });
+                showDtsAlert('TeamUnify swimmers imported and saved.', 'success');
+                showAutosaveStatus('swimmers', 'Imported and saved', 'saved');
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not apply the TeamUnify import.', 'error');
+            }
         }
 
         async function saveSwimmers(options = {}) {

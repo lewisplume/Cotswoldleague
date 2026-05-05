@@ -36,6 +36,7 @@ try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_5_id INT DEFAULT N
 try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_6_id INT DEFAULT NULL"); } catch (Exception $e) {}
 try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_7_id INT DEFAULT NULL"); } catch (Exception $e) {}
 try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_8_id INT DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN round_date VARCHAR(50) DEFAULT NULL"); } catch (Exception $e) {}
 
 // Results Table Updates for Season Tracking
 try { $conn->query("ALTER TABLE results ADD COLUMN season_year INT NOT NULL DEFAULT 2026"); } catch (Exception $e) {}
