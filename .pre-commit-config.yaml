@@ -13,7 +13,7 @@ repos:
     hooks:
       - id: codespell
         args: [--ignore-words-list=teh,fo]
-        files: \.php$
+        files: \.(php|md|txt|yaml|yml)$
 
   - repo: local
     hooks:
@@ -21,16 +21,10 @@ repos:
         name: PHP Syntax Check
         entry: php -l
         language: system
-        types: [php]
+        files: \.php$
 
       - id: php-cs-fixer
         name: PHP CS Fixer
         entry: vendor/bin/php-cs-fixer fix --dry-run --diff
         language: system
-        types: [php]
-
-      - id: phpunit
-        name: PHPUnit
-        entry: vendor/bin/phpunit
-        language: system
-        stages: [manual]
+        files: \.php$
