@@ -4,7 +4,7 @@ This note captures the full digital teamsheets workstream as it evolved in conve
 
 ## What We Built
 
-The old workflow relied on Google Sheets teamsheets for swimmer entry, relay selection, shared visibility, and secretary notification. We built a parallel in-portal digital teamsheets module that lives inside the existing team portal codebase while leaving the legacy sheet flow available as a fallback.
+The old workflow relied on Google Sheets teamsheets for swimmer entry, relay selection, shared visibility, and secretary notification. We built an in-portal digital teamsheets module that lives inside the existing team portal codebase and is now the default team-facing workflow.
 
 The main entry point is a dedicated standalone page:
 - [digital-teamsheets.php](/Users/lewis/Library/CloudStorage/GoogleDrive-lewisplume@gmail.com/Other computers/My computer/cotswoldleague/digital-teamsheets.php)
@@ -63,6 +63,7 @@ The swimmer list is intentionally spreadsheet-like:
 - the list supports adding/removing swimmers inline
 - previous season swimmers can be copied forward and then adjusted
 - TeamUnify best-times CSV exports can be previewed and imported
+- Swim Club Manager group PB XLSX exports can be previewed and imported
 - autosave is enabled so edits do not vanish if the user forgets to press save
 
 ### TeamUnify Import
@@ -73,6 +74,7 @@ The TeamUnify importer was added after inspecting an untouched `Top Times` CSV e
 
 The importer:
 - accepts CSV upload from the Swimmer List tab
+- includes a help button beside the TeamUnify import button with step-by-step export guidance
 - parses TeamUnify names from `Surname, Firstname` into `Firstname Surname`
 - strips the trailing `S` from best-time values
 - maps league-supported events into existing PB columns
@@ -83,8 +85,32 @@ The importer:
 
 Operational detail:
 - the finals date can be entered on the `Finals Results & Teamsheets Upload` cards in `league_admin.php`
-- saving the date there writes it to finals venue rows for the active season
+- saving the date there ensures A, B, and C Final venue rows exist for the active season and writes the date to all three
 - the importer reads that stored `round_date` when calculating age groups
+
+### Finals Venue Model
+
+Finals are now treated as first-class `venue_details` rows instead of a dropdown-only special case:
+- A, B, and C Final rows use `round_number = 99`
+- their `gala_type` values are `a_final`, `b_final`, and `c_final`
+- the finals date can be entered at AGM setup time, before the venue location or qualifying teams are known
+- saving the finals date creates any missing A/B/C final rows and preserves existing rows
+- the physical host/location can be edited later on the venue cards
+- final team assignments are automatically synced from the current standings whenever a round is published from the gala results dashboard
+- the older manual `update_scores.php` score-save route also triggers the same finals sync
+- saving/creating finals slots in `league_admin.php` also syncs immediately, which covers seasons where points already existed before the finals rows were created
+- `digital_teamsheet_api.php?action=load` performs a defensive sync before returning round options when finals are configured, so older active seasons are brought into line when teams open the builder
+- `Auto-Gen Finals` is now only a manual resync fallback; it no longer deletes and recreates finals rows
+- preserving the rows means final date, venue details, result uploads, and legacy collated teamsheet links survive when finalists are regenerated
+
+Teamsheet visibility for finals is membership based. A final appears in a club's Teamsheet Builder only after that club is assigned into the relevant final's team slots. For example, once Swindon is assigned into `b_final`, Swindon sees `B Final`; it does not see A or C unless assigned there.
+
+Shared implementation detail:
+- `finals_sync.php` owns the reusable finals helpers
+- `cotswold_sync_finals_from_standings()` ranks clubs by `round_1 + round_2 + round_3 + round_4`
+- the split is top 8 to A Final, next 6 to B Final, next 6 to C Final
+- the helper uses all clubs, with missing season points treated as zero, so finals can keep updating throughout the season as each round lands
+- if fewer than 20 clubs exist, final rows are still created but teams are not assigned
 
 Mapped TeamUnify events:
 - `25 Free`, `25 Back`, `25 Breast`, `25 Fly`
@@ -93,6 +119,31 @@ Mapped TeamUnify events:
 - `100 IM`
 
 Unsupported rows such as `200 Free`, `400 Free`, `800 Free`, `1500 Free`, `200 IM`, and `400 IM` are deliberately ignored because the current swimmer table has no columns for them.
+
+### Swim Club Manager Import
+
+The Swim Club Manager importer was added separately from TeamUnify because its export is an `.xlsx` workbook rather than a CSV. The inspected `Group PB Report` format has:
+- report settings at the top, including `Age on date`
+- one or more club group sections
+- a table header with swimmer name, age, SE number, then event PB columns
+
+The importer:
+- accepts XLSX upload from the Swimmer List tab
+- reads the first worksheet in the browser with SheetJS, avoiding a PHP `ZipArchive` dependency
+- parses names from `Surname, Firstname` into `Firstname Surname`
+- uses the age value in the file to set `11/U`, `13/U`, `15/U`, or `Open`
+- shows a warning that the age is only correct if Swim Club Manager was exported using the league finals date
+- maps supported event columns into the existing PB fields
+- reports unsupported longer-distance event columns in the preview
+- applies imports using the same merge behaviour as TeamUnify
+
+Mapped Swim Club Manager events:
+- `25 Free`, `25 Back`, `25 Breast`, `25 Fly`
+- `50 Free`, `50 Back`, `50 Breast`, `50 Fly`
+- `100 Free`, `100 Back`, `100 Breast`, `100 Fly`
+- `100 IM`
+
+The Swim Club Manager importer does not calculate age from DOB because the export does not include DOB.
 
 ### Teamsheet Builder
 
@@ -121,7 +172,9 @@ Submitted teamsheets still require a reason for edits. That reason is retained f
 
 ### Legacy Compatibility
 
-The existing Google Sheet workflow is still intact while the portal version proves itself. The point was to add a safer replacement, not to break the old path before confidence is high.
+Digital Teamsheets is now the default team-facing path. The old Google Sheet link UI has been removed from the team portal and admin venue/finals forms because the portal workflow is now the preferred experience.
+
+The old storage columns and legacy import tools still exist in the codebase, so the Google Sheet route could be restored if needed, but clubs should no longer be directed there.
 
 ### Smart Programme / Results Matcher
 
@@ -154,11 +207,13 @@ That keeps the rest of the gala pipeline usable while the teamsheet workflow mig
 10. Event rows gained a minimise button so completed events can be collapsed.
 11. Autosave was added for both swimmer list and teamsheet edits.
 12. A TeamUnify CSV import preview/apply flow was added to speed up swimmer-list setup.
-13. This handoff note and the monthly update log were requested to preserve the design and implementation history.
+13. A separate Swim Club Manager XLSX import preview/apply flow was added for clubs using that platform.
+14. Finals were promoted into first-class A/B/C venue rows so dates can be set early and qualifying teams can be assigned later.
+15. This handoff note and the monthly update log were requested to preserve the design and implementation history.
 
 ## Current Status
 
-The digital teamsheets module is now a functioning beta feature inside the portal, with:
+The digital teamsheets module is now the default team-facing teamsheet feature inside the portal, with:
 - full page workspace
 - tabbed layout
 - season-aware swimmer copy-forward
@@ -168,10 +223,12 @@ The digital teamsheets module is now a functioning beta feature inside the porta
 - relay/cannon selection fixes
 - collapse controls
 - TeamUnify best-times import preview
+- Swim Club Manager group PB import preview
+- first-class finals venue rows with membership-based teamsheet dropdown visibility
 
 ## Things To Watch Going Forward
 
-- This is still a beta path, so the old Google Sheet route should remain available until the portal workflow is trusted in live use.
+- Digital Teamsheets is now the default route, but avoid deleting the old Google Sheet import code until the portal workflow has completed live-season use.
 - Because autosave is now present, be careful when changing event navigation or tab switching so unsaved state is not accidentally dropped.
 - The audit trail and shared visibility rules should stay aligned with gala membership and season scoping.
 - If additional event types appear, the swimmer-picker and PB logic should be checked carefully before assuming they behave like current individual events.

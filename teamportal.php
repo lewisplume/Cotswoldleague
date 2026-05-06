@@ -15,37 +15,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 $success_msg = '';
 $error_msg = '';
 
-// 1. Teamsheet Links Mapping
-$teamsheets = [
-    "Academy Swim Team" => "https://docs.google.com/spreadsheets/d/1i8XiwXvW6UVdjqnXHG0DwrFWIwVik9aAUxExHKkR778/edit?usp=drive_web",
-    "Backwell" => "https://docs.google.com/spreadsheets/d/1hmCtCGgSpQfIVzy-a0nbgpToVJXDb6M9k3a3ULGvSgk/edit?usp=drive_web",
-    "Bath Dolphin" => "https://docs.google.com/spreadsheets/d/1iczsTghg46ISBxtTIjGhU3pg-qX2z2We7IE9tdbGHe0/edit?usp=drive_web",
-    "Bridgwater" => "https://docs.google.com/spreadsheets/d/1Itz6yPVQbtrUcIQumiTQj-juO8ayCJKcLp3G1II25dY/edit?usp=drive_web",
-    "Bristol North" => "https://docs.google.com/spreadsheets/d/109pMY2kj4FZHcbVmFqFiWHTz--NkkfllhxeRtSKt5E4/edit?usp=drive_web",
-    "Brockworth" => "https://docs.google.com/spreadsheets/d/18fYT_o3rR1Z8MBMiTBRTiA8ssOmbXkuIvMDmnTzUfHo/edit?usp=drive_web",
-    "Burnham-On-Sea" => "https://docs.google.com/spreadsheets/d/1EQTrCVxUv9DSFJQOe_Dha-fi8T1xsm7e73lwaJhnH9A/edit?usp=drive_web",
-    "COB (City of Bristol)" => "https://docs.google.com/spreadsheets/d/1L4yEk8hV-BHc6KNYdMz3Z_FdM4AbPnWTf2VtbORz984/edit?usp=drive_web",
-    "City of Bristol" => "https://docs.google.com/spreadsheets/d/1L4yEk8hV-BHc6KNYdMz3Z_FdM4AbPnWTf2VtbORz984/edit?usp=drive_web",
-    "Clevedon" => "https://docs.google.com/spreadsheets/d/1KMuZFQyt-JBLoyREyqPUBNmOUWGyexFFdPw5IhScHfE/edit?usp=drive_web",
-    "Corsham" => "https://docs.google.com/spreadsheets/d/1NDZLL8IAGIH-mRNWjeKRfomg8FyAPvnoRxhPK178SYY/edit?usp=drive_web",
-    "Cwmbran" => "https://docs.google.com/spreadsheets/d/1iKdSH5aQr1LY_PdH6w0rhKq2-bVdS0Cz25WivXHKWl8/edit?usp=drive_web",
-    "Dursley" => "https://docs.google.com/spreadsheets/d/1ofBJ09URsgDV1tgOdFWVf83Cv_GQgKfYG5i13zUNUBk/edit?usp=drive_web",
-    "Forest of Dean" => "https://docs.google.com/spreadsheets/d/1ohMOSAEtNkBXt40CjBBEoFDizF3LzsssltN5XyKNMGc/edit?usp=drive_web",
-    "Monnow SC" => "https://docs.google.com/spreadsheets/d/1qSw1UbIvCyrnqIK8CQo9_G8UuOxrFgx623YZm50W_wQ/edit?usp=drive_web",
-    "Monnow" => "https://docs.google.com/spreadsheets/d/1qSw1UbIvCyrnqIK8CQo9_G8UuOxrFgx623YZm50W_wQ/edit?usp=drive_web",
-    "Newport" => "https://docs.google.com/spreadsheets/d/1siyNpNaW4e6MNeLziyYbso1HB7cA_sVCDAEhvUjQKfw/edit?usp=drive_web",
-    "Severnside Tritons" => "https://docs.google.com/spreadsheets/d/1Q8_8ZO_AMEWIKYaHj6lyRMu0pTiC8u2nHvxrZC8heeo/edit?usp=drive_web",
-    "Southwold SC" => "https://docs.google.com/spreadsheets/d/10nb25eFXcsLMA-Z5W8W5GDTztdCpOJCmoUZSc9Txbdw/edit?usp=drive_web",
-    "Southwold" => "https://docs.google.com/spreadsheets/d/10nb25eFXcsLMA-Z5W8W5GDTztdCpOJCmoUZSc9Txbdw/edit?usp=drive_web",
-    "Swindon ASC" => "https://docs.google.com/spreadsheets/d/1_Ies54ItzAFeOlDSo1dJ5LyC2Wj16cST2VQRkUC1Gbc/edit?usp=drive_web",
-    "Swindon" => "https://docs.google.com/spreadsheets/d/1_Ies54ItzAFeOlDSo1dJ5LyC2Wj16cST2VQRkUC1Gbc/edit?usp=drive_web",
-    "Wells" => "https://docs.google.com/spreadsheets/d/1cI9CoLIt5FE-hR1VKjORb0bJQBnW-eTyvLTiTf7_L_c/edit?usp=drive_web",
-    "Yeovil" => "https://docs.google.com/spreadsheets/d/1gPk0gqfQeDHKISyTBuYlUo5gcHGoYmP2MQGgiAeKT40/edit?usp=drive_web"
-];
-$master_teamsheet_link = "https://docs.google.com/spreadsheets/d/1HWqc4Lw8Iule7tv2mHRkfDWmQUs9fo5OO8uI2QnwC0U/edit?usp=drive_web";
-
-
-// 2. Club DB Shortname Mapping handled directly by club_id JOIN
+// Club DB shortname mapping is handled directly by club_id joins.
 
 // Handle Login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
@@ -190,7 +160,6 @@ $my_club_data = null;
 $directory_data = [];
 $clubs_dropdown = [];
 $venues = [];
-$my_teamsheet_link = null;
 
 if ($is_logged_in) {
     // 1. Fetch My Club Data (Joined with clubs for Logo)
@@ -202,11 +171,6 @@ if ($is_logged_in) {
         $my_club_data = $res->fetch_assoc();
     }
     $stmt->close();
-
-    // 2. Map Teamsheet Link
-    if (isset($teamsheets[$current_club_name])) {
-        $my_teamsheet_link = $teamsheets[$current_club_name];
-    }
 
     // 3. Fetch My Venues
     $v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.club_id = ? AND vd.season_year = ? ORDER BY vd.round_number ASC";
@@ -293,7 +257,6 @@ if ($is_logged_in) {
     // 5c. Determine My Final Tier
     $my_final_tier = null;
     $my_final_file = null;
-    $my_final_teamsheet_link = null;
     if (in_array($current_club_id, $filter_matrix['finals']['A'])) $my_final_tier = 'A';
     elseif (in_array($current_club_id, $filter_matrix['finals']['B'])) $my_final_tier = 'B';
     elseif (in_array($current_club_id, $filter_matrix['finals']['C'])) $my_final_tier = 'C';
@@ -302,11 +265,6 @@ if ($is_logged_in) {
         $final_files = glob('uploads/results/Final_' . $my_final_tier . '_Results.*');
         if (!empty($final_files)) {
             $my_final_file = basename($final_files[0]);
-        }
-        $finals_links_file = 'uploads/results/finals_teamsheets.json';
-        if (file_exists($finals_links_file)) {
-            $links = json_decode(file_get_contents($finals_links_file), true);
-            $my_final_teamsheet_link = $links[$my_final_tier] ?? null;
         }
     }
 
@@ -352,6 +310,7 @@ if ($is_logged_in) {
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -524,85 +483,7 @@ if ($is_logged_in) {
                     <!-- LEFT COLUMN (Spans 2): Teamsheets & Venues -->
                     <div class="<?php echo $digital_teamsheets_standalone ? '' : 'lg:col-span-2'; ?> space-y-8">
 
-                        <!-- TEAMSHEET PORTAL -->
-                        <?php if (!$digital_teamsheets_standalone): ?>
-                        <div
-                            class="glass-panel p-8 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-900/20 to-transparent relative overflow-hidden group">
-                            <div
-                                class="absolute right-0 top-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors pointer-events-none">
-                            </div>
-
-                            <div
-                                class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                <div class="flex items-start gap-5">
-                                    <div
-                                        class="bg-emerald-500/20 p-4 rounded-2xl flex-shrink-0 border border-emerald-500/30 shadow-inner">
-                                        <i data-lucide="file-spreadsheet" class="w-8 h-8 text-emerald-400"></i>
-                                    </div>
-                                    <div>
-                                        <h2 class="text-2xl font-bold text-white mb-1">Club Teamsheet</h2>
-                                        <p class="text-slate-300 text-sm max-w-md leading-relaxed">Access your personal
-                                            <?php echo $active_season_year; ?> club teamsheet. This is a live Google Sheet — no login or saving required.
-                                            All changes are tracked automatically.</p>
-                                    </div>
-                                </div>
-
-                                <div class="w-full sm:w-64 flex-shrink-0 flex flex-col gap-3">
-                                    <?php
-                                    $sheet_id = '';
-                                    if ($my_teamsheet_link && preg_match('/\/d\/([a-zA-Z0-9-_]+)/', $my_teamsheet_link, $match)) {
-                                        $sheet_id = $match[1];
-                                    }
-                                    ?>
-                                    <?php if ($my_teamsheet_link): ?>
-                                        <a href="<?php echo htmlspecialchars($my_teamsheet_link); ?>" target="_blank"
-                                            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-3">
-                                            <span>Open Teamsheet</span>
-                                            <i data-lucide="external-link" class="w-4 h-4"></i>
-                                        </a>
-
-                                        <div class="flex flex-col gap-2 mt-1">
-                                            <a href="smartprogrammenew.php?sheet_id=<?php echo htmlspecialchars($sheet_id); ?>"
-                                                target="_blank"
-                                                class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2 text-sm">
-                                                <span>Print Smart Programme</span>
-                                                <i data-lucide="printer" class="w-4 h-4"></i>
-                                            </a>
-                                            <p
-                                                class="text-[11px] text-slate-400 text-center leading-tight px-1 border-b border-white/5 pb-2 mb-1">
-                                                Automatically imports your live Teamsheet for printing.
-                                            </p>
-
-                                            <a href="smart-results-matcher.php?sheet_id=<?php echo htmlspecialchars($sheet_id); ?>"
-                                                target="_blank"
-                                                class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 text-sm">
-                                                <span>Smart Results Matcher</span>
-                                                <i data-lucide="check-square" class="w-4 h-4"></i>
-                                            </a>
-                                            <p class="text-[11px] text-slate-400 text-center leading-tight px-1">
-                                                Automatically fetches swimmers and matches times from gala results.
-                                            </p>
-                                        </div>
-                                    <?php else: ?>
-                                        <div
-                                            class="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-sm text-center w-full">
-                                            Link unavailable. Contact admin.
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <div
-                                class="relative z-10 mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                <p class="text-xs text-emerald-400/80 font-medium flex items-center gap-2">
-                                    <i data-lucide="info" class="w-4 h-4"></i> Round entries will be taken automatically on
-                                    the submission deadline.
-                                </p>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <!-- DIGITAL TEAMSHEETS BETA -->
+                        <!-- DIGITAL TEAMSHEETS -->
                         <?php if ($digital_teamsheets_standalone): ?>
                         <div id="digital-teamsheets"
                             class="glass-panel p-8 rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 to-transparent relative overflow-hidden">
@@ -617,10 +498,9 @@ if ($is_logged_in) {
                                         <div>
                                             <div class="flex items-center gap-3 mb-1">
                                                 <h2 class="text-2xl font-bold text-white">Digital Teamsheets</h2>
-                                                <span class="bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">Beta</span>
                                             </div>
                                             <p class="text-slate-300 text-sm max-w-2xl leading-relaxed">
-                                                Build swimmer lists and round teamsheets inside the portal while the existing Google Sheet links stay available.
+                                                Build swimmer lists and round teamsheets inside the portal.
                                             </p>
                                         </div>
                                     </div>
@@ -662,10 +542,21 @@ if ($is_logged_in) {
                                             <p class="text-xs text-slate-400 mt-1">Edit names, age groups, PBs, and availability in one place.</p>
                                         </div>
                                         <div class="flex flex-wrap gap-2">
-                                            <input id="dts-teamunify-file" type="file" accept=".csv,text/csv" class="hidden" onchange="previewTeamunifyImport(this.files[0])">
-                                            <button type="button" onclick="document.getElementById('dts-teamunify-file').click()"
-                                                class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
-                                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Import TeamUnify CSV
+                                            <div class="flex">
+                                                <input id="dts-teamunify-file" type="file" accept=".csv,text/csv" class="hidden" onchange="previewTeamunifyImport(this.files[0])">
+                                                <button type="button" onclick="document.getElementById('dts-teamunify-file').click()"
+                                                    class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 border-r-0 font-bold py-2 px-3 rounded-l-lg text-xs flex items-center gap-1.5">
+                                                    <i data-lucide="upload" class="w-3.5 h-3.5"></i> Import TeamUnify CSV
+                                                </button>
+                                                <button type="button" onclick="openTeamunifyGuide()" title="TeamUnify import guide" aria-label="TeamUnify import guide"
+                                                    class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 font-bold py-2 px-2 rounded-r-lg text-xs flex items-center">
+                                                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                            <input id="dts-scm-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="previewSwimClubManagerImport(this.files[0])">
+                                            <button type="button" onclick="document.getElementById('dts-scm-file').click()"
+                                                class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Import Swim Club Manager XLSX
                                             </button>
                                             <button type="button" onclick="addSwimmerRow()"
                                                 class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
@@ -679,6 +570,51 @@ if ($is_logged_in) {
                                         </div>
                                     </div>
                                     <div id="dts-teamunify-preview" class="hidden border-b border-sky-500/20 bg-sky-500/10 p-4"></div>
+                                    <div id="dts-scm-preview" class="hidden border-b border-indigo-500/20 bg-indigo-500/10 p-4"></div>
+                                    <div id="dts-teamunify-guide-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center">
+                                        <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-sky-500/30 rounded-2xl shadow-2xl shadow-slate-950/60">
+                                            <div class="p-5 border-b border-white/10 flex items-start justify-between gap-4">
+                                                <div>
+                                                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                                                        <i data-lucide="circle-help" class="w-5 h-5 text-sky-300"></i> TeamUnify Import Guide
+                                                    </h4>
+                                                    <p class="text-xs text-slate-400 mt-1">Exporting times for the Cotswold League teamsheet.</p>
+                                                </div>
+                                                <button type="button" onclick="closeTeamunifyGuide()" aria-label="Close TeamUnify import guide"
+                                                    class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 p-2 rounded-lg">
+                                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                            <div class="p-5 space-y-5 text-sm text-slate-300">
+                                                <div>
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-2">Phase 1: Generate The Report In TeamUnify</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>From the left-hand sidebar, select <strong class="text-white">Events &amp; Competition</strong>, then click <strong class="text-white">Time Reports</strong>.</li>
+                                                        <li>Choose <strong class="text-white">Top Times By Athletes</strong>.</li>
+                                                        <li>Click <strong class="text-white">Configure this page</strong> and set <strong class="text-white">Course</strong> to <strong class="text-white">SCM</strong>, set <strong class="text-white">Age Up Date</strong> to the finals date, and make sure <strong class="text-white">Show birth date</strong> is checked.</li>
+                                                        <li>Click <strong class="text-white">Report Now</strong>. On the report page, click <strong class="text-white">Save as Excel</strong>. This opens the data in a new Excel Online tab.</li>
+                                                    </ol>
+                                                </div>
+                                                <div>
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-2">Phase 2: Save As CSV</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>In the Excel Online tab, go to <strong class="text-white">File</strong> &gt; <strong class="text-white">Export</strong>.</li>
+                                                        <li>Select <strong class="text-white">Download as CSV</strong>. The file will save to your computer, usually in Downloads.</li>
+                                                    </ol>
+                                                </div>
+                                                <div>
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-2">Phase 3: Import</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>Open the Cotswold League Teamsheet builder.</li>
+                                                        <li>Click <strong class="text-white">Import TeamUnify CSV</strong> and upload the CSV file you downloaded.</li>
+                                                    </ol>
+                                                </div>
+                                                <div class="bg-sky-500/10 border border-sky-500/20 rounded-xl p-4 text-xs text-sky-100 leading-relaxed">
+                                                    <strong class="text-white">Pro tip:</strong> TeamUnify and the Teamsheet builder are both browser-based, so keeping them in side-by-side tabs makes it easy to verify that swimmer times have carried over correctly.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="overflow-auto max-h-[68vh]">
                                         <table class="min-w-[1680px] w-full text-xs text-slate-300 border-separate border-spacing-0">
                                             <thead class="bg-slate-900/95 text-slate-400 uppercase tracking-wider sticky top-0 z-10">
@@ -793,7 +729,6 @@ if ($is_logged_in) {
                                     <div>
                                         <div class="flex items-center gap-3 mb-1">
                                             <h2 class="text-2xl font-bold text-white">Digital Teamsheets</h2>
-                                            <span class="bg-cyan-500/15 text-cyan-300 border border-cyan-400/20 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">Beta</span>
                                         </div>
                                         <p class="text-slate-300 text-sm max-w-md leading-relaxed">
                                             Manage swimmer lists, round selections, submissions, shared sheets, and audit history in a dedicated workspace.
@@ -1129,12 +1064,6 @@ if ($is_logged_in) {
                                         </div>
                                     </div>
                                     <div class="pt-3 border-t border-white/5 mt-auto space-y-2">
-                                        <?php if (!empty($draw['teamsheet_link'])): ?>
-                                            <a href="<?php echo htmlspecialchars($draw['teamsheet_link']); ?>" target="_blank" class="w-full bg-sky-600/20 hover:bg-sky-600 text-sky-400 hover:text-white border border-sky-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
-                                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> View Teamsheets
-                                            </a>
-                                        <?php endif; ?>
-                                        
                                         <?php if (!empty($draw['scoresheet_id']) && $draw['scoresheet_status'] === 'published'): ?>
                                             <a href="gala_scoresheet.php?id=<?php echo htmlspecialchars($draw['scoresheet_id']); ?>" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-900/20">
                                                 <i data-lucide="bar-chart" class="w-3.5 h-3.5"></i> Web Results
@@ -1169,11 +1098,6 @@ if ($is_logged_in) {
                                         </div>
                                     </div>
                                     <div class="pt-3 border-t border-white/5 mt-auto space-y-2">
-                                        <?php if ($my_final_teamsheet_link): ?>
-                                            <a href="<?php echo htmlspecialchars($my_final_teamsheet_link); ?>" target="_blank" class="w-full bg-sky-600/20 hover:bg-sky-600 text-sky-400 hover:text-white border border-sky-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
-                                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> View Teamsheets
-                                            </a>
-                                        <?php endif; ?>
                                         <?php if ($my_final_file): ?>
                                             <a href="uploads/results/<?php echo htmlspecialchars($my_final_file); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
                                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results
@@ -1373,6 +1297,7 @@ if ($is_logged_in) {
         };
 
         let dtsTeamunifyPreview = null;
+        let dtsSwimClubManagerPreview = null;
 
         const dtsPbMap = {
             '25m|Freestyle': 'pb_free_25',
@@ -1605,6 +1530,27 @@ if ($is_logged_in) {
             }).filter(swimmer => swimmer.swimmer_name);
         }
 
+        function openTeamunifyGuide() {
+            const modal = document.getElementById('dts-teamunify-guide-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeTeamunifyGuide() {
+            const modal = document.getElementById('dts-teamunify-guide-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeTeamunifyGuide();
+            }
+        });
+
         async function previewTeamunifyImport(file) {
             const input = document.getElementById('dts-teamunify-file');
             if (!file) return;
@@ -1714,36 +1660,274 @@ if ($is_logged_in) {
             renderTeamunifyPreview();
         }
 
-        async function applyTeamunifyImport() {
-            if (!dtsTeamunifyPreview?.swimmers?.length) return;
+        function importedAgeGroupFromAge(age) {
+            age = parseInt(age, 10);
+            if (!age) return '';
+            if (age <= 11) return '11/U';
+            if (age <= 13) return '13/U';
+            if (age <= 15) return '15/U';
+            return 'Open';
+        }
+
+        function normaliseImportedName(name) {
+            name = String(name || '').trim();
+            if (name.includes(',')) {
+                const parts = name.split(',');
+                name = `${parts.slice(1).join(',').trim()} ${parts[0].trim()}`.trim();
+            }
+            return name.replace(/\s+/g, ' ');
+        }
+
+        function normaliseImportedTime(value) {
+            const time = String(value || '').trim();
+            if (!time) return '';
+            const zeroMinute = time.match(/^0:([0-5]?\d(?:\.\d+)?)$/);
+            if (zeroMinute) return zeroMinute[1];
+            return time.toUpperCase().replace(/S$/, '');
+        }
+
+        function importedEventField(eventName) {
+            return {
+                '25 free': 'pb_free_25',
+                '25 back': 'pb_back_25',
+                '25 breast': 'pb_breast_25',
+                '25 fly': 'pb_fly_25',
+                '50 free': 'pb_free_50',
+                '50 back': 'pb_back_50',
+                '50 breast': 'pb_breast_50',
+                '50 fly': 'pb_fly_50',
+                '100 free': 'pb_free_100',
+                '100 back': 'pb_back_100',
+                '100 breast': 'pb_breast_100',
+                '100 fly': 'pb_fly_100',
+                '100 im': 'pb_im'
+            }[String(eventName || '').trim().toLowerCase()] || '';
+        }
+
+        function parseSwimClubManagerWorkbook(rows) {
+            const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+            let headers = [];
+            let ageOnDate = '';
+            let eventRows = 0;
+            let mappedRows = 0;
+            const ignoredEvents = {};
+            const swimmers = [];
+
+            rows.forEach(row => {
+                const first = String(row[0] || '').trim();
+                if (first.toLowerCase().startsWith('age on date:')) {
+                    ageOnDate = first.replace(/^age on date:\s*/i, '').trim();
+                    return;
+                }
+                if (String(row[1] || '').trim().toLowerCase() === 'age' && String(row[2] || '').trim().toLowerCase() === 'se #') {
+                    headers = row;
+                    return;
+                }
+                if (!headers.length || !first) return;
+
+                const age = parseInt(row[1], 10);
+                if (!age) return;
+                const swimmer = {
+                    id: 0,
+                    swimmer_name: normaliseImportedName(first),
+                    age_group: importedAgeGroupFromAge(age),
+                    availability: {},
+                    import_meta: {
+                        age,
+                        age_on_date: ageOnDate,
+                        se_number: String(row[2] || '').trim()
+                    }
+                };
+                pbFields.forEach(field => swimmer[field] = '');
+
+                for (let col = 3; col < headers.length; col += 1) {
+                    const eventName = String(headers[col] || '').trim();
+                    const time = normaliseImportedTime(row[col]);
+                    if (!eventName || !time) continue;
+                    eventRows += 1;
+                    const field = importedEventField(eventName);
+                    if (field) {
+                        swimmer[field] = time;
+                        mappedRows += 1;
+                    } else {
+                        ignoredEvents[eventName] = (ignoredEvents[eventName] || 0) + 1;
+                    }
+                }
+                swimmers.push(swimmer);
+            });
+
+            return {
+                success: true,
+                swimmers,
+                summary: {
+                    swimmer_count: swimmers.length,
+                    event_rows: eventRows,
+                    mapped_rows: mappedRows,
+                    ignored_events: ignoredEvents,
+                    age_on_date: ageOnDate,
+                    age_groups_calculated: !!ageOnDate
+                }
+            };
+        }
+
+        async function previewSwimClubManagerImport(file) {
+            const input = document.getElementById('dts-scm-file');
+            if (!file) return;
             try {
-                const current = collectSwimmers();
-                const byName = new Map(current.map(swimmer => [swimmer.swimmer_name.toLowerCase(), swimmer]));
-                const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+                if (!window.XLSX) {
+                    throw new Error('The spreadsheet reader has not loaded yet. Please refresh and try again.');
+                }
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+                dtsSwimClubManagerPreview = parseSwimClubManagerWorkbook(rows);
+                if (!dtsSwimClubManagerPreview.swimmers.length) {
+                    throw new Error('No swimmers were found in this Swim Club Manager export.');
+                }
+                renderSwimClubManagerPreview();
+            } catch (err) {
+                dtsSwimClubManagerPreview = null;
+                renderSwimClubManagerPreview();
+                showDtsAlert(err.message || 'Could not read the Swim Club Manager XLSX.', 'error');
+            } finally {
+                if (input) input.value = '';
+            }
+        }
 
-                dtsTeamunifyPreview.swimmers.forEach(imported => {
-                    const key = imported.swimmer_name.toLowerCase();
-                    const existing = byName.get(key) || {
-                        id: 0,
-                        swimmer_name: imported.swimmer_name,
-                        age_group: '',
-                        availability: {}
-                    };
-                    if (imported.age_group) existing.age_group = imported.age_group;
-                    pbFields.forEach(field => {
-                        if (imported[field]) existing[field] = imported[field];
-                    });
-                    byName.set(key, existing);
+        function renderSwimClubManagerPreview() {
+            const el = document.getElementById('dts-scm-preview');
+            if (!el) return;
+            if (!dtsSwimClubManagerPreview?.swimmers?.length) {
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
+            }
+
+            const summary = dtsSwimClubManagerPreview.summary || {};
+            const existingNames = new Set(collectSwimmers().map(swimmer => swimmer.swimmer_name.toLowerCase()));
+            const updateCount = dtsSwimClubManagerPreview.swimmers.filter(swimmer => existingNames.has(swimmer.swimmer_name.toLowerCase())).length;
+            const newCount = dtsSwimClubManagerPreview.swimmers.length - updateCount;
+            const ignored = Object.entries(summary.ignored_events || {});
+            const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+            const ageText = summary.age_on_date
+                ? `Ages taken from export age-on-date ${dtsEscape(summary.age_on_date)}. Check this matches the league finals date before applying.`
+                : 'Age groups are based on ages in the file. Check Swim Club Manager was exported using the league finals date.';
+            const previewRows = dtsSwimClubManagerPreview.swimmers.map(swimmer => {
+                const pbCount = pbFields.filter(field => swimmer[field]).length;
+                const isMatch = existingNames.has(swimmer.swimmer_name.toLowerCase());
+                return `
+                    <tr class="border-t border-white/5">
+                        <td class="px-3 py-2 font-semibold text-white">${dtsEscape(swimmer.swimmer_name)}</td>
+                        <td class="px-3 py-2 text-slate-300">${dtsEscape(swimmer.import_meta?.age || '-')}</td>
+                        <td class="px-3 py-2 text-slate-300">${dtsEscape(swimmer.age_group || '-')}</td>
+                        <td class="px-3 py-2 text-slate-300">${pbCount}</td>
+                        <td class="px-3 py-2">
+                            <span class="${isMatch ? 'text-amber-200 bg-amber-500/10 border-amber-500/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-500/20'} border rounded-md px-2 py-0.5 text-[10px] font-bold uppercase">
+                                ${isMatch ? 'Update' : 'New'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div class="space-y-2">
+                            <div class="text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-indigo-300"></i>
+                                Swim Club Manager import preview
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${dtsSwimClubManagerPreview.swimmers.length}</strong> swimmers</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${newCount}</strong> new</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${updateCount}</strong> matched</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${summary.mapped_rows || 0}</strong> PBs mapped</span>
+                            </div>
+                            <div class="text-xs text-amber-100 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">${ageText}</div>
+                            ${ignored.length ? `<div class="text-[11px] text-amber-200">Ignored unsupported events: ${ignored.map(([event, count]) => `${dtsEscape(event)} (${count})`).join(', ')}</div>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="applySwimClubManagerImport()"
+                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i> Apply Import
+                            </button>
+                            <button type="button" onclick="clearSwimClubManagerPreview()"
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="max-h-72 overflow-auto rounded-lg border border-white/10 bg-slate-950/40">
+                        <table class="w-full min-w-[640px] text-xs text-left">
+                            <thead class="sticky top-0 bg-slate-900 text-slate-400 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-3 py-2">Swimmer</th>
+                                    <th class="px-3 py-2">Age</th>
+                                    <th class="px-3 py-2">Age Group</th>
+                                    <th class="px-3 py-2">PBs</th>
+                                    <th class="px-3 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${previewRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            el.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function clearSwimClubManagerPreview() {
+            dtsSwimClubManagerPreview = null;
+            renderSwimClubManagerPreview();
+        }
+
+        async function applyImportedSwimmers(preview, clearPreview, sourceName) {
+            if (!preview?.swimmers?.length) return;
+            const current = collectSwimmers();
+            const byName = new Map(current.map(swimmer => [swimmer.swimmer_name.toLowerCase(), swimmer]));
+            const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+
+            preview.swimmers.forEach(imported => {
+                const key = imported.swimmer_name.toLowerCase();
+                const existing = byName.get(key) || {
+                    id: 0,
+                    swimmer_name: imported.swimmer_name,
+                    age_group: '',
+                    availability: {}
+                };
+                if (imported.age_group) existing.age_group = imported.age_group;
+                pbFields.forEach(field => {
+                    if (imported[field]) existing[field] = imported[field];
                 });
+                byName.set(key, existing);
+            });
 
-                dtsState.swimmers = Array.from(byName.values()).sort((a, b) => a.swimmer_name.localeCompare(b.swimmer_name));
-                renderSwimmerList();
-                clearTeamunifyPreview();
-                await saveSwimmers({ silent: true, reload: false });
-                showDtsAlert('TeamUnify swimmers imported and saved.', 'success');
-                showAutosaveStatus('swimmers', 'Imported and saved', 'saved');
+            dtsState.swimmers = Array.from(byName.values()).sort((a, b) => a.swimmer_name.localeCompare(b.swimmer_name));
+            renderSwimmerList();
+            clearPreview();
+            await saveSwimmers({ silent: true, reload: false });
+            showDtsAlert(`${sourceName} swimmers imported and saved.`, 'success');
+            showAutosaveStatus('swimmers', 'Imported and saved', 'saved');
+        }
+
+        async function applyTeamunifyImport() {
+            try {
+                await applyImportedSwimmers(dtsTeamunifyPreview, clearTeamunifyPreview, 'TeamUnify');
             } catch (err) {
                 showDtsAlert(err.message || 'Could not apply the TeamUnify import.', 'error');
+            }
+        }
+
+        async function applySwimClubManagerImport() {
+            try {
+                await applyImportedSwimmers(dtsSwimClubManagerPreview, clearSwimClubManagerPreview, 'Swim Club Manager');
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not apply the Swim Club Manager import.', 'error');
             }
         }
 
@@ -1852,7 +2036,20 @@ if ($is_logged_in) {
         }
 
         function swimmerOptions(selected = '') {
-            return dtsState.swimmers.map(swimmer => `<option value="${dtsEscape(swimmer.swimmer_name)}" ${selected === swimmer.swimmer_name ? 'selected' : ''}>${dtsEscape(swimmer.swimmer_name)}</option>`).join('');
+            const groups = ['11/U', '13/U', '15/U', 'Open', 'Unassigned'];
+            const grouped = Object.fromEntries(groups.map(group => [group, []]));
+            dtsState.swimmers.forEach(swimmer => {
+                const ageGroup = groups.includes(swimmer.age_group) ? swimmer.age_group : 'Unassigned';
+                grouped[ageGroup].push(swimmer);
+            });
+            return groups.map(group => {
+                if (!grouped[group].length) return '';
+                const options = grouped[group]
+                    .sort((a, b) => a.swimmer_name.localeCompare(b.swimmer_name))
+                    .map(swimmer => `<option value="${dtsEscape(swimmer.swimmer_name)}" ${selected === swimmer.swimmer_name ? 'selected' : ''}>${dtsEscape(swimmer.swimmer_name)}</option>`)
+                    .join('');
+                return `<optgroup label="${dtsEscape(group)}">${options}</optgroup>`;
+            }).join('');
         }
 
         function buildSwimmerPickerHtml(limit, selected) {

@@ -214,14 +214,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                                     class="bg-emerald-900/20 px-4 py-3 text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-white/5">
                                     Teamsheets</div>
                                 <div class="p-3">
-                                    <a href="teamportal.php"
+                                    <a href="digital-teamsheets.php"
                                         class="flex items-center p-3 hover:bg-white/5 rounded-xl border border-white/5 transition-colors group">
                                         <div class="bg-emerald-500/10 p-2 rounded-lg mr-3 flex-shrink-0"><i
-                                                data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
+                                                data-lucide="clipboard-list" class="text-emerald-500 w-5 h-5"></i></div>
                                         <div class="flex-grow min-w-0">
-                                            <p class="text-sm font-medium">Manage in Team Portal</p>
-                                            <p class="text-xs text-slate-500">For 2027, teamsheets are handled in the Team
-                                                Portal.</p>
+                                            <p class="text-sm font-medium">Open Digital Teamsheets</p>
+                                            <p class="text-xs text-slate-500">Manage swimmer lists, submissions, and shared teamsheets.</p>
                                         </div>
                                     </a>
                                 </div>

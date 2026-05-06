@@ -5,6 +5,7 @@
  */
 session_start();
 include 'db.php';
+include_once 'finals_sync.php';
 
 header('Content-Type: application/json');
 
@@ -185,13 +186,19 @@ if ($action === 'publish_round' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         // Update totals
         $conn->query("UPDATE results SET total = COALESCE(round_1,0) + COALESCE(round_2,0) + COALESCE(round_3,0) + COALESCE(round_4,0) WHERE season_year = $season");
 
+        $finals_sync = cotswold_sync_finals_from_standings($conn, $season);
+
         // Mark scoresheets as published
         $ids = array_column($scoresheets, 'id');
         $id_str = implode(',', $ids);
         $conn->query("UPDATE gala_scoresheets SET status = 'published' WHERE id IN ($id_str)");
 
         $conn->commit();
-        echo json_encode(['success' => true, 'message' => "Round $round published successfully."]);
+        $message = "Round $round published successfully.";
+        if (!empty($finals_sync['synced'])) {
+            $message .= " Finals assignments updated from the latest standings.";
+        }
+        echo json_encode(['success' => true, 'message' => $message, 'finals_sync' => $finals_sync]);
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(['error' => 'Database error during publish: ' . $e->getMessage()]);

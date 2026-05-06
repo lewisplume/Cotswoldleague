@@ -169,18 +169,23 @@ Modernized the club management system to include interactive mapping and locatio
 Improved the way live digital resources are linked to specific gala venues.
 
 *   **Dynamic Teamsheet Link Storage**: Added `teamsheet_link` support to the `venue_details` table and a centralized `finals_teamsheets.json` for championship tiers.
-*   **Portal Integration**: The Team Portal now dynamically renders "View Teamsheets" buttons for every round, pulling directly from these administrative overrides.
+*   **Portal Integration**: The Team Portal previously rendered collated teamsheet buttons for every round from administrative overrides. These links have now been removed from the team-facing portal in favour of Digital Teamsheets.
 *   **Legacy Cleanup**: Relocated dozens of deprecated scripts (e.g., old smartprogramme versions, debug tools) into a protected `_legacy` directory to reduce codebase clutter and security surface area.
 
 ## 12. Digital Teamsheets Portal Migration
-The Google Sheets teamsheet workflow was migrated into a dedicated in-portal beta workspace while keeping the legacy sheet route available as a fallback.
+The Google Sheets teamsheet workflow was migrated into a dedicated in-portal workspace, which is now the default route for clubs.
 
 *   **Dedicated Workspace Page**: Added `digital-teamsheets.php` as a standalone page that reuses the team portal shell but shows only the teamsheet workspace.
 *   **Portal Simplification**: `teamportal.php` now shows a compact launch card instead of the full teamsheet UI so the main dashboard stays lighter.
 *   **Tabbed Interface**: Added tabs for `Swimmer List`, `Teamsheet Builder`, and `Shared Teamsheets` so each area gets full width and the workflow feels less crowded.
 *   **Swimmer List Improvements**: Age groups are dropdowns with `11/U`, `13/U`, `15/U`, and `Open`; availability boxes are explicitly labelled; the swimmer name column is wider and sticky/frozen; and previous season swimmers can be copied forward and adjusted.
-*   **TeamUnify Import**: Added a preview-first CSV importer for TeamUnify `Top Times` exports, mapping supported best-time events into league PB fields and leaving age groups blank when no reliable finals date can be parsed.
+*   **TeamUnify Import**: Added a preview-first CSV importer for TeamUnify `Top Times` exports, mapping supported best-time events into league PB fields and leaving age groups blank when no reliable finals date can be parsed. A help pop-up now explains the TeamUnify export and CSV download steps.
+*   **Swim Club Manager Import**: Added a separate preview-first XLSX importer for Swim Club Manager group PB reports, using the exported age column for league age groups and warning clubs to export with age as of the finals date.
 *   **Finals Date Entry**: Added a finals date field to the Finals Results & Teamsheets Upload cards in `league_admin.php` so age groups can be calculated from DOB against the league finals date.
+*   **First-Class Finals Slots**: A, B, and C Finals are now stored as proper `venue_details` rows with `round_number = 99` and `gala_type` values of `a_final`, `b_final`, and `c_final`; saving the finals date creates/updates those rows, while Auto-Gen Finals now preserves existing dates, venues, uploads, and links and only refreshes the finalist team assignments.
+*   **Automatic Finals Assignment Sync**: Added `finals_sync.php` and wired it into round publishing plus the legacy manual score-save page, so A/B/C Final team slots update automatically from the latest standings after each round. Finals date/slot saves also sync immediately, and the digital teamsheet loader defensively syncs configured finals before building the dropdown. The manual Auto-Gen Finals button now acts as a fallback resync only.
+*   **Finals Teamsheet Visibility**: The Teamsheet Builder now shows finals based on assigned team membership, so a club only sees the A/B/C Final it has qualified for once those team slots are populated.
+*   **Digital Teamsheets Defaulted**: Removed the team-facing Google Teamsheet links and the admin collated teamsheet link fields, making the portal-based Digital Teamsheets workflow the default route for clubs.
 *   **Teamsheet Builder Improvements**: Relay and cannon entries now use per-position dropdowns instead of a browser multiselect; relay and cannon PB fields are greyed out because those events do not use PBs; and each event row has a minimise/expand control so completed events can be collapsed.
 *   **Sharing, Editing, and Safety**: Submitted teamsheets are shared automatically with the clubs in the same gala group; post-submission edits are allowed but require a reason and are written to an audit log; and autosave now covers both swimmer list and teamsheet editing.
 *   **Downstream Compatibility**: `smartprogrammenew.php` and `smart-results-matcher.php` now accept portal-generated digital teamsheet exports alongside the legacy Google Sheet import path, and `digital_teamsheet_export.php` provides a CSV export route for the new workflow.
@@ -219,6 +224,11 @@ A dedicated handoff note was created for future maintainers and LLMs.
 - [x] Tabbed teamsheet UI implemented.
 - [x] Swimmer list copy-forward and autosave added.
 - [x] TeamUnify best-times CSV importer added.
+- [x] Swim Club Manager group PB XLSX importer added.
+- [x] Finals promoted into first-class A/B/C venue rows.
+- [x] Finals team assignments now auto-sync after points are updated.
+- [x] Finals teamsheet dropdowns now depend on assigned finalist teams.
+- [x] Digital Teamsheets made the default club teamsheet route.
 - [x] Shared teamsheet visibility and audit logging added.
 - [x] Relay/cannon selection corrected to ordered dropdowns.
 - [x] Relay/cannon PB fields greyed out.

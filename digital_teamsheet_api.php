@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'db.php';
+include_once 'finals_sync.php';
 
 header('Content-Type: application/json');
 
@@ -218,7 +219,7 @@ function parse_teamunify_csv($path, $finals_date)
 
 function get_round_options($conn, $club_id, $season)
 {
-    $sql = "SELECT vd.id, vd.round_number, vd.gala_type, vd.club_id AS host_club_id,
+    $sql = "SELECT vd.id, vd.round_number, vd.gala_type, vd.club_id AS host_club_id, vd.venue_name,
                    c_host.name AS host_name,
                    c1.name AS team1_name, c2.name AS team2_name, c3.name AS team3_name, c4.name AS team4_name,
                    c5.name AS team5_name, c6.name AS team6_name, c7.name AS team7_name, c8.name AS team8_name
@@ -233,11 +234,26 @@ function get_round_options($conn, $club_id, $season)
             LEFT JOIN clubs c7 ON vd.team_7_id = c7.id
             LEFT JOIN clubs c8 ON vd.team_8_id = c8.id
             WHERE vd.season_year = ?
-              AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
-                   OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
+              AND (
+                   (
+                       (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
+                       AND (vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
+                            OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
+                   )
+                   OR (
+                       vd.round_number != 99
+                       AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
+                            OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
+                   )
+              )
             ORDER BY vd.round_number ASC, c_host.name ASC";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiiiiiiiii", $season, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id);
+    $stmt->bind_param(
+        "iiiiiiiiiiiiiiiiii",
+        $season,
+        $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id,
+        $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id, $club_id
+    );
     $stmt->execute();
     $res = $stmt->get_result();
     $rounds = [];
@@ -255,6 +271,13 @@ function get_round_options($conn, $club_id, $season)
         ]));
         $gala_type = $row['gala_type'] ?: 'round';
         $round_key = $gala_type === 'round' ? 'round_' . (int)$row['round_number'] : $gala_type;
+        $label = 'Round ' . (int)$row['round_number'] . ' - ' . $row['host_name'];
+        if ($gala_type !== 'round') {
+            $label = ucwords(str_replace('_', ' ', $gala_type));
+            if (!empty($row['venue_name']) && stripos($row['venue_name'], 'Venue TBC') === false) {
+                $label .= ' - ' . $row['venue_name'];
+            }
+        }
         $rounds[] = [
             'venue_detail_id' => (int)$row['id'],
             'round_number' => (int)$row['round_number'],
@@ -262,11 +285,31 @@ function get_round_options($conn, $club_id, $season)
             'gala_type' => $gala_type,
             'host_name' => $row['host_name'],
             'teams' => array_values(array_unique($teams)),
-            'label' => ($gala_type === 'round' ? 'Round ' . (int)$row['round_number'] : strtoupper(str_replace('_', ' ', $gala_type))) . ' - ' . $row['host_name'],
+            'label' => $label,
         ];
     }
     $stmt->close();
     return $rounds;
+}
+
+function finals_are_configured($conn, $season)
+{
+    $setting_key = 'finals_date_' . $season;
+    $stmt = $conn->prepare("SELECT 1 FROM global_settings WHERE setting_key = ? AND setting_value != '' LIMIT 1");
+    $stmt->bind_param("s", $setting_key);
+    $stmt->execute();
+    $has_setting = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    if ($has_setting) {
+        return true;
+    }
+
+    $stmt = $conn->prepare("SELECT 1 FROM venue_details WHERE season_year = ? AND (round_number = 99 OR gala_type IN ('a_final','b_final','c_final')) LIMIT 1");
+    $stmt->bind_param("i", $season);
+    $stmt->execute();
+    $has_rows = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    return $has_rows;
 }
 
 function can_view_teamsheet($conn, $viewer_club_id, $teamsheet)
@@ -281,10 +324,27 @@ function can_view_teamsheet($conn, $viewer_club_id, $teamsheet)
         return false;
     }
     $stmt = $conn->prepare("SELECT id FROM venue_details
-        WHERE id = ? AND (club_id = ? OR team_1_id = ? OR team_2_id = ? OR team_3_id = ? OR team_4_id = ?
-        OR team_5_id = ? OR team_6_id = ? OR team_7_id = ? OR team_8_id = ?)");
+        WHERE id = ? AND (
+            (
+                (round_number = 99 OR gala_type IN ('a_final','b_final','c_final'))
+                AND (team_1_id = ? OR team_2_id = ? OR team_3_id = ? OR team_4_id = ?
+                     OR team_5_id = ? OR team_6_id = ? OR team_7_id = ? OR team_8_id = ?)
+            )
+            OR (
+                round_number != 99
+                AND (club_id = ? OR team_1_id = ? OR team_2_id = ? OR team_3_id = ? OR team_4_id = ?
+                     OR team_5_id = ? OR team_6_id = ? OR team_7_id = ? OR team_8_id = ?)
+            )
+        )");
     $venue_id = (int)$teamsheet['venue_detail_id'];
-    $stmt->bind_param("iiiiiiiiii", $venue_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id);
+    $stmt->bind_param(
+        "iiiiiiiiiiiiiiiiii",
+        $venue_id,
+        $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id,
+        $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id,
+        $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id,
+        $viewer_club_id, $viewer_club_id, $viewer_club_id, $viewer_club_id
+    );
     $stmt->execute();
     $ok = $stmt->get_result()->num_rows > 0;
     $stmt->close();
@@ -376,6 +436,11 @@ if ($action === 'load') {
     }
     $stmt->close();
 
+    $finals_sync = null;
+    if (finals_are_configured($conn, $season)) {
+        $finals_sync = cotswold_sync_finals_from_standings($conn, $season);
+    }
+
     $rounds = get_round_options($conn, $club_id, $season);
 
     $events = [];
@@ -450,6 +515,7 @@ if ($action === 'load') {
         'events' => $events,
         'teamsheets' => $teamsheets,
         'shared' => $shared,
+        'finals_sync' => $finals_sync,
     ]);
     exit;
 }

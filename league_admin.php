@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'db.php';
+include_once 'finals_sync.php';
 
 // Handle Logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
@@ -133,16 +134,25 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
 
     // --- ADD VENUE SLOT ---
     if ($_POST['admin_action'] === 'add_venue') {
-        $first_club_res = $conn->query("SELECT id FROM clubs ORDER BY id ASC LIMIT 1");
-        $placeholder_club = ($first_club_res && $first_club_res->num_rows > 0) ? $first_club_res->fetch_assoc()['id'] : 1;
+        $placeholder_club = cotswold_get_placeholder_club_id($conn);
         $round_num = isset($_POST['new_round']) ? intval($_POST['new_round']) : 1;
-        
-        $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, season_year, gala_type) VALUES (?, 'TBC', ?, ?, 'round')");
-        $stmt->bind_param("iii", $placeholder_club, $round_num, $current_season_year);
-        if ($stmt->execute()) {
-            $success_msg = "Blank venue added for Round $round_num (Season $current_season_year).";
+
+        if ($round_num === 99) {
+            cotswold_ensure_finals_venue_rows($conn, $current_season_year, cotswold_get_finals_date_for_season($conn, $current_season_year));
+            $sync = cotswold_sync_finals_from_standings($conn, $current_season_year);
+            $success_msg = "A, B and C Final venue slots are ready for Season $current_season_year.";
+            if (!empty($sync['synced'])) {
+                $success_msg .= " Team assignments have been synced from the current standings.";
+            }
         } else {
-            $error_msg = "Failed to add venue: " . $conn->error;
+            $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, season_year, gala_type) VALUES (?, 'TBC', ?, ?, 'round')");
+            $stmt->bind_param("iii", $placeholder_club, $round_num, $current_season_year);
+            if ($stmt->execute()) {
+                $success_msg = "Blank venue added for Round $round_num (Season $current_season_year).";
+            } else {
+                $error_msg = "Failed to add venue: " . $conn->error;
+            }
+            $stmt->close();
         }
     }
 
@@ -179,8 +189,6 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $t6 = !empty($_POST['team_6_id']) ? $_POST['team_6_id'] : null;
         $t7 = !empty($_POST['team_7_id']) ? $_POST['team_7_id'] : null;
         $t8 = !empty($_POST['team_8_id']) ? $_POST['team_8_id'] : null;
-        $teamsheet_link = !empty($_POST['teamsheet_link']) ? $_POST['teamsheet_link'] : null;
-
         if ($host_id === null || $round_num === null) {
             $error_msg = "Error: Stale data detected. Please refresh the page and try again to prevent data loss.";
         } else {
@@ -188,6 +196,15 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                 $stmt_date = $conn->prepare("UPDATE venue_details SET round_date=? WHERE round_number=? AND season_year=?");
                 $stmt_date->bind_param("sii", $r_date, $round_num, $current_season_year);
                 $stmt_date->execute();
+                $stmt_date->close();
+
+                if ((int)$round_num === 99) {
+                    $setting_key = 'finals_date_' . $current_season_year;
+                    $stmt_setting = $conn->prepare("INSERT INTO global_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+                    $stmt_setting->bind_param("ss", $setting_key, $r_date);
+                    $stmt_setting->execute();
+                    $stmt_setting->close();
+                }
             }
 
             // FILE UPLOAD LOGIC
@@ -212,11 +229,11 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             }
 
             if ($results_file_name !== null) {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, results_file=?, teamsheet_link=? WHERE id=?");
-                $stmt->bind_param("issssssiiiiiiiissi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $results_file_name, $teamsheet_link, $id);
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, results_file=? WHERE id=?");
+                $stmt->bind_param("issssssiiiiiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $results_file_name, $id);
             } else {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, teamsheet_link=? WHERE id=?");
-                $stmt->bind_param("issssssiiiiiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $teamsheet_link, $id);
+                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=? WHERE id=?");
+                $stmt->bind_param("issssssiiiiiiiii", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $id);
             }
             if ($stmt->execute()) {
                 $success_msg = "Venue details updated successfully.";
@@ -243,23 +260,13 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
             }
             $stmt_setting->close();
 
-            $stmt_date = $conn->prepare("UPDATE venue_details SET round_date=? WHERE season_year=? AND (round_number=99 OR gala_type IN ('a_final','b_final','c_final'))");
-            $stmt_date->bind_param("si", $finals_date, $current_season_year);
-            if (empty($error_msg) && $stmt_date->execute()) {
-                $success_msgs[] = "Finals date saved.";
+            cotswold_ensure_finals_venue_rows($conn, $current_season_year, $finals_date);
+            $sync = cotswold_sync_finals_from_standings($conn, $current_season_year);
+            if (empty($error_msg)) {
+                $success_msgs[] = !empty($sync['synced']) ? "Finals date saved and team assignments synced." : "Finals date saved.";
             } else {
                 $error_msg = "Failed to save finals date.";
             }
-            $stmt_date->close();
-        }
-        
-        // Handle Teamsheet Link
-        if (isset($_POST['teamsheet_link']) && trim($_POST['teamsheet_link']) !== '') {
-            $json_file = 'uploads/results/finals_teamsheets.json';
-            $links = file_exists($json_file) ? json_decode(file_get_contents($json_file), true) : [];
-            $links[$tier] = trim($_POST['teamsheet_link']);
-            file_put_contents($json_file, json_encode($links, JSON_PRETTY_PRINT));
-            $success_msgs[] = "Final {$tier} teamsheet link saved.";
         }
         
         // Handle File Upload
@@ -290,7 +297,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         
         if (!empty($success_msgs)) {
             $success_msg = implode(" ", $success_msgs);
-        } elseif (empty($error_msg) && empty($_FILES['results_file']['name']) && empty($_POST['teamsheet_link']) && empty($_POST['finals_date'])) {
+        } elseif (empty($error_msg) && empty($_FILES['results_file']['name']) && empty($_POST['finals_date'])) {
             $error_msg = "No file, link, or finals date provided.";
         }
     }
@@ -546,58 +553,16 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
     
     // --- AUTO-GENERATE FINALS ---
     if ($_POST['admin_action'] === 'generate_finals') {
-        // Find top 8 (A), next 6 (B), final 6 (C)
-        $rank_sql = "SELECT c.id, c.name, (COALESCE(r.round_1,0) + COALESCE(r.round_2,0) + COALESCE(r.round_3,0) + COALESCE(r.round_4,0)) as total
-                     FROM results r JOIN clubs c ON r.club_id = c.id
-                     WHERE r.season_year = $current_season_year
-                     ORDER BY total DESC, c.name ASC";
-        $results_query = $conn->query($rank_sql);
-        
-        $ranked_teams = [];
-        while($row = $results_query->fetch_assoc()) {
-            $ranked_teams[] = $row['id'];
-        }
-        
-        if (count($ranked_teams) < 20) {
-            $error_msg = "Not enough teams ranked to generate finals (requires at least 20). Found: " . count($ranked_teams);
-        } else {
-            // First, scrub any existing finals for this season
-            $conn->query("DELETE FROM venue_details WHERE season_year = $current_season_year AND round_number = 99");
-            
-            // A Final - Top 8
-            $a_teams = array_slice($ranked_teams, 0, 8);
-            // B Final - Next 6
-            $b_teams = array_slice($ranked_teams, 8, 6);
-            // C Final - Next 6 (or remaining)
-            $c_teams = array_slice($ranked_teams, 14, 6);
-            
-            // Note: We need placeholder host clubs. Just use the first team of the final as the placeholder host for now, admin can update.
-            $stmt = $conn->prepare("INSERT INTO venue_details (club_id, venue_name, round_number, gala_type, season_year, team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id) VALUES (?, ?, 99, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
-            $types = ['a_final', 'b_final', 'c_final'];
-            $finals_teams_lists = [$a_teams, $b_teams, $c_teams];
-            
-            try {
-                $conn->begin_transaction();
-                
-                foreach ($types as $idx => $ftype) {
-                    $teams = $finals_teams_lists[$idx];
-                    $host = $teams[0]; 
-                    $vname = strtoupper(str_replace('_', ' ', $ftype)) . " Hosted By " . $host;
-                    
-                    // Pad array with nulls to len 8
-                    $t = array_pad($teams, 8, null);
-                    
-                    $stmt->bind_param("issiiiiiiiii", $host, $vname, $ftype, $current_season_year, $t[0], $t[1], $t[2], $t[3], $t[4], $t[5], $t[6], $t[7]);
-                    $stmt->execute();
-                }
-                
-                $conn->commit();
-                $success_msg = "Finals (A, B, C) have been automatically generated successfully.";
-            } catch (Exception $e) {
-                $conn->rollback();
-                $error_msg = "Error generating finals: " . $e->getMessage();
+        $active_admin_tab = 'tab-venues';
+        try {
+            $sync = cotswold_sync_finals_from_standings($conn, $current_season_year);
+            if (!empty($sync['synced'])) {
+                $success_msg = "Finals teams synced from the current standings. Existing final dates, venues, uploads and links were preserved.";
+            } else {
+                $error_msg = $sync['message'];
             }
+        } catch (Exception $e) {
+            $error_msg = "Error syncing finals: " . $e->getMessage();
         }
     }
 }
@@ -617,7 +582,7 @@ if ($is_logged_in) {
     if ($res) while($r = $res->fetch_assoc()) $contacts_data[] = $r;
 
     // Venues (filtered by Active Season)
-    $res = $conn->query("SELECT vd.*, c.name as host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $current_season_year ORDER BY round_number ASC, c.name ASC");
+    $res = $conn->query("SELECT vd.*, c.name as host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $current_season_year ORDER BY round_number ASC, FIELD(vd.gala_type, 'a_final', 'b_final', 'c_final', 'round'), c.name ASC");
     if ($res) while($r = $res->fetch_assoc()) $venues_data[] = $r;
 
     // Stats
@@ -1026,10 +991,10 @@ if ($is_logged_in) {
                                 </button>
                             </form>
 
-                            <form method="POST" onsubmit="return confirm('Are you sure you want to Auto-Generate finals? This will overwrite any existing finals for this season.');">
+                            <form method="POST" onsubmit="return confirm('Resync finals team assignments from the current standings? Existing final dates, venue details, uploads and links will be kept.');">
                                 <input type="hidden" name="admin_action" value="generate_finals">
                                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-                                    <i data-lucide="sparkles" class="w-4 h-4"></i> Auto-Gen Finals 
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync Finals
                                 </button>
                             </form>
                         </div>
@@ -1037,6 +1002,10 @@ if ($is_logged_in) {
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <?php foreach($venues_data as $venue): ?>
+                            <?php
+                                $is_final_venue = ((int)$venue['round_number'] === 99) || in_array($venue['gala_type'], ['a_final', 'b_final', 'c_final'], true);
+                                $venue_label = $is_final_venue ? cotswold_final_gala_label($venue['gala_type']) : 'Round ' . (int)$venue['round_number'];
+                            ?>
                             <div class="glass-panel p-5 rounded-2xl border border-white/5 relative group">
                                 <form method="POST" class="space-y-4" enctype="multipart/form-data">
                                     <input type="hidden" name="admin_action" value="update_venue">
@@ -1046,7 +1015,7 @@ if ($is_logged_in) {
                                     <div class="flex justify-between items-start border-b border-white/5 pb-3">
                                         <div>
                                             <div class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-1 inline-flex items-center gap-2">
-                                                Round <?php echo $venue['round_number']; ?> - 
+                                                <?php echo htmlspecialchars($venue_label); ?> - 
                                                 <input type="text" name="round_date" value="<?php echo htmlspecialchars($venue['round_date'] ?? ''); ?>" class="bg-transparent border-b border-emerald-500/50 w-24 focus:outline-none focus:border-emerald-300 text-emerald-300 placeholder-emerald-700/50" placeholder="DD/MM/YYYY">
                                             </div>
                                             <div class="mt-1 flex items-center gap-2">
@@ -1107,10 +1076,6 @@ if ($is_logged_in) {
                                             </label>
                                             <input type="file" name="results_file" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
                                         </div>
-                                        <div class="mt-3">
-                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Collated Teamsheet Link (Google Sheets)</label>
-                                            <input type="url" name="teamsheet_link" value="<?php echo htmlspecialchars($venue['teamsheet_link'] ?? ''); ?>" placeholder="https://docs.google.com/spreadsheets/d/..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                                        </div>
                                     </div>
 
                                     <div class="pt-3 border-t border-white/5 space-y-2">
@@ -1139,11 +1104,9 @@ if ($is_logged_in) {
 
                     <!-- FINALS RESULTS PANEL -->
                     <div class="mt-10 border-t border-slate-700/50 pt-8">
-                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Results & Teamsheets Upload</h2>
+                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Date & Results Upload</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <?php 
-                            $finals_links_file = 'uploads/results/finals_teamsheets.json';
-                            $finals_links = file_exists($finals_links_file) ? json_decode(file_get_contents($finals_links_file), true) : [];
                             $finals_date_value = '';
                             $finals_setting_key = 'finals_date_' . $current_season_year;
                             $finals_setting_stmt = $conn->prepare("SELECT setting_value FROM global_settings WHERE setting_key=? LIMIT 1");
@@ -1188,11 +1151,6 @@ if ($is_logged_in) {
                                             <input type="file" name="results_file" accept=".xlsx,.xls,.csv" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
                                         </div>
 
-                                        <div>
-                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Collated Teamsheet Link</label>
-                                            <input type="url" name="teamsheet_link" placeholder="https://docs.google.com/spreadsheets/d/..." value="<?php echo htmlspecialchars($finals_links[$tier] ?? ''); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
-                                        </div>
-                                        
                                         <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-sm border border-slate-700 transition-colors">Save Updates</button>
                                     </form>
                                 </div>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'db.php';
+include_once 'finals_sync.php';
 
 // Check if already authenticated via Super Admin portal
 $authenticated = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
@@ -36,7 +37,11 @@ if ($authenticated && isset($_POST['update_scores'])) {
             $stmt->execute();
         }
     }
+    $finals_sync = cotswold_sync_finals_from_standings($conn, $current_season_year);
     $message = "Scores Updated Successfully!";
+    if (!empty($finals_sync['synced'])) {
+        $message .= " Finals assignments updated from the latest standings.";
+    }
 }
 
 // Fetch Current Data
