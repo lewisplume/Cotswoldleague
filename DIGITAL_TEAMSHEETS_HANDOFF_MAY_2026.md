@@ -109,8 +109,8 @@ Shared implementation detail:
 - `finals_sync.php` owns the reusable finals helpers
 - `cotswold_sync_finals_from_standings()` ranks clubs by `round_1 + round_2 + round_3 + round_4`
 - the split is top 8 to A Final, next 6 to B Final, next 6 to C Final
-- the helper uses all clubs, with missing season points treated as zero, so finals can keep updating throughout the season as each round lands
-- if fewer than 20 clubs exist, final rows are still created but teams are not assigned
+- the helper uses active clubs plus any club that already has results in the selected season, with missing season points treated as zero, so current-season history is preserved while retired clubs stay out of clean future seasons
+- if fewer than 8 eligible clubs exist, final rows are still created but teams are not assigned
 
 Mapped TeamUnify events:
 - `25 Free`, `25 Back`, `25 Breast`, `25 Fly`
@@ -151,9 +151,10 @@ The event builder mirrors the Google Sheet workflow in a portal-native way:
 - each individual event has one swimmer dropdown
 - relays and cannons use multiple dropdowns, one per position, instead of a browser multiselect
 - relay/cannon PB fields are greyed out because those events do not use PBs
+- individual PB fields follow the selected swimmer, clearing when no swimmer is selected and refreshing when a different swimmer is chosen
 - each event row has a minimise/expand control so completed events can be collapsed
 - validation warnings appear above the swimmer selector only when needed, explain the issue, and can be ignored for that event/selection
-- the builder has a default-off `Show Available Only` toggle that filters dropdowns to swimmers checked as available for the selected round or final
+- the builder has a default-off `Show Available Only` toggle that filters dropdowns to swimmers checked as available for the selected round or final; when it is off, availability is treated as unused and does not trigger warnings
 - `Copy Round` lets a club copy selections, PB snapshots, and notes from another saved teamsheet in the same season into the current builder, then edit from there
 
 ### Shared Teamsheets

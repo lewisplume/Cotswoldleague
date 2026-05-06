@@ -65,50 +65,85 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
     }
 
     if ($_POST['admin_action'] === 'add_club') {
-        $name = $_POST['name'];
-        $pool_name = $_POST['pool_name'];
-        $postcode = $_POST['postcode'];
-        $website = $_POST['website'];
+        $name = trim($_POST['name']);
+        $pool_name = trim($_POST['pool_name']);
+        $postcode = trim($_POST['postcode']);
+        $website = trim($_POST['website']);
         $logo = trim($_POST['logo']);
         $lat = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
         $lng = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
+        $initial_pin = trim($_POST['access_pin'] ?? '0000');
 
-        if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'images/Teams/';
-            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-            $file_info = pathinfo($_FILES['logo_file']['name']);
-            $ext = strtolower($file_info['extension']);
-            $new_filename = preg_replace('/[^a-zA-Z0-9]/', '', $name) . '_logo.' . $ext;
-            if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_dir . $new_filename)) {
-                $logo = $new_filename;
-            }
-        }
-
-        $stmt = $conn->prepare("INSERT INTO clubs (name, pool_name, postcode, website, logo, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssdd", $name, $pool_name, $postcode, $website, $logo, $lat, $lng);
-        if ($stmt->execute()) {
-            $new_club_id = $conn->insert_id;
-            // Create a stub entry in club_contacts
-            $conn->query("INSERT INTO club_contacts (club_id, club_name, access_pin) VALUES ($new_club_id, '" . $conn->real_escape_string($name) . "', '0000')");
-            // Create a stub entry in results for the active season
-            $conn->query("INSERT INTO results (club_id, season_year) VALUES ($new_club_id, $current_season_year)");
-            
-            $success_msg = "Club '$name' added successfully.";
+        if ($name === '' || $pool_name === '' || $postcode === '') {
+            $error_msg = "Club name, pool name and postcode are required.";
+        } elseif ($initial_pin !== '' && !preg_match('/^\d{4}$/', $initial_pin)) {
+            $error_msg = "Initial PIN must be exactly 4 digits.";
         } else {
-            $error_msg = "Failed to add club: " . $conn->error;
+            if ($initial_pin === '') {
+                $initial_pin = '0000';
+            }
+
+            $dup_stmt = $conn->prepare("SELECT id, is_active FROM clubs WHERE LOWER(name) = LOWER(?) LIMIT 1");
+            $dup_stmt->bind_param("s", $name);
+            $dup_stmt->execute();
+            $existing_club = $dup_stmt->get_result()->fetch_assoc();
+            $dup_stmt->close();
+
+            if ($existing_club) {
+                $error_msg = !empty($existing_club['is_active'])
+                    ? "A club named '$name' already exists."
+                    : "A retired club named '$name' already exists. Reactivate it instead of adding a duplicate.";
+            } else {
+                if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
+                    $upload_dir = 'images/Teams/';
+                    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+                    $file_info = pathinfo($_FILES['logo_file']['name']);
+                    $ext = strtolower($file_info['extension']);
+                    $new_filename = preg_replace('/[^a-zA-Z0-9]/', '', $name) . '_logo.' . $ext;
+                    if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_dir . $new_filename)) {
+                        $logo = $new_filename;
+                    }
+                }
+
+                $conn->begin_transaction();
+                try {
+                    $stmt = $conn->prepare("INSERT INTO clubs (name, pool_name, postcode, website, logo, latitude, longitude, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+                    if (!$stmt) throw new Exception($conn->error);
+                    $stmt->bind_param("sssssdd", $name, $pool_name, $postcode, $website, $logo, $lat, $lng);
+                    if (!$stmt->execute()) throw new Exception($stmt->error);
+
+                    $new_club_id = $conn->insert_id;
+
+                    $contact_stmt = $conn->prepare("INSERT INTO club_contacts (club_id, club_name, access_pin) VALUES (?, ?, ?)");
+                    if (!$contact_stmt) throw new Exception($conn->error);
+                    $contact_stmt->bind_param("iss", $new_club_id, $name, $initial_pin);
+                    if (!$contact_stmt->execute()) throw new Exception($contact_stmt->error);
+
+                    $results_stmt = $conn->prepare("INSERT INTO results (club_id, season_year, round_1, round_2, round_3, round_4, total) VALUES (?, ?, 0, 0, 0, 0, 0)");
+                    if (!$results_stmt) throw new Exception($conn->error);
+                    $results_stmt->bind_param("ii", $new_club_id, $current_season_year);
+                    if (!$results_stmt->execute()) throw new Exception($results_stmt->error);
+
+                    $conn->commit();
+                    $success_msg = "Club '$name' added successfully.";
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $error_msg = "Failed to add club: " . $e->getMessage();
+                }
+            }
         }
     }
 
-    if ($_POST['admin_action'] === 'delete_club') {
-        $id = $_POST['id'];
-        // Cascade delete (In a real app, strict foreign keys handle this, but manual cleanup ensures no orphans just in case)
-        $conn->query("DELETE FROM venue_details WHERE club_id=$id OR team_1_id=$id OR team_2_id=$id OR team_3_id=$id OR team_4_id=$id OR team_5_id=$id OR team_6_id=$id OR team_7_id=$id OR team_8_id=$id");
-        $conn->query("DELETE FROM club_contacts WHERE club_id=$id");
-        $conn->query("DELETE FROM results WHERE club_id=$id");
-        if ($conn->query("DELETE FROM clubs WHERE id=$id")) {
-            $success_msg = "Club deleted successfully.";
+    if ($_POST['admin_action'] === 'deactivate_club' || $_POST['admin_action'] === 'reactivate_club') {
+        $id = (int) $_POST['id'];
+        $is_active = ($_POST['admin_action'] === 'reactivate_club') ? 1 : 0;
+
+        $stmt = $conn->prepare("UPDATE clubs SET is_active=? WHERE id=?");
+        $stmt->bind_param("ii", $is_active, $id);
+        if ($stmt->execute()) {
+            $success_msg = $is_active ? "Club reactivated successfully." : "Club retired successfully. Historical results and fixtures have been preserved.";
         } else {
-            $error_msg = "Failed to delete club: " . $conn->error;
+            $error_msg = "Failed to update club status: " . $conn->error;
         }
     }
 
@@ -571,14 +606,23 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
 $clubs_data = [];
 $contacts_data = [];
 $venues_data = [];
+$active_clubs_data = [];
+$retired_clubs_data = [];
 
 if ($is_logged_in) {
     // Clubs
     $res = $conn->query("SELECT * FROM clubs ORDER BY name ASC");
-    if ($res) while($r = $res->fetch_assoc()) $clubs_data[] = $r;
+    if ($res) while($r = $res->fetch_assoc()) {
+        $clubs_data[] = $r;
+        if (!empty($r['is_active'])) {
+            $active_clubs_data[] = $r;
+        } else {
+            $retired_clubs_data[] = $r;
+        }
+    }
 
     // Contacts
-    $res = $conn->query("SELECT cc.*, c.name as real_club_name, c.logo FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id ORDER BY c.name ASC");
+    $res = $conn->query("SELECT cc.*, c.name as real_club_name, c.logo, c.is_active FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id ORDER BY c.is_active DESC, c.name ASC");
     if ($res) while($r = $res->fetch_assoc()) $contacts_data[] = $r;
 
     // Venues (filtered by Active Season)
@@ -595,6 +639,81 @@ if ($is_logged_in) {
             if ($r['action_name'] == 'report_generated') $rep_count = $r['count'];
         }
     }
+}
+
+function cotswold_render_admin_club_card($club) {
+    ?>
+    <div class="glass-panel p-5 rounded-2xl border border-white/5 relative group">
+        <form method="POST" enctype="multipart/form-data" class="space-y-3 relative z-10">
+            <input type="hidden" name="admin_action" value="update_club">
+            <input type="hidden" name="id" value="<?php echo $club['id']; ?>">
+
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 bg-white rounded-lg p-1 flex-shrink-0 border border-slate-600">
+                    <?php if($club['logo']): ?>
+                        <img src="images/Teams/<?php echo htmlspecialchars($club['logo']); ?>" class="w-full h-full object-contain">
+                    <?php else: ?>
+                        <div class="w-full h-full bg-slate-200 rounded"></div>
+                    <?php endif; ?>
+                </div>
+                <div class="w-full">
+                    <div class="flex items-center gap-2">
+                        <input type="text" name="name" value="<?php echo htmlspecialchars($club['name']); ?>" class="font-bold bg-transparent border-b border-transparent hover:border-slate-600 focus:border-indigo-500 focus:outline-none w-full text-white pb-1">
+                        <?php if (empty($club['is_active'])): ?>
+                            <span class="text-[10px] uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded px-2 py-0.5">Retired</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-[80px_1fr] items-center gap-2 text-xs">
+                <span class="text-slate-500">Pool:</span>
+                <input type="text" name="pool_name" value="<?php echo htmlspecialchars($club['pool_name']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+
+                <span class="text-slate-500">Postcode:</span>
+                <input type="text" name="postcode" value="<?php echo htmlspecialchars($club['postcode']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+
+                <span class="text-slate-500">Website:</span>
+                <input type="text" name="website" value="<?php echo htmlspecialchars($club['website']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+
+                <span class="text-slate-500">Logo file:</span>
+                <div class="flex gap-2 w-full">
+                    <input type="text" name="logo" value="<?php echo htmlspecialchars($club['logo']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-1/3 text-xs" placeholder="Filename">
+                    <input type="file" name="logo_file" accept="image/*" class="bg-slate-900/50 border border-slate-800 rounded py-1 px-1 focus:border-indigo-500 focus:outline-none text-slate-400 w-2/3 text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                </div>
+
+                <span class="text-slate-500">Latitude:</span>
+                <input type="number" step="0.000001" name="latitude" value="<?php echo htmlspecialchars($club['latitude'] ?? ''); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+
+                <span class="text-slate-500">Longitude:</span>
+                <input type="number" step="0.000001" name="longitude" value="<?php echo htmlspecialchars($club['longitude'] ?? ''); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button type="submit" class="text-xs bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition-colors">
+                    <i data-lucide="save" class="w-3 h-3"></i> Sync Details
+                </button>
+        </form>
+                <?php if (!empty($club['is_active'])): ?>
+                <form method="POST" onsubmit="return confirm('Retire this club from active league workflows? Historical results and fixtures will be preserved.');">
+                    <input type="hidden" name="admin_action" value="deactivate_club">
+                    <input type="hidden" name="id" value="<?php echo $club['id']; ?>">
+                    <button type="submit" class="text-xs bg-amber-600/20 text-amber-300 hover:bg-amber-600 hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors" title="Retire club">
+                        <i data-lucide="archive" class="w-3 h-3"></i> Retire
+                    </button>
+                </form>
+                <?php else: ?>
+                <form method="POST" onsubmit="return confirm('Reactivate this club for league workflows and team portal access?');">
+                    <input type="hidden" name="admin_action" value="reactivate_club">
+                    <input type="hidden" name="id" value="<?php echo $club['id']; ?>">
+                    <button type="submit" class="text-xs bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors" title="Reactivate club">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reactivate
+                    </button>
+                </form>
+                <?php endif; ?>
+            </div>
+    </div>
+    <?php
 }
 
 ?>
@@ -847,71 +966,50 @@ if ($is_logged_in) {
                             <input type="text" name="name" placeholder="Club Name*" required class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <input type="text" name="pool_name" placeholder="Pool Name*" required class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <input type="text" name="postcode" placeholder="Postcode*" required class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
-                            <input type="text" name="website" placeholder="Website URL" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
-                            <input type="text" name="logo" placeholder="Logo filename (e.g., logo.webp)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
-                            <input type="file" name="logo_file" accept="image/*" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer text-slate-400">
-                            <input type="number" step="0.000001" name="latitude" placeholder="Latitude (optional)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
-                            <input type="number" step="0.000001" name="longitude" placeholder="Longitude (optional)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+	                            <input type="text" name="website" placeholder="Website URL" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+	                            <input type="text" name="logo" placeholder="Logo filename (e.g., logo.webp)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+	                            <input type="file" name="logo_file" accept="image/*" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer text-slate-400">
+	                            <input type="text" name="access_pin" placeholder="Initial Team Portal PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+	                            <input type="number" step="0.000001" name="latitude" placeholder="Latitude (optional)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
+	                            <input type="number" step="0.000001" name="longitude" placeholder="Longitude (optional)" class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none">
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold">Save Club</button>
                         </form>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        <?php foreach($clubs_data as $club): ?>
-                            <div class="glass-panel p-5 rounded-2xl border border-white/5 relative group">
-                                <form method="POST" enctype="multipart/form-data" class="space-y-3 relative z-10">
-                                    <input type="hidden" name="admin_action" value="update_club">
-                                    <input type="hidden" name="id" value="<?php echo $club['id']; ?>">
-                                    
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <div class="w-10 h-10 bg-white rounded-lg p-1 flex-shrink-0 border border-slate-600">
-                                            <?php if($club['logo']): ?>
-                                                <img src="images/Teams/<?php echo htmlspecialchars($club['logo']); ?>" class="w-full h-full object-contain">
-                                            <?php else: ?>
-                                                <div class="w-full h-full bg-slate-200 rounded"></div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <input type="text" name="name" value="<?php echo htmlspecialchars($club['name']); ?>" class="font-bold bg-transparent border-b border-transparent hover:border-slate-600 focus:border-indigo-500 focus:outline-none w-full text-white pb-1">
-                                    </div>
-
-                                    <div class="grid grid-cols-[80px_1fr] items-center gap-2 text-xs">
-                                        <span class="text-slate-500">Pool:</span>
-                                        <input type="text" name="pool_name" value="<?php echo htmlspecialchars($club['pool_name']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
-                                        
-                                        <span class="text-slate-500">Postcode:</span>
-                                        <input type="text" name="postcode" value="<?php echo htmlspecialchars($club['postcode']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
-                                        
-                                        <span class="text-slate-500">Website:</span>
-                                        <input type="text" name="website" value="<?php echo htmlspecialchars($club['website']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
-                                        
-                                        <span class="text-slate-500">Logo file:</span>
-                                        <div class="flex gap-2 w-full">
-                                            <input type="text" name="logo" value="<?php echo htmlspecialchars($club['logo']); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-1/3 text-xs" placeholder="Filename">
-                                            <input type="file" name="logo_file" accept="image/*" class="bg-slate-900/50 border border-slate-800 rounded py-1 px-1 focus:border-indigo-500 focus:outline-none text-slate-400 w-2/3 text-[10px] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
-                                        </div>
-
-                                        <span class="text-slate-500">Latitude:</span>
-                                        <input type="number" step="0.000001" name="latitude" value="<?php echo htmlspecialchars($club['latitude'] ?? ''); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
-                                        
-                                        <span class="text-slate-500">Longitude:</span>
-                                        <input type="number" step="0.000001" name="longitude" value="<?php echo htmlspecialchars($club['longitude'] ?? ''); ?>" class="bg-slate-900/50 border border-slate-800 rounded px-2 py-1 focus:border-indigo-500 focus:outline-none text-white w-full">
-                                    </div>
-
-                                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button type="submit" class="text-xs bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition-colors">
-                                            <i data-lucide="save" class="w-3 h-3"></i> Sync Details
-                                        </button>
-                                </form>
-                                        <form method="POST" onsubmit="return confirm('WARNING: Are you sure you want to delete this club? This cascades to contacts and venues!');">
-                                            <input type="hidden" name="admin_action" value="delete_club">
-                                            <input type="hidden" name="id" value="<?php echo $club['id']; ?>">
-                                            <button type="submit" class="text-xs bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors">
-                                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+                    <div class="space-y-10">
+                        <section>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold uppercase tracking-widest text-emerald-300 flex items-center gap-2">
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i> Active Clubs
+                                </h3>
+                                <span class="text-xs text-slate-500 font-bold"><?php echo count($active_clubs_data); ?> clubs</span>
                             </div>
-                        <?php endforeach; ?>
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <?php foreach($active_clubs_data as $club): ?>
+                                    <?php cotswold_render_admin_club_card($club); ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
+
+                        <section>
+                            <div class="flex items-center justify-between mb-4 border-t border-white/10 pt-6">
+                                <h3 class="text-sm font-bold uppercase tracking-widest text-amber-300 flex items-center gap-2">
+                                    <i data-lucide="archive" class="w-4 h-4"></i> Retired Clubs
+                                </h3>
+                                <span class="text-xs text-slate-500 font-bold"><?php echo count($retired_clubs_data); ?> clubs</span>
+                            </div>
+                            <?php if (!empty($retired_clubs_data)): ?>
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                    <?php foreach($retired_clubs_data as $club): ?>
+                                        <?php cotswold_render_admin_club_card($club); ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="border border-dashed border-slate-700 rounded-2xl px-5 py-6 text-sm text-slate-500">
+                                    No retired clubs.
+                                </div>
+                            <?php endif; ?>
+                        </section>
                     </div>
                 </div>
 
@@ -931,7 +1029,12 @@ if ($is_logged_in) {
                                             <div class="w-8 h-8 bg-white/10 rounded overflow-hidden flex-shrink-0 p-1">
                                                 <?php if($contact['logo']): ?><img src="images/Teams/<?php echo htmlspecialchars($contact['logo']); ?>" class="w-full h-full object-contain"><?php endif; ?>
                                             </div>
-                                            <h3 class="font-bold text-white"><?php echo htmlspecialchars($contact['real_club_name']); ?></h3>
+                                            <h3 class="font-bold text-white flex items-center gap-2">
+                                                <?php echo htmlspecialchars($contact['real_club_name']); ?>
+                                                <?php if (empty($contact['is_active'])): ?>
+                                                    <span class="text-[10px] uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded px-2 py-0.5">Retired</span>
+                                                <?php endif; ?>
+                                            </h3>
                                         </div>
                                         <div class="bg-orange-500/10 border border-orange-500/30 p-3 rounded-xl inline-block mt-2">
                                             <label class="text-[10px] uppercase text-orange-400 font-bold block mb-1">Access PIN</label>
@@ -1022,7 +1125,13 @@ if ($is_logged_in) {
                                                 <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Host:</span>
                                                 <select name="host_club_id" onchange="const form = this.closest('form'); form.querySelector('input[name=venue_name]').value = ''; form.querySelector('textarea[name=address]').value = ''; form.querySelector('input[name=warmup_time]').value = ''; form.querySelector('input[name=start_time]').value = ''; form.querySelector('input[name=payment_info]').value = ''; form.querySelector('input[name=parking_info]').value = '';" class="bg-transparent text-white text-lg font-bold focus:outline-none appearance-none border-b border-transparent hover:border-emerald-500 focus:border-emerald-500 cursor-pointer">
                                                     <?php foreach($clubs_data as $c): ?>
-                                                        <option value="<?php echo $c['id']; ?>" <?php echo ($venue['club_id'] == $c['id']) ? 'selected' : ''; ?> class="text-black bg-white"><?php echo htmlspecialchars($c['name']); ?></option>
+                                                        <?php
+                                                            $is_selected_host = ((int) $venue['club_id'] === (int) $c['id']);
+                                                            if (empty($c['is_active']) && !$is_selected_host) continue;
+                                                        ?>
+                                                        <option value="<?php echo $c['id']; ?>" <?php echo $is_selected_host ? 'selected' : ''; ?> class="text-black bg-white">
+                                                            <?php echo htmlspecialchars($c['name'] . (empty($c['is_active']) ? ' (retired)' : '')); ?>
+                                                        </option>
                                                     <?php endforeach; ?>
                                                 </select>
                                                 <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-500/50"></i>
@@ -1091,7 +1200,13 @@ if ($is_logged_in) {
                                             <select name="<?php echo $team_key; ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 appearance-none">
                                                 <option value="">- Select Team <?php echo $t; ?> -</option>
                                                 <?php foreach($clubs_data as $c): ?>
-                                                    <option value="<?php echo $c['id']; ?>" <?php echo ($selected_id == $c['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($c['name']); ?></option>
+                                                    <?php
+                                                        $is_selected_team = ((int) $selected_id === (int) $c['id']);
+                                                        if (empty($c['is_active']) && !$is_selected_team) continue;
+                                                    ?>
+                                                    <option value="<?php echo $c['id']; ?>" <?php echo $is_selected_team ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($c['name'] . (empty($c['is_active']) ? ' (retired)' : '')); ?>
+                                                    </option>
                                                 <?php endforeach; ?>
                                             </select>
                                             <?php endfor; ?>

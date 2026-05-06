@@ -18,6 +18,7 @@ The Cotswold League is a unique swimming league focused on development, sporting
 ### Admin & Representative Tools
 
 * **Super Admin Dashboard (`league_admin.php`):** A centralized control center for managing the league database, club contacts, venue draws, and official results uploads.
+    * Clubs can be retired/reactivated without deleting historical standings, draws, or uploads, and new clubs are created with contact/PIN and active-season results records.
 * **Representative Portal (`admin.php`):** A gated gateway for club reps, providing access to the host team checklist and the secure Team Portal.
 * **Team Portal (`teamportal.php`):** A sophisticated dashboard for club reps featuring:
     * **Smart Programme Generator:** Automated creation of gala programmes via Google Sheets integration.

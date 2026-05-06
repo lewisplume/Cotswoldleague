@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $pin = $_POST['pin'] ?? '';
 
     if ($club_id && $pin) {
-        $stmt = $conn->prepare("SELECT id, club_name FROM club_contacts WHERE club_id = ? AND access_pin = ?");
+        $stmt = $conn->prepare("SELECT cc.id, cc.club_name FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id WHERE cc.club_id = ? AND cc.access_pin = ? AND c.is_active = 1");
         $stmt->bind_param("is", $club_id, $pin);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -50,6 +50,20 @@ $is_logged_in = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'
 $current_club_id = $_SESSION['club_id'] ?? 0;
 $current_club_name = $_SESSION['club_name'] ?? '';
 $digital_teamsheets_standalone = defined('DIGITAL_TEAMSHEETS_STANDALONE') && DIGITAL_TEAMSHEETS_STANDALONE;
+
+if ($is_logged_in) {
+    $active_stmt = $conn->prepare("SELECT c.is_active FROM clubs c WHERE c.id = ?");
+    $active_stmt->bind_param("i", $current_club_id);
+    $active_stmt->execute();
+    $active_res = $active_stmt->get_result();
+    $active_row = $active_res->fetch_assoc();
+    $active_stmt->close();
+    if (!$active_row || (int) $active_row['is_active'] !== 1) {
+        session_destroy();
+        header("Location: teamportal.php");
+        exit;
+    }
+}
 
 function cotswold_portal_gala_label($round_number, $gala_type = 'round') {
     $final_labels = [
@@ -344,7 +358,7 @@ if ($is_logged_in) {
     $d_stmt->close();
 
     // 4. Fetch Directory Data
-    $sql = "SELECT cc.*, c.logo, c.name as real_club_name FROM club_contacts cc LEFT JOIN clubs c ON cc.club_id = c.id ORDER BY c.name ASC";
+    $sql = "SELECT cc.*, c.logo, c.name as real_club_name FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id WHERE c.is_active = 1 ORDER BY c.name ASC";
     $dir_res = $conn->query($sql);
     if ($dir_res) {
         while ($d = $dir_res->fetch_assoc()) {
@@ -359,7 +373,7 @@ if ($is_logged_in) {
     ];
 
     // 5a. A/B/C Finals dynamically pulled from live results
-    $standings_sql = "SELECT c.id FROM results r JOIN clubs c ON r.club_id = c.id ORDER BY (r.round_1 + r.round_2 + r.round_3 + r.round_4) DESC, c.name ASC";
+    $standings_sql = "SELECT c.id FROM results r JOIN clubs c ON r.club_id = c.id WHERE r.season_year = $active_season_year ORDER BY (r.round_1 + r.round_2 + r.round_3 + r.round_4) DESC, c.name ASC";
     $s_res = $conn->query($standings_sql);
     if ($s_res) {
         $pos = 1;
@@ -411,7 +425,7 @@ if ($is_logged_in) {
     }
 } else {
     // Populate Dropdown for Login
-    $sql = "SELECT club_id, club_name FROM club_contacts ORDER BY club_name ASC";
+    $sql = "SELECT cc.club_id, cc.club_name FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id WHERE c.is_active = 1 ORDER BY cc.club_name ASC";
     $result = $conn->query($sql);
     if ($result) {
         while ($row = $result->fetch_assoc()) {
@@ -2533,15 +2547,19 @@ if ($is_logged_in) {
             const limit = parseInt(row.dataset.limit, 10);
             const pbField = row.dataset.pbField;
             const pbInput = row.querySelector('.dts-event-pb');
-            if (pbField && selected.length === 1) {
+            if (pbInput && limit > 1) {
+                pbInput.value = '';
+            } else if (pbInput && pbField && selected.length === 1) {
                 const swimmer = dtsState.swimmers.find(s => s.swimmer_name === selected[0]);
-                if (swimmer && !pbInput.value) pbInput.value = swimmer[pbField] || '';
+                pbInput.value = swimmer?.[pbField] || '';
+            } else if (pbInput && pbField) {
+                pbInput.value = '';
             }
             const availabilityKey = getSelectedAvailabilityKey();
-            const unavailable = selected.filter(name => {
+            const unavailable = dtsState.showAvailableOnly ? selected.filter(name => {
                 const swimmer = dtsState.swimmers.find(s => s.swimmer_name === name);
                 return swimmer?.availability && swimmer.availability[availabilityKey] === false;
-            });
+            }) : [];
             const duplicateCount = selected.length - new Set(selected).size;
             const swimmerWord = limit === 1 ? 'swimmer' : 'swimmers';
             const messages = [];

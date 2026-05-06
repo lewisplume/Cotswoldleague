@@ -1,8 +1,9 @@
 <?php
 include 'db.php';
 include 'geocode_init.php';
-$sql = "SELECT * FROM clubs ORDER BY name ASC";
+$sql = "SELECT * FROM clubs WHERE is_active = 1 ORDER BY name ASC";
 $result = $conn->query($sql);
+$club_count = $result ? $result->num_rows : 0;
 $clubs_json_data = [];
 ?>
 <!DOCTYPE html>
@@ -41,7 +42,7 @@ $clubs_json_data = [];
             Participating <span class="text-sky-500">Teams</span>
         </h1>
         <p class="text-lg text-slate-400 max-w-3xl mx-auto mb-8 leading-relaxed">
-            The Cotswold Swimming League is proudly made up of 20 competitive clubs spanning across seven counties.
+            The Cotswold Swimming League is proudly made up of <?php echo number_format($club_count); ?> competitive clubs spanning across seven counties.
             Browse the map or the directory below to find the team closest to you and discover more about
             their programs!
         </p>

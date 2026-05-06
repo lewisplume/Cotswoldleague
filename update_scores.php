@@ -49,6 +49,7 @@ if ($authenticated && isset($_POST['update_scores'])) {
 $sql = "SELECT c.id, c.name, COALESCE(r.round_1, 0) as round_1, COALESCE(r.round_2, 0) as round_2, COALESCE(r.round_3, 0) as round_3, COALESCE(r.round_4, 0) as round_4 
         FROM clubs c 
         LEFT JOIN results r ON c.id = r.club_id AND r.season_year = $current_season_year
+        WHERE c.is_active = 1 OR r.id IS NOT NULL
         ORDER BY c.name ASC";
 $result = $conn->query($sql);
 ?>

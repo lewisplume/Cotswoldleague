@@ -866,6 +866,8 @@ while ($row = $res_clubs->fetch_assoc()) {
         function renderSetupStage() {
             const container = document.getElementById('lane-assignment-container');
             container.innerHTML = '';
+            btnLockSetup.disabled = false;
+            btnLockSetup.innerHTML = '<i data-lucide="lock" class="w-5 h-5"></i> Lock Setup & Start Recording';
 
             appState.teams.forEach(team => {
                 if (team.is_absent) {
@@ -987,20 +989,24 @@ while ($row = $res_clubs->fetch_assoc()) {
                 const recName = document.getElementById('recorder-name').value;
 
                 if (appState.online) {
+                    btnLockSetup.disabled = true;
                     btnLockSetup.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Saving...';
                     lucide.createIcons();
 
                     try {
                         await postLaneAssignments(appState.scoresheet.id, lanes, recName);
+                        appState.forceSetupOpen = false;
                         // Reload data to ensure sync
                         await loadScoresheetData(appState.scoresheet.id);
                     } catch (e) {
                         alert("Failed to save lane assignments.");
+                        btnLockSetup.disabled = false;
                         btnLockSetup.innerHTML = '<i data-lucide="lock" class="w-5 h-5"></i> Lock Setup & Start Recording';
                         lucide.createIcons();
                     }
                 } else {
                     applyLaneAssignmentsLocally(lanes, recName);
+                    appState.forceSetupOpen = false;
                     localStorage.setItem(pendingLanesKey(appState.scoresheet.id), JSON.stringify({ lanes, recorderName: recName }));
                     await persistCurrentScoresheetLocally();
                     renderUI();

@@ -42,6 +42,8 @@ try { $conn->query("ALTER TABLE venue_details ADD COLUMN round_date VARCHAR(50) 
 try { $conn->query("ALTER TABLE results ADD COLUMN season_year INT NOT NULL DEFAULT 2026"); } catch (Exception $e) {}
 try { $conn->query("ALTER TABLE results ADD COLUMN total INT DEFAULT 0"); } catch (Exception $e) {}
 
+// Club membership status. Inactive clubs are retained for history but excluded from active workflows.
+try { $conn->query("ALTER TABLE clubs ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1"); } catch (Exception $e) {}
 
 // Add results_file column if it doesn't exist
 try {

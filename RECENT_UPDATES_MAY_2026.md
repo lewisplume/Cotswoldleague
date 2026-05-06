@@ -186,9 +186,9 @@ The Google Sheets teamsheet workflow was migrated into a dedicated in-portal wor
 *   **Automatic Finals Assignment Sync**: Added `finals_sync.php` and wired it into round publishing plus the legacy manual score-save page, so A/B/C Final team slots update automatically from the latest standings after each round. Finals date/slot saves also sync immediately, and the digital teamsheet loader defensively syncs configured finals before building the dropdown. The manual Auto-Gen Finals button now acts as a fallback resync only.
 *   **Finals Teamsheet Visibility**: The Teamsheet Builder now shows finals based on assigned team membership, so a club only sees the A/B/C Final it has qualified for once those team slots are populated.
 *   **Digital Teamsheets Defaulted**: Removed the team-facing Google Teamsheet links and the admin collated teamsheet link fields, making the portal-based Digital Teamsheets workflow the default route for clubs.
-*   **Teamsheet Builder Improvements**: Relay and cannon entries now use per-position dropdowns instead of a browser multiselect; relay and cannon PB fields are greyed out because those events do not use PBs; and each event row has a minimise/expand control so completed events can be collapsed.
+*   **Teamsheet Builder Improvements**: Relay and cannon entries now use per-position dropdowns instead of a browser multiselect; relay and cannon PB fields are greyed out because those events do not use PBs; individual PBs now refresh from the current swimmer selection and clear when no swimmer is selected; and each event row has a minimise/expand control so completed events can be collapsed.
 *   **Contextual Teamsheet Warnings**: Removed the permanent warning column from the builder. Warnings now appear above the swimmer selector only when an entry needs attention, with an explanation and an ignore option.
-*   **Availability Filtering**: Added an optional `Show Available Only` toggle in the Teamsheet Builder. It is off by default and filters swimmer dropdowns by the selected round/final availability checkboxes when enabled.
+*   **Availability Filtering**: Added an optional `Show Available Only` toggle in the Teamsheet Builder. It is off by default and filters swimmer dropdowns by the selected round/final availability checkboxes when enabled; when off, availability is ignored and does not create warnings.
 *   **Copy Round**: Added a Teamsheet Builder copy control so teams can copy selections from another saved round/final in the same season and edit from that starting point.
 *   **Generate Programme & Results Matcher Links**: Restored the downstream tools around the digital workflow. Generate Programme is linked from the Teamsheet Builder once a digital teamsheet exists, and Smart Results Matcher appears on the main portal draw/result cards only when a results file is available and the club has submitted its digital teamsheet.
 *   **Finals Portal Filtering Fix**: Placeholder A/B/C Final venue rows no longer appear as three hosted `Round 99` scoresheet, venue, and draw cards for the placeholder host club. Finals only show in round/results cards for clubs actually assigned to that final, the top placed club in each final (`team_1_id`) is treated as the scoresheet/venue host, and related scoresheet/teamsheet joins use the latest row to avoid duplicate portal cards.
@@ -200,6 +200,18 @@ A dedicated handoff note was created for future maintainers and LLMs.
 
 *   **Reference File**: Added `DIGITAL_TEAMSHEETS_HANDOFF_MAY_2026.md` with architecture notes, bugs fixed, implementation history, and watch-outs.
 *   **Coverage**: The handoff file captures the conversation trail, the new feature set, the autosave behaviour, the shared-sheet model, and the relay/cannon fixes.
+
+## 14. Club Retirement and Safe Membership Changes
+The first real-world team withdrawal scenario led to a safer club lifecycle model that preserves current-season and historical data.
+
+*   **Soft Retirement Model**: Added `clubs.is_active` so teams can be retired from active league workflows without deleting historic `results`, `venue_details`, uploads, or draw data.
+*   **Super Admin Club Management**: Replaced the destructive club delete action in `league_admin.php` with Retire/Reactivate actions and split the Clubs Database into Active Clubs and Retired Clubs sections.
+*   **Team Portal Access Control**: Retired clubs are removed from the Team Portal login dropdown, blocked from logging in, and immediately logged out if an old session still exists.
+*   **Contact Privacy**: The Team Portal contacts directory now only shows active clubs, so retired-club contact details are hidden from other teams.
+*   **Public and Season Behaviour**: `clubs.php` shows active clubs only, while historical standings and season draw pages can still resolve retired clubs for seasons where their data exists.
+*   **Future Season Setup**: Admin venue/team dropdowns hide retired clubs for new selections but keep showing an already-selected retired club on old venue rows so historic draws remain editable/readable.
+*   **Add Club Hardening**: The Add New Club form now validates required fields and an optional initial Team Portal PIN, prevents duplicate names including retired duplicates, explicitly creates new clubs as active, and writes the club/contact/results rows inside a transaction.
+*   **Finals Eligibility**: Finals syncing now ranks active clubs plus any club that already has results in the selected season, preserving current-season history while excluding retired clubs from clean future seasons.
 
 ---
 **Summary Checklist**
@@ -242,3 +254,6 @@ A dedicated handoff note was created for future maintainers and LLMs.
 - [x] Copy Round added for reusing saved teamsheet selections.
 - [x] Generate Programme and Smart Results Matcher links restored for digital teamsheets.
 - [x] Digital teamsheet handoff document created for future reference.
+- [x] Club retirement workflow implemented without deleting historic results or draws.
+- [x] Retired clubs blocked from Team Portal login and hidden from the contacts directory.
+- [x] Add New Club flow hardened with active status, initial PIN, duplicate checks, and transaction-safe setup.

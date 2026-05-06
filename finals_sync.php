@@ -78,6 +78,7 @@ function cotswold_sync_finals_from_standings($conn, $season) {
                         (COALESCE(r.round_1,0) + COALESCE(r.round_2,0) + COALESCE(r.round_3,0) + COALESCE(r.round_4,0)) AS total
                  FROM clubs c
                  LEFT JOIN results r ON r.club_id = c.id AND r.season_year = ?
+                 WHERE c.is_active = 1 OR r.id IS NOT NULL
                  ORDER BY total DESC, c.name ASC";
     $stmt = $conn->prepare($rank_sql);
     $stmt->bind_param("i", $season);
@@ -90,11 +91,11 @@ function cotswold_sync_finals_from_standings($conn, $season) {
     }
     $stmt->close();
 
-    if (count($ranked_teams) < 20) {
+    if (count($ranked_teams) < 8) {
         return [
             'synced' => false,
             'team_count' => count($ranked_teams),
-            'message' => 'Finals slots exist, but at least 20 clubs are required to assign A/B/C finals.',
+            'message' => 'Finals slots exist, but at least 8 eligible clubs are required to assign finals.',
         ];
     }
 
