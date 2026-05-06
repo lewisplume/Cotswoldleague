@@ -29,3 +29,11 @@ repos:
     rev: 3.2.0
     hooks:
       - id: sqlfluff-lint
+
+  - repo: local
+    hooks:
+      - id: php-lint
+        name: PHP Lint
+        entry: php -l
+        language: system
+        types: [php]
