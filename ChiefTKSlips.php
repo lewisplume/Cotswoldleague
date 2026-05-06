@@ -4,6 +4,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chief Timekeeper Slips | Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -151,7 +152,7 @@
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
     <?php include 'nav.php'; ?>
 
-    <nav class="no-print border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+    <div class="no-print border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-16 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
 
@@ -182,7 +183,7 @@
                 </button>
             </div>
         </div>
-    </nav>
+    </div>
 
     <main class="flex justify-center p-4 md:p-8">
 

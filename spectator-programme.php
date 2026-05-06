@@ -1,4 +1,10 @@
-<?php include_once 'db.php'; ?>
+<?php
+include_once 'db.php';
+include_once 'document_event_helpers.php';
+
+$programme_events = cotswold_load_document_events($conn, $current_season_year);
+$programme_events_json = json_encode($programme_events, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -152,7 +158,7 @@
     <?php include 'nav.php'; ?>
 
     <!-- NAVIGATION & CONTROLS (Hidden on Print/PDF) -->
-    <nav class="no-print border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="no-print border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-16 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row items-center justify-between py-4 gap-4">
                 <div class="flex items-center gap-4 w-full md:w-auto">
@@ -188,7 +194,7 @@
                 </div>
             </div>
         </div>
-    </nav>
+    </div>
 
     <!-- PRINTABLE SHEET -->
     <main class="flex justify-center p-4 md:p-8 transition-all print:block print:p-0 print:m-0">
@@ -208,6 +214,9 @@
             </div>
 
             <!-- Page 1 Events Container -->
+            <div id="emptyProgrammeMessage" class="hidden border border-amber-200 bg-amber-50 text-amber-900 rounded-xl p-4 text-sm font-semibold">
+                No event list has been configured for the active season yet.
+            </div>
             <div id="programmePage1"></div>
 
             <div class="text-center text-[10px] text-slate-400 mt-1 print:mt-auto pb-1">--- PAGE 1 ---</div>
@@ -269,106 +278,32 @@
         // Initialize Icons
         lucide.createIcons();
 
-        // Base Event Data
-        const baseEvents = [
-            { id: 1, desc: "Girls 15/u 4x1 Individual Medley", limit: "1.17.75" },
-            { id: 2, desc: "Boys 15/u 4x1 Individual Medley", limit: "1.10.39" },
-            { id: 3, desc: "Girls Open 4x1 Individual Medley", limit: "1.15.51" },
-            { id: 4, desc: "Boys Open 4x1 Individual Medley", limit: "1.06.34" },
-            { id: 5, desc: "Girls 11/u {dist} Freestyle", limit: "14.78", is11u: true },
-            { id: 6, desc: "Boys 11/u {dist} Freestyle", limit: "14.81", is11u: true },
-            { id: 7, desc: "Girls 13/u 50m Breaststroke", limit: "41.70" },
-            { id: 8, desc: "Boys 13/u 50m Breaststroke", limit: "41.80" },
-            { id: 9, desc: "Girls 15/u 50m Backstroke", limit: "33.80" },
-            { id: 10, desc: "Boys 15/u 50m Backstroke", limit: "33.10" },
-
-            { id: 11, desc: "Girls Open 100m Butterfly", limit: "1.11.70" },
-            { id: 12, desc: "Boys Open 100m Butterfly", limit: "1.01.90" },
-            { id: 13, desc: "Girls 11/u 4x1 Medley Relay", limit: "1.09.33" },
-            { id: 14, desc: "Boys 11/u 4x1 Medley Relay", limit: "1.08.69" },
-            { id: 15, desc: "Girls 13/u 4x1 F/style Relay", limit: "57.67" },
-            { id: 16, desc: "Boys 13/u 4x1 F/style Relay", limit: "55.07" },
-            { id: 17, desc: "Girls 15/u 50m Breaststroke", limit: "38.50" },
-            { id: 18, desc: "Boys 15/u 50m Breaststroke", limit: "37.40" },
-            { id: 19, desc: "Girls Open 100m Backstroke", limit: "1.09.50" },
-            { id: 20, desc: "Boys Open 100m Backstroke", limit: "1.03.40" },
-
-            { id: 21, desc: "Girls 11/u {dist} Butterfly", limit: "16.16", is11u: true },
-            { id: 22, desc: "Boys 11/u {dist} Butterfly", limit: "16.39", is11u: true },
-            { id: 23, desc: "Girls 13/u 50m Freestyle", limit: "30.50" },
-            { id: 24, desc: "Boys 13/u 50m Freestyle", limit: "30.60" },
-            { id: 25, desc: "Girls 15/u 4x2 Medley Relay", limit: "2.12.90" },
-            { id: 26, desc: "Boys 15/u 4x2 Medley Relay", limit: "2.02.60" },
-            { id: 27, desc: "Girls Open 4x2 Medley Relay", limit: "2.11.07" },
-            { id: 28, desc: "Boys Open 4x2 Medley Relay", limit: "1.59.44" },
-            { id: 29, desc: "Girls 11/u {dist} Backstroke", limit: "18.12", is11u: true },
-            { id: 30, desc: "Boys 11/u {dist} Backstroke", limit: "18.22", is11u: true },
-
-            { id: 31, desc: "Girls 13/u 50m Butterfly", limit: "35.00" },
-            { id: 32, desc: "Boys 13/u 50m Butterfly", limit: "35.50" },
-            { id: 33, desc: "Girls 15/u 50m Freestyle", limit: "29.30" },
-            { id: 34, desc: "Boys 15/u 50m Freestyle", limit: "28.10" },
-            { id: 35, desc: "Girls Open 100m Breaststroke", limit: "1.22.10" },
-            { id: 36, desc: "Boys Open 100m Breaststroke", limit: "1.13.90" },
-            { id: 37, desc: "Girls 11/u 4x1 F/style Relay", limit: "59.12" },
-            { id: 38, desc: "Boys 11/u 4x1 F/style Relay", limit: "59.24" },
-            { id: 39, desc: "Girls 13/u 4x1 Medley Relay", limit: "1.04.60" },
-            { id: 40, desc: "Boys 13/u 4x1 Medley Relay", limit: "1.02.14" },
-
-            { id: 41, desc: "Girls 15/u 50m Butterfly", limit: "32.50" },
-            { id: 42, desc: "Boys 15/u 50m Butterfly", limit: "31.50" },
-            { id: 43, desc: "Girls Open 100m Freestyle", limit: "1.02.10" },
-            { id: 44, desc: "Boys Open 100m Freestyle", limit: "55.30" },
-            { id: 45, desc: "Girls 11/u {dist} Breaststroke", limit: "20.27", is11u: true },
-            { id: 46, desc: "Boys 11/u {dist} Breaststroke", limit: "19.27", is11u: true },
-            { id: 47, desc: "Girls 13/u 50m Backstroke", limit: "36.60" },
-            { id: 48, desc: "Boys 13/u 50m Backstroke", limit: "36.00" },
-            { id: 49, desc: "Girls 15/u 4x2 F/style Relay", limit: "1.58.80" },
-            { id: 50, desc: "Boys 15/u 4x2 F/style Relay", limit: "1.49.20" },
-            { id: 51, desc: "Girls Open 4x2 Freestyle Relay", limit: "1.57.21" },
-            { id: 52, desc: "Boys Open 4x2 Freestyle Relay", limit: "1.46.98" },
-            { id: 53, desc: "8x25m Mixed Cannon", limit: "N/A" }
-        ];
-
-        // A Final uses 50m for 11/u individual events and therefore has different time limits.
-        const aFinal11uLimits = {
-            5: "32.29",
-            6: "31.80",
-            21: "37.00",
-            22: "38.00",
-            29: "37.00",
-            30: "37.50",
-            45: "43.30",
-            46: "44.60"
-        };
+        const baseEvents = <?php echo $programme_events_json ?: '[]'; ?>;
 
         function generateProgramme() {
             const type = document.getElementById('galaType').value;
+            const emptyMessage = document.getElementById('emptyProgrammeMessage');
 
             const activeSeasonYear = <?php echo (int)$current_season_year; ?>;
             let subtitle = "";
-            let dist11u = "25m";
             let teamCount = 4; // Default to Rounds
 
             if (type === 'round') {
                 subtitle = `Rounds Programme - ${activeSeasonYear} Season`;
-                dist11u = "25m";
                 teamCount = 4;
             } else if (type === 'final_a') {
                 subtitle = `A Final Programme - ${activeSeasonYear} Season`;
-                dist11u = "50m"; // A Final is 50m for 11/u
                 teamCount = 8;
             } else if (type === 'final_b') {
                 subtitle = `B Final Programme - ${activeSeasonYear} Season`;
-                dist11u = "25m";
                 teamCount = 6;
             } else if (type === 'final_c') {
                 subtitle = `C Final Programme - ${activeSeasonYear} Season`;
-                dist11u = "25m";
                 teamCount = 6;
             }
 
             document.getElementById('programmeSubtitle').textContent = subtitle;
+            emptyMessage.classList.toggle('hidden', baseEvents.length > 0);
 
             // Split events into chunks of 10 for score updates
             const chunksPage1 = [
@@ -382,11 +317,11 @@
                 baseEvents.slice(40, 53) // Last block has 13 events
             ];
 
-            document.getElementById('programmePage1').innerHTML = buildChunksHtml(chunksPage1, dist11u, teamCount, type);
-            document.getElementById('programmePage2').innerHTML = buildChunksHtml(chunksPage2, dist11u, teamCount, type);
+            document.getElementById('programmePage1').innerHTML = buildChunksHtml(chunksPage1, teamCount, type);
+            document.getElementById('programmePage2').innerHTML = buildChunksHtml(chunksPage2, teamCount, type);
         }
 
-        function buildChunksHtml(chunks, dist11u, teamCount, type) {
+        function buildChunksHtml(chunks, teamCount, type) {
             let html = '';
 
             chunks.forEach((chunk) => {
@@ -410,13 +345,8 @@
                 `;
 
                 chunk.forEach((evt, index) => {
-                    let desc = evt.desc;
-                    if (evt.is11u) desc = desc.replace('{dist}', dist11u);
-
-                    let limit = evt.limit;
-                    if (type === 'final_a' && Object.prototype.hasOwnProperty.call(aFinal11uLimits, evt.id)) {
-                        limit = aFinal11uLimits[evt.id];
-                    }
+                    const desc = type === 'final_a' ? evt.a_final_desc : evt.round_desc;
+                    const limit = type === 'final_a' ? evt.a_final_limit : evt.round_limit;
 
                     const rowBg = index % 2 === 0 ? 'print-bg-slate-50 bg-slate-50' : 'bg-white';
 
@@ -424,7 +354,7 @@
                         <tr class="${rowBg}">
                             <td class="text-center font-bold text-slate-700">${evt.id}</td>
                             <td class="font-bold text-slate-800">${desc}</td>
-                            <td class="limit-col">${limit !== 'N/A' ? limit : '-'}</td>
+                            <td class="limit-col">${limit || '-'}</td>
                             <td class="write-in-col"></td>
                         </tr>
                     `;

@@ -242,7 +242,8 @@ foreach ($clubs as $c) {
 
     <script>
         lucide.createIcons();
-        document.getElementById('year-span').textContent = new Date().getFullYear();
+        const activeSeasonYear = <?php echo (int)$current_season_year; ?>;
+        document.getElementById('year-span').textContent = activeSeasonYear;
 
         function updateFormDisplay() {
             const round = document.getElementById('roundNum').value;
@@ -319,7 +320,7 @@ foreach ($clubs as $c) {
                 <div class="script-section">
                     <h3 class="text-lg font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1">1. Pre-Gala Welcomes</h3>
                     <p class="script-notes mb-3">(Announce 10-15 minutes before warm-up starts)</p>
-                    <p class="mb-2">"Good afternoon/evening everyone, and a very warm welcome to <strong>${pool}</strong> for <strong>${round}</strong> of the ${new Date().getFullYear()} Cotswold Swimming League.</p>
+                    <p class="mb-2">"Good afternoon/evening everyone, and a very warm welcome to <strong>${pool}</strong> for <strong>${round}</strong> of the ${activeSeasonYear} Cotswold Swimming League.</p>
                     <p class="mb-2">We are delighted to host tonight’s gala. I am <strong>${announcer}</strong>, and I’ll be your announcer for the evening. We have ${numClubsStr} fantastic clubs competing today. Please give a warm welcome to:</p>
                     <ul class="list-disc pl-8 my-3 space-y-1">
                         ${clubsLi}
@@ -381,7 +382,7 @@ ${currentPointsHtml}                    </div>
                     <h3 class="text-lg font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1">7. Final Results & Closing</h3>
                     <p class="mb-2">"That concludes the racing for tonight! A huge well done to every swimmer. Before we announce the final results, a few thank yous.</p>
                     <p class="mb-2">Thank you to our Referee, <strong>${referee}</strong>, and all the officials and timekeepers who volunteered their time. Thank you to the staff here at <strong>${pool}</strong>, and of course, to all the parents and coaches for your support.</p>
-                    <p class="mb-2 mt-4">And now, the final results for <strong>${round}</strong> of the ${new Date().getFullYear()} Cotswold League:</p>
+                    <p class="mb-2 mt-4">And now, the final results for <strong>${round}</strong> of the ${activeSeasonYear} Cotswold League:</p>
                     <div class="pl-4 my-4 space-y-4 font-mono">
 ${finalResultsHtml}                    </div>
                     <p class="mb-2 mt-4">Congratulations to ________________________! Safe travels home everyone, and we look forward to seeing you next time!"</p>

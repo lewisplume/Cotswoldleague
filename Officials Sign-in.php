@@ -258,10 +258,10 @@
     <?php include 'nav.php'; ?>
 
     <!-- New Navigation Bar (Tailwind Styled) -->
-    <nav
-        class="no-print border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-0 left-0 right-0 z-50 h-[70px]">
+    <div
+        class="no-print border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-16 left-0 right-0 z-40 min-h-[70px]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-            <div class="flex items-center justify-between h-full">
+            <div class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between md:min-h-[70px]">
                 <!-- Left: Home Link and Title -->
                 <div class="flex items-center gap-4">
                     <a href="admin.php" class="text-white hover:text-sky-400 transition-colors">
@@ -272,7 +272,7 @@
 
                 <!-- Center: Controls -->
                 <div
-                    class="controls-container flex items-center gap-2 bg-slate-800 rounded-lg p-1 border border-slate-700">
+                    class="controls-container flex flex-wrap items-center gap-2 bg-slate-800 rounded-lg p-1 border border-slate-700">
                     <div class="flex items-center">
                         <label for="galaType" class="text-slate-400 text-xs font-bold px-2 uppercase">Gala:</label>
                         <select id="galaType" onchange="updateSheet()"
@@ -303,7 +303,7 @@
                 </button>
             </div>
         </div>
-    </nav>
+    </div>
 
     <!-- Restored Content Structure -->
     <div class="container">

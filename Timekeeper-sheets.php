@@ -1,4 +1,10 @@
-<?php include_once 'db.php'; ?>
+<?php
+include_once 'db.php';
+include_once 'document_event_helpers.php';
+
+$timekeeper_events = cotswold_load_document_events($conn, $current_season_year);
+$timekeeper_events_json = json_encode($timekeeper_events, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -124,7 +130,7 @@
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
     <?php include 'nav.php'; ?>
 
-    <nav class="no-print border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+    <div class="no-print border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-16 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-4">
@@ -167,7 +173,7 @@
                 </button>
             </div>
         </div>
-    </nav>
+    </div>
 
     <main class="flex justify-center p-4 md:p-8">
 
@@ -221,6 +227,9 @@
                 <tbody id="tableBody1" class="divide-y divide-black">
                 </tbody>
             </table>
+            <div id="emptyEventsMessage" class="hidden mt-4 border border-amber-300 bg-amber-50 text-amber-900 rounded-lg p-4 text-sm font-semibold">
+                No event list has been configured for the active season yet.
+            </div>
 
             <div class="page-footer text-center text-[10px] text-slate-400 mt-1">--- PAGE 1 ---</div>
 
@@ -262,64 +271,7 @@
     <script>
         lucide.createIcons();
 
-        // Base Event Data
-        // 'dist' property used for 11/u dynamic changes (25 vs 50)
-        const events = [
-            { id: 1, age: "Girls 15/u", desc: "4x1 Individual Medley" },
-            { id: 2, age: "Boys 15/u", desc: "4x1 Individual Medley" },
-            { id: 3, age: "Girls Open", desc: "4x1 Individual Medley" },
-            { id: 4, age: "Boys Open", desc: "4x1 Individual Medley" },
-            { id: 5, age: "Girls 11/u", desc: "Freestyle", dist: "25m" },
-            { id: 6, age: "Boys 11/u", desc: "Freestyle", dist: "25m" },
-            { id: 7, age: "Girls 13/u", desc: "50m Breaststroke" },
-            { id: 8, age: "Boys 13/u", desc: "50m Breaststroke" },
-            { id: 9, age: "Girls 15/u", desc: "50m Backstroke" },
-            { id: 10, age: "Boys 15/u", desc: "50m Backstroke" },
-            { id: 11, age: "Girls Open", desc: "100m Butterfly" },
-            { id: 12, age: "Boys Open", desc: "100m Butterfly" },
-            { id: 13, age: "Girls 11/u", desc: "4x1 Medley Relay" },
-            { id: 14, age: "Boys 11/u", desc: "4x1 Medley Relay" },
-            { id: 15, age: "Girls 13/u", desc: "4x1 Freestyle Relay" },
-            { id: 16, age: "Boys 13/u", desc: "4x1 Freestyle Relay" },
-            { id: 17, age: "Girls 15/u", desc: "50m Breaststroke" },
-            { id: 18, age: "Boys 15/u", desc: "50m Breaststroke" },
-            { id: 19, age: "Girls Open", desc: "100m Backstroke" },
-            { id: 20, age: "Boys Open", desc: "100m Backstroke" },
-            { id: 21, age: "Girls 11/u", desc: "Butterfly", dist: "25m" },
-            { id: 22, age: "Boys 11/u", desc: "Butterfly", dist: "25m" },
-            { id: 23, age: "Girls 13/u", desc: "50m Freestyle" },
-            { id: 24, age: "Boys 13/u", desc: "50m Freestyle" },
-            { id: 25, age: "Girls 15/u", desc: "4x2 Medley Relay" },
-            { id: 26, age: "Boys 15/u", desc: "4x2 Medley Relay" },
-            { id: 27, age: "Girls Open", desc: "4x2 Medley Relay" },
-            { id: 28, age: "Boys Open", desc: "4x2 Medley Relay" },
-            { id: 29, age: "Girls 11/u", desc: "Backstroke", dist: "25m" },
-            { id: 30, age: "Boys 11/u", desc: "Backstroke", dist: "25m" },
-            // Page 2
-            { id: 31, age: "Girls 13/u", desc: "50m Butterfly" },
-            { id: 32, age: "Boys 13/u", desc: "50m Butterfly" },
-            { id: 33, age: "Girls 15/u", desc: "50m Freestyle" },
-            { id: 34, age: "Boys 15/u", desc: "50m Freestyle" },
-            { id: 35, age: "Girls Open", desc: "100m Breaststroke" },
-            { id: 36, age: "Boys Open", desc: "100m Breaststroke" },
-            { id: 37, age: "Girls 11/u", desc: "4x1 Freestyle Relay" },
-            { id: 38, age: "Boys 11/u", desc: "4x1 Freestyle Relay" },
-            { id: 39, age: "Girls 13/u", desc: "4x1 Medley Relay" },
-            { id: 40, age: "Boys 13/u", desc: "4x1 Medley Relay" },
-            { id: 41, age: "Girls 15/u", desc: "50m Butterfly" },
-            { id: 42, age: "Boys 15/u", desc: "50m Butterfly" },
-            { id: 43, age: "Girls Open", desc: "100m Freestyle" },
-            { id: 44, age: "Boys Open", desc: "100m Freestyle" },
-            { id: 45, age: "Girls 11/u", desc: "Breaststroke", dist: "25m" },
-            { id: 46, age: "Boys 11/u", desc: "Breaststroke", dist: "25m" },
-            { id: 47, age: "Girls 13/u", desc: "50m Backstroke" },
-            { id: 48, age: "Boys 13/u", desc: "50m Backstroke" },
-            { id: 49, age: "Girls 15/u", desc: "4x2 Freestyle Relay" },
-            { id: 50, age: "Boys 15/u", desc: "4x2 Freestyle Relay" },
-            { id: 51, age: "Girls Open", desc: "4x2 Freestyle Relay" },
-            { id: 52, age: "Boys Open", desc: "4x2 Freestyle Relay" },
-            { id: 53, age: "Mixed", desc: "8x1 Cannon Relay (1 Boy/1 Girl per age)" }
-        ];
+        const events = <?php echo $timekeeper_events_json ?: '[]'; ?>;
 
         function updateProgramme() {
             const type = document.getElementById('galaType').value;
@@ -328,8 +280,8 @@
             const roundOutput = document.getElementById('roundOutput');
             const tb1 = document.getElementById('tableBody1');
             const tb2 = document.getElementById('tableBody2');
+            const emptyMessage = document.getElementById('emptyEventsMessage');
 
-            let dist11u = '25m';
             let displayText = "";
 
             // Logic to handle Type selection
@@ -337,20 +289,16 @@
                 // Show Round Selector
                 roundSelector.style.display = 'flex';
                 displayText = "Round " + roundNum;
-                dist11u = '25m'; // Rounds are 25m
             } else {
                 // Hide Round Selector
                 roundSelector.style.display = 'none';
 
                 if (type === 'final_a') {
                     displayText = "A Final";
-                    dist11u = '50m'; // A Final is 50m
                 } else if (type === 'final_b') {
                     displayText = "B Final";
-                    dist11u = '25m';
                 } else if (type === 'final_c') {
                     displayText = "C Final";
-                    dist11u = '25m';
                 }
             }
 
@@ -360,15 +308,11 @@
             // Clear tables
             tb1.innerHTML = '';
             tb2.innerHTML = '';
+            emptyMessage.classList.toggle('hidden', events.length > 0);
 
             // Generate Table Rows
             events.forEach((evt) => {
-                let fullDesc = evt.desc;
-
-                // If event has dynamic distance
-                if (evt.dist) {
-                    fullDesc = `${dist11u} ${evt.desc}`;
-                }
+                const fullDesc = type === 'final_a' ? evt.a_final_detail : evt.round_detail;
 
                 // Styling logic
                 const isEven = evt.id % 2 === 0;
