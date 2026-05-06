@@ -130,6 +130,9 @@ while ($row = $res_clubs->fetch_assoc()) {
                     <div class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
                     Connecting...
                 </div>
+                <button type="button" onclick="openScoresheetHelp()" class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg flex items-center gap-2">
+                    <i data-lucide="circle-help" class="w-4 h-4"></i> Help
+                </button>
                 <button id="btn-edit-setup" class="hidden bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg flex items-center gap-2">
                     <i data-lucide="settings" class="w-4 h-4"></i> Edit Setup
                 </button>
@@ -273,6 +276,89 @@ while ($row = $res_clubs->fetch_assoc()) {
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- SCORESHEET HELP MODAL -->
+    <div id="scoresheet-help-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="glass-panel border border-sky-500/30 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-slate-950/60">
+            <div class="p-5 border-b border-white/10 flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="circle-help" class="w-5 h-5 text-sky-300"></i> Digital Scoresheet Guide
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Poolside recording, offline use, lane setup, DQs, and league submission.</p>
+                </div>
+                <button type="button" onclick="closeScoresheetHelp()" aria-label="Close scoresheet guide"
+                    class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 p-2 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-5 text-sm text-slate-300 leading-relaxed">
+                <section class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-3">Before Gala Day</h4>
+                    <ol class="space-y-2 list-decimal list-inside">
+                        <li>Open the scoresheet once while online from the Team Portal gala card.</li>
+                        <li>If prompted, use <strong class="text-white">Install App</strong> on the venue device so the page can reopen if the pool has poor internet.</li>
+                        <li>Check the gala title, host, round or final, and listed teams before assigning lanes.</li>
+                        <li>Leave the stable scoresheet URL open or reopen the installed app on the same device on gala day.</li>
+                    </ol>
+                </section>
+
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-3">Setup</h4>
+                        <ol class="space-y-2 list-decimal list-inside">
+                            <li>Assign each participating team to its physical pool lane.</li>
+                            <li>Use <strong class="text-white">Mark Absent</strong> if a team is not swimming; it is removed from lane requirements.</li>
+                            <li>Use <strong class="text-white">Substitute</strong> or <strong class="text-white">Add Extra Team</strong> when the real gala differs from the draw.</li>
+                            <li>Enter the recorder name, then press <strong class="text-white">Lock Setup &amp; Start Recording</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-3">Recording Results</h4>
+                        <ol class="space-y-2 list-decimal list-inside">
+                            <li>Enter times in each event/lane cell; values are formatted when you leave the box.</li>
+                            <li>The grid recalculates places, points, running totals, DQs, and too-fast checks automatically.</li>
+                            <li>Use the zoom controls if the gala has many teams or the screen is small.</li>
+                            <li>The live standings panel updates as results are entered.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-3">DQs And Edits</h4>
+                        <ol class="space-y-2 list-decimal list-inside">
+                            <li>Press <strong class="text-white">DQ</strong> on the relevant event and lane.</li>
+                            <li>Choose a common reason such as false start, did not start, or enter a custom reason.</li>
+                            <li>Press an active DQ button again to clear the DQ for that event/lane.</li>
+                            <li>If lane setup needs changing later, use <strong class="text-white">Edit Setup</strong>, adjust lanes, and lock again.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-slate-950/40 border border-white/5 rounded-xl p-4">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-sky-300 mb-3">Offline And Sync</h4>
+                        <ol class="space-y-2 list-decimal list-inside">
+                            <li>The Online/Offline badge shows the current connection state.</li>
+                            <li>Results and lane setup are saved locally on this device while offline.</li>
+                            <li>When the device reconnects, pending lane assignments and results sync back to the server.</li>
+                            <li>Avoid switching devices mid-gala unless the first device has come back online and synced.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <section class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-3">Submitting To The League</h4>
+                    <ol class="space-y-2 list-decimal list-inside">
+                        <li>Review all event times, DQs, and the live standings before publishing.</li>
+                        <li>Use <strong class="text-white">Submit to League</strong> when the gala record is complete.</li>
+                        <li>Publishing locks the scoresheet and makes the results available for league verification and downstream results tools.</li>
+                    </ol>
+                </section>
+            </div>
         </div>
     </div>
 
@@ -1123,6 +1209,27 @@ while ($row = $res_clubs->fetch_assoc()) {
         function closeDqModal() {
             document.getElementById('dq-modal').classList.add('hidden');
         }
+
+        function openScoresheetHelp() {
+            const modal = document.getElementById('scoresheet-help-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeScoresheetHelp() {
+            const modal = document.getElementById('scoresheet-help-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeScoresheetHelp();
+            }
+        });
 
         async function submitDq() {
             const eventId = parseInt(document.getElementById('dq-event-id').value);

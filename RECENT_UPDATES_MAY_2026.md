@@ -187,6 +187,11 @@ The Google Sheets teamsheet workflow was migrated into a dedicated in-portal wor
 *   **Finals Teamsheet Visibility**: The Teamsheet Builder now shows finals based on assigned team membership, so a club only sees the A/B/C Final it has qualified for once those team slots are populated.
 *   **Digital Teamsheets Defaulted**: Removed the team-facing Google Teamsheet links and the admin collated teamsheet link fields, making the portal-based Digital Teamsheets workflow the default route for clubs.
 *   **Teamsheet Builder Improvements**: Relay and cannon entries now use per-position dropdowns instead of a browser multiselect; relay and cannon PB fields are greyed out because those events do not use PBs; and each event row has a minimise/expand control so completed events can be collapsed.
+*   **Contextual Teamsheet Warnings**: Removed the permanent warning column from the builder. Warnings now appear above the swimmer selector only when an entry needs attention, with an explanation and an ignore option.
+*   **Availability Filtering**: Added an optional `Show Available Only` toggle in the Teamsheet Builder. It is off by default and filters swimmer dropdowns by the selected round/final availability checkboxes when enabled.
+*   **Copy Round**: Added a Teamsheet Builder copy control so teams can copy selections from another saved round/final in the same season and edit from that starting point.
+*   **Generate Programme & Results Matcher Links**: Restored the downstream tools around the digital workflow. Generate Programme is linked from the Teamsheet Builder once a digital teamsheet exists, and Smart Results Matcher appears on the main portal draw/result cards only when a results file is available and the club has submitted its digital teamsheet.
+*   **Finals Portal Filtering Fix**: Placeholder A/B/C Final venue rows no longer appear as three hosted `Round 99` scoresheet, venue, and draw cards for the placeholder host club. Finals only show in round/results cards for clubs actually assigned to that final, the top placed club in each final (`team_1_id`) is treated as the scoresheet/venue host, and related scoresheet/teamsheet joins use the latest row to avoid duplicate portal cards.
 *   **Sharing, Editing, and Safety**: Submitted teamsheets are shared automatically with the clubs in the same gala group; post-submission edits are allowed but require a reason and are written to an audit log; and autosave now covers both swimmer list and teamsheet editing.
 *   **Downstream Compatibility**: `smartprogrammenew.php` and `smart-results-matcher.php` now accept portal-generated digital teamsheet exports alongside the legacy Google Sheet import path, and `digital_teamsheet_export.php` provides a CSV export route for the new workflow.
 
@@ -233,4 +238,7 @@ A dedicated handoff note was created for future maintainers and LLMs.
 - [x] Relay/cannon selection corrected to ordered dropdowns.
 - [x] Relay/cannon PB fields greyed out.
 - [x] Event-level minimise controls added to teamsheet rows.
+- [x] Optional availability-only swimmer filtering added to the Teamsheet Builder.
+- [x] Copy Round added for reusing saved teamsheet selections.
+- [x] Generate Programme and Smart Results Matcher links restored for digital teamsheets.
 - [x] Digital teamsheet handoff document created for future reference.

@@ -51,6 +51,18 @@ $current_club_id = $_SESSION['club_id'] ?? 0;
 $current_club_name = $_SESSION['club_name'] ?? '';
 $digital_teamsheets_standalone = defined('DIGITAL_TEAMSHEETS_STANDALONE') && DIGITAL_TEAMSHEETS_STANDALONE;
 
+function cotswold_portal_gala_label($round_number, $gala_type = 'round') {
+    $final_labels = [
+        'a_final' => 'A Final',
+        'b_final' => 'B Final',
+        'c_final' => 'C Final',
+    ];
+    if ((int)$round_number === 99 || isset($final_labels[$gala_type])) {
+        return $final_labels[$gala_type] ?? 'Final';
+    }
+    return 'Round ' . (int)$round_number;
+}
+
 // HANDLE AUTHENTICATED ACTIONS
 if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -104,9 +116,23 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $target_host_name = $_POST['target_host_name']; // Extracted from form for log
 
         // Audit check old values
-        $old_sql = "SELECT * FROM venue_details WHERE id = ? AND club_id = ? AND season_year = ?";
+        $old_sql = "SELECT * FROM venue_details
+                    WHERE id = ?
+                      AND season_year = ?
+                      AND (
+                          (
+                              COALESCE(gala_type, 'round') = 'round'
+                              AND round_number <> 99
+                              AND club_id = ?
+                          )
+                          OR
+                          (
+                              (round_number = 99 OR gala_type IN ('a_final','b_final','c_final'))
+                              AND team_1_id = ?
+                          )
+                      )";
         $old_stmt = $conn->prepare($old_sql);
-        $old_stmt->bind_param("iii", $venue_id, $current_club_id, $active_season_year);
+        $old_stmt->bind_param("iiii", $venue_id, $active_season_year, $current_club_id, $current_club_id);
         $old_stmt->execute();
         $old_res = $old_stmt->get_result();
         $old_row = $old_res->fetch_assoc();
@@ -131,9 +157,24 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($changes)) {
                 $error_msg = "No changes detected for the venue.";
             } else {
-                $update_sql = "UPDATE venue_details SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=? WHERE id=? AND club_id=? AND season_year=?";
+                $update_sql = "UPDATE venue_details
+                               SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?
+                               WHERE id=?
+                                 AND season_year=?
+                                 AND (
+                                     (
+                                         COALESCE(gala_type, 'round') = 'round'
+                                         AND round_number <> 99
+                                         AND club_id=?
+                                     )
+                                     OR
+                                     (
+                                         (round_number = 99 OR gala_type IN ('a_final','b_final','c_final'))
+                                         AND team_1_id=?
+                                     )
+                                 )";
                 $stmt = $conn->prepare($update_sql);
-                $stmt->bind_param("ssssssiii", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $venue_id, $current_club_id, $active_season_year);
+                $stmt->bind_param("ssssssiiii", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $venue_id, $active_season_year, $current_club_id, $current_club_id);
 
                 if ($stmt->execute()) {
                     $success_msg = "Venue details updated successfully.";
@@ -173,9 +214,31 @@ if ($is_logged_in) {
     $stmt->close();
 
     // 3. Fetch My Venues
-    $v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.club_id = ? AND vd.season_year = ? ORDER BY vd.round_number ASC";
+    $v_sql = "SELECT vd.*,
+                     CASE
+                         WHEN (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
+                         THEN COALESCE(c_top.name, c.name)
+                         ELSE c.name
+                     END AS host_club_name
+              FROM venue_details vd
+              JOIN clubs c ON vd.club_id = c.id
+              LEFT JOIN clubs c_top ON vd.team_1_id = c_top.id
+              WHERE vd.season_year = ?
+                AND (
+                    (
+                        COALESCE(vd.gala_type, 'round') = 'round'
+                        AND vd.round_number <> 99
+                        AND vd.club_id = ?
+                    )
+                    OR
+                    (
+                        (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
+                        AND vd.team_1_id = ?
+                    )
+                )
+              ORDER BY vd.round_number ASC, FIELD(vd.gala_type, 'round', 'a_final', 'b_final', 'c_final')";
     $v_stmt = $conn->prepare($v_sql);
-    $v_stmt->bind_param("ii", $current_club_id, $active_season_year);
+    $v_stmt->bind_param("iii", $active_season_year, $current_club_id, $current_club_id);
     $v_stmt->execute();
     $v_res = $v_stmt->get_result();
     if ($v_res->num_rows > 0) {
@@ -198,7 +261,9 @@ if ($is_logged_in) {
                         c7.name AS team7_name,
                         c8.name AS team8_name,
                          gs.id AS scoresheet_id,
-                         gs.status AS scoresheet_status
+                         gs.status AS scoresheet_status,
+                         cts.id AS digital_teamsheet_id,
+                         cts.status AS digital_teamsheet_status
                   FROM venue_details vd
                   LEFT JOIN clubs c_host ON vd.club_id = c_host.id
                   LEFT JOIN clubs c1 ON vd.team_1_id = c1.id
@@ -209,15 +274,70 @@ if ($is_logged_in) {
                     LEFT JOIN clubs c6 ON vd.team_6_id = c6.id
                     LEFT JOIN clubs c7 ON vd.team_7_id = c7.id
                     LEFT JOIN clubs c8 ON vd.team_8_id = c8.id
-                  LEFT JOIN gala_scoresheets gs ON vd.id = gs.venue_detail_id
-                  WHERE vd.season_year = ? AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ? OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
-                  ORDER BY vd.round_number ASC";
+                  LEFT JOIN gala_scoresheets gs ON gs.id = (
+                      SELECT gs2.id
+                      FROM gala_scoresheets gs2
+                      WHERE gs2.venue_detail_id = vd.id
+                        AND gs2.season_year = vd.season_year
+                      ORDER BY gs2.updated_at DESC, gs2.id DESC
+                      LIMIT 1
+                  )
+                  LEFT JOIN club_teamsheets cts ON cts.id = (
+                      SELECT cts2.id
+                      FROM club_teamsheets cts2
+                      WHERE cts2.club_id = ?
+                        AND cts2.season_year = vd.season_year
+                        AND cts2.venue_detail_id = vd.id
+                      ORDER BY cts2.updated_at DESC, cts2.id DESC
+                      LIMIT 1
+                  )
+                  WHERE vd.season_year = ?
+                    AND (
+                        (
+                            COALESCE(vd.gala_type, 'round') = 'round'
+                            AND vd.round_number <> 99
+                            AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ? OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
+                        )
+                        OR
+                        (
+                            (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
+                            AND (vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ? OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
+                        )
+                    )
+                  ORDER BY vd.round_number ASC, FIELD(vd.gala_type, 'round', 'a_final', 'b_final', 'c_final')";
     $d_stmt = $conn->prepare($draws_sql);
-    $d_stmt->bind_param("iiiiiiiiii", $active_season_year, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
+    $d_stmt->bind_param(
+        "iiiiiiiiiiiiiiiiiii",
+        $current_club_id,
+        $active_season_year,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id,
+        $current_club_id
+    );
     $d_stmt->execute();
     $d_res = $d_stmt->get_result();
+    $seen_draw_venue_ids = [];
     if ($d_res->num_rows > 0) {
         while ($row = $d_res->fetch_assoc()) {
+            $venue_id = (int)$row['id'];
+            if (isset($seen_draw_venue_ids[$venue_id])) {
+                continue;
+            }
+            $seen_draw_venue_ids[$venue_id] = true;
             $draws[] = $row;
         }
     }
@@ -504,19 +624,116 @@ if ($is_logged_in) {
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="flex flex-col sm:flex-row xl:flex-col gap-2 min-w-[220px]">
+                                    <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto xl:flex-shrink-0">
+                                        <button type="button" onclick="openDigitalTeamsheetsHelp()"
+                                            class="bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                                            <i data-lucide="circle-help" class="w-4 h-4"></i> Help
+                                        </button>
                                         <button type="button" onclick="loadDigitalTeamsheets(true)"
-                                            class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                                            class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap">
                                             <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh
                                         </button>
                                         <button type="button" onclick="copyPreviousSeasonSwimmers()"
-                                            class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20 flex items-center justify-center gap-2 text-sm">
+                                            class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20 flex items-center justify-center gap-2 text-sm whitespace-nowrap">
                                             <i data-lucide="copy" class="w-4 h-4"></i> Copy Previous Season
                                         </button>
                                     </div>
                                 </div>
 
                                 <div id="dts-alert" class="hidden rounded-xl px-4 py-3 text-sm font-semibold"></div>
+
+                                <div id="dts-help-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center">
+                                    <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-cyan-500/30 rounded-2xl shadow-2xl shadow-slate-950/60">
+                                        <div class="p-5 border-b border-white/10 flex items-start justify-between gap-4">
+                                            <div>
+                                                <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                                                    <i data-lucide="circle-help" class="w-5 h-5 text-cyan-300"></i> Digital Teamsheets Guide
+                                                </h4>
+                                                <p class="text-xs text-slate-400 mt-1">Swimmer lists, teamsheet building, imports, submission, sharing, and audit history.</p>
+                                            </div>
+                                            <button type="button" onclick="closeDigitalTeamsheetsHelp()" aria-label="Close Digital Teamsheets guide"
+                                                class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 p-2 rounded-lg">
+                                                <i data-lucide="x" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                        <div class="p-5 space-y-5 text-sm text-slate-300 leading-relaxed">
+                                            <section class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
+                                                <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Recommended Order</h5>
+                                                <ol class="space-y-2 list-decimal list-inside">
+                                                    <li>Start in <strong class="text-white">Swimmer List</strong> and build the season swimmer database.</li>
+                                                    <li>Use <strong class="text-white">Copy Previous Season</strong> if returning swimmers exist, then update ages, PBs, and availability.</li>
+                                                    <li>Open <strong class="text-white">Teamsheet Builder</strong>, select the round or final, choose swimmers, and save a draft.</li>
+                                                    <li>Submit the teamsheet once checked. It is then shared with the clubs in that gala.</li>
+                                                </ol>
+                                            </section>
+
+                                            <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Swimmer List</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>Add each swimmer once for the active season.</li>
+                                                        <li>Set the age group with the dropdown and enter PBs for supported league events.</li>
+                                                        <li>Tick availability for each round and final so the builder can filter selections.</li>
+                                                        <li>Changes autosave shortly after editing, and <strong class="text-white">Save List</strong> is available for a manual save.</li>
+                                                    </ol>
+                                                </div>
+
+                                                <div class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Importing Times</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li><strong class="text-white">Import TeamUnify CSV</strong> previews a Top Times export and calculates age groups when a finals date is available.</li>
+                                                        <li><strong class="text-white">Import Swim Club Manager XLSX</strong> previews a Group PB Report and uses the ages in the workbook.</li>
+                                                        <li>Both importers match existing swimmers by name, add new swimmers, map supported PB events, and show unsupported events before applying.</li>
+                                                        <li>For TeamUnify export steps, use the small question-mark button beside the TeamUnify import control.</li>
+                                                    </ol>
+                                                </div>
+                                            </section>
+
+                                            <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Teamsheet Builder</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>Select the correct round or A/B/C Final from the dropdown.</li>
+                                                        <li>Individual events take one swimmer; relays and cannons use ordered swimmer dropdowns.</li>
+                                                        <li>Relay and cannon PB fields are greyed out because they are not required.</li>
+                                                        <li>Use <strong class="text-white">Show Available Only</strong>, <strong class="text-white">Copy Round</strong>, and per-event minimise buttons to move through the list faster.</li>
+                                                    </ol>
+                                                </div>
+
+                                                <div class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Validation And Autosave</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>Warnings appear when an event has too few swimmers, duplicate swimmers, or unavailable swimmers.</li>
+                                                        <li>You can ignore a warning for an event when the choice is intentional.</li>
+                                                        <li>Teamsheet edits autosave after selection, PB, or note changes.</li>
+                                                        <li>Editing a submitted teamsheet requires a reason, which is recorded in the audit history.</li>
+                                                    </ol>
+                                                </div>
+                                            </section>
+
+                                            <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Submitting And Sharing</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li><strong class="text-white">Save Draft</strong> keeps the teamsheet private to your club while you continue editing.</li>
+                                                        <li><strong class="text-white">Submit</strong> shares the teamsheet automatically with the clubs in the same gala.</li>
+                                                        <li>The <strong class="text-white">Shared Teamsheets</strong> tab shows submitted sheets from your club and the other clubs in your gala group.</li>
+                                                        <li>Submitted digital teamsheets can feed programme generation and the results matcher once the downstream tools are available.</li>
+                                                    </ol>
+                                                </div>
+
+                                                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                                                    <h5 class="text-xs font-bold uppercase tracking-widest text-amber-300 mb-3">Finals Visibility</h5>
+                                                    <ol class="space-y-2 list-decimal list-inside">
+                                                        <li>A, B, and C Finals appear only when your club has been assigned to that final.</li>
+                                                        <li>Final team assignments are synced from league standings as rounds are published.</li>
+                                                        <li>If a final is missing after qualification is known, refresh the page first, then ask the league admin to check finals sync.</li>
+                                                    </ol>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div class="bg-slate-950/40 border border-white/5 rounded-2xl p-2 flex flex-col sm:flex-row gap-2">
                                     <button type="button" data-dts-tab="swimmers" onclick="switchDtsTab('swimmers')"
@@ -659,6 +876,21 @@ if ($is_logged_in) {
                                             <select id="dts-round-select" onchange="selectDigitalRound()"
                                                 class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white min-w-[260px] focus:outline-none focus:border-cyan-400">
                                             </select>
+                                            <div class="flex">
+                                                <select id="dts-copy-source-select"
+                                                    class="bg-slate-900 border border-slate-700 border-r-0 rounded-l-lg px-3 py-2 text-sm text-white min-w-[190px] focus:outline-none focus:border-cyan-400">
+                                                    <option value="">Copy from...</option>
+                                                </select>
+                                                <button type="button" onclick="copyRoundTeamsheet()"
+                                                    class="bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700 font-bold py-2 px-3 rounded-r-lg text-xs flex items-center justify-center gap-1.5">
+                                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Round
+                                                </button>
+                                            </div>
+                                            <label class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 flex items-center justify-center gap-2 cursor-pointer hover:border-cyan-500/60">
+                                                <input id="dts-available-only-toggle" type="checkbox" onchange="toggleAvailableOnly(this.checked)"
+                                                    class="rounded border-slate-700 bg-slate-950 text-cyan-500">
+                                                <span class="font-bold text-xs whitespace-nowrap">Show Available Only</span>
+                                            </label>
                                             <button type="button" onclick="saveTeamsheet(false)"
                                                 class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
                                                 <i data-lucide="save" class="w-4 h-4"></i> Save Draft
@@ -675,7 +907,7 @@ if ($is_logged_in) {
                                     <div id="dts-audit-list" class="hidden px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-100"></div>
 
                                     <div class="overflow-auto max-h-[68vh]">
-                                        <table class="min-w-[1050px] w-full text-xs text-slate-300">
+                                        <table class="min-w-[960px] w-full text-xs text-slate-300">
                                             <thead class="bg-slate-900/95 text-slate-400 uppercase tracking-wider sticky top-0 z-10">
                                                 <tr>
                                                     <th class="px-3 py-2 w-14 text-center">No</th>
@@ -684,7 +916,6 @@ if ($is_logged_in) {
                                                     <th class="px-3 py-2 w-[360px] text-left">Swimmer(s)</th>
                                                     <th class="px-3 py-2 w-32 text-left">PB</th>
                                                     <th class="px-3 py-2 w-52 text-left">Host Notes</th>
-                                                    <th class="px-3 py-2 w-28 text-center">Warnings</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="dts-events-body" class="divide-y divide-white/5"></tbody>
@@ -698,11 +929,7 @@ if ($is_logged_in) {
                                         </a>
                                         <a id="dts-programme-link" href="#" target="_blank"
                                             class="hidden bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded-lg text-xs items-center gap-1.5">
-                                            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Smart Programme
-                                        </a>
-                                        <a id="dts-matcher-link" href="#" target="_blank"
-                                            class="hidden bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-3 rounded-lg text-xs items-center gap-1.5">
-                                            <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Smart Results Matcher
+                                            <i data-lucide="printer" class="w-3.5 h-3.5"></i> Generate Programme
                                         </a>
                                     </div>
                                 </section>
@@ -763,8 +990,9 @@ if ($is_logged_in) {
 
                                     <div class="w-full sm:w-64 flex-shrink-0 flex flex-col gap-3">
                                         <?php foreach ($venues as $v): ?>
+                                            <?php $venue_gala_label = cotswold_portal_gala_label($v['round_number'], $v['gala_type'] ?? 'round'); ?>
                                             <a href="gala_scoresheet.php?venue_id=<?php echo $v['id']; ?>" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2">
-                                                <span>Round <?php echo $v['round_number']; ?> Scoresheet</span>
+                                                <span><?php echo htmlspecialchars($venue_gala_label); ?> Scoresheet</span>
                                                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
                                             </a>
                                         <?php endforeach; ?>
@@ -792,12 +1020,12 @@ if ($is_logged_in) {
                             <?php else: ?>
                                 <div class="space-y-6">
                                     <?php foreach ($venues as $venue): ?>
+                                        <?php $venue_gala_label = cotswold_portal_gala_label($venue['round_number'], $venue['gala_type'] ?? 'round'); ?>
                                         <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/5">
                                             <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
                                                 <div>
                                                     <span
-                                                        class="bg-sky-500/20 text-sky-400 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-1 inline-block">Round
-                                                        <?php echo $venue['round_number']; ?></span>
+                                                        class="bg-sky-500/20 text-sky-400 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider mb-1 inline-block"><?php echo htmlspecialchars($venue_gala_label); ?></span>
                                                     <h3 class="font-bold text-white">
                                                         <?php echo htmlspecialchars($venue['host_club_name']); ?>
                                                     </h3>
@@ -1028,10 +1256,13 @@ if ($is_logged_in) {
                     <?php else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                             <?php foreach ($draws as $draw): ?>
+                                <?php
+                                $draw_label = cotswold_portal_gala_label($draw['round_number'], $draw['gala_type'] ?? 'round');
+                                ?>
                                 <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5 flex flex-col justify-between">
                                     <div>
                                         <div class="flex items-center justify-between mb-3">
-                                            <span class="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Round <?php echo $draw['round_number']; ?></span>
+                                            <span class="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider"><?php echo htmlspecialchars($draw_label); ?></span>
                                         </div>
                                         <div class="mb-3">
                                             <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Host Venue</span>
@@ -1075,6 +1306,19 @@ if ($is_logged_in) {
                                         <?php else: ?>
                                             <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
                                                 Results pending
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($draw['results_file']) && !empty($draw['digital_teamsheet_id']) && ($draw['digital_teamsheet_status'] ?? '') === 'submitted'): ?>
+                                            <a href="smart-results-matcher.php?digital_teamsheet_id=<?php echo (int)$draw['digital_teamsheet_id']; ?>" target="_blank" class="w-full bg-purple-600 hover:bg-purple-500 text-white border border-purple-500 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-purple-900/20">
+                                                <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Smart Results Matcher
+                                            </a>
+                                        <?php elseif (!empty($draw['results_file'])): ?>
+                                            <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
+                                                Submit digital teamsheet to enable matcher
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="w-full text-center text-[11px] text-slate-600 border border-slate-800/70 py-2 rounded-lg bg-slate-900/40 cursor-not-allowed">
+                                                Results matcher available after upload
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -1283,7 +1527,9 @@ if ($is_logged_in) {
             shared: [],
             selectedRound: null,
             activeTeamsheet: null,
-            loadedEntries: {}
+            loadedEntries: {},
+            showAvailableOnly: false,
+            ignoredWarnings: {}
         };
 
         const dtsAutosave = {
@@ -1530,6 +1776,21 @@ if ($is_logged_in) {
             }).filter(swimmer => swimmer.swimmer_name);
         }
 
+        function openDigitalTeamsheetsHelp() {
+            const modal = document.getElementById('dts-help-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeDigitalTeamsheetsHelp() {
+            const modal = document.getElementById('dts-help-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
         function openTeamunifyGuide() {
             const modal = document.getElementById('dts-teamunify-guide-modal');
             if (!modal) return;
@@ -1547,6 +1808,7 @@ if ($is_logged_in) {
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
+                closeDigitalTeamsheetsHelp();
                 closeTeamunifyGuide();
             }
         });
@@ -1980,6 +2242,22 @@ if ($is_logged_in) {
             select.innerHTML = dtsState.rounds.length
                 ? dtsState.rounds.map((round, index) => `<option value="${index}">${dtsEscape(round.label)}</option>`).join('')
                 : '<option value="">No rounds found for this club</option>';
+            renderCopyRoundOptions();
+        }
+
+        function renderCopyRoundOptions() {
+            const select = document.getElementById('dts-copy-source-select');
+            if (!select) return;
+            const currentVenueId = dtsState.selectedRound?.venue_detail_id ? String(dtsState.selectedRound.venue_detail_id) : '';
+            const options = dtsState.rounds
+                .map(round => {
+                    const sheet = dtsState.teamsheets[round.round_key];
+                    if (!sheet?.id) return null;
+                    if (currentVenueId && String(round.venue_detail_id) === currentVenueId) return null;
+                    return `<option value="${sheet.id}">${dtsEscape(round.label)}</option>`;
+                })
+                .filter(Boolean);
+            select.innerHTML = '<option value="">Copy from...</option>' + options.join('');
         }
 
         async function selectDigitalRound() {
@@ -2008,6 +2286,54 @@ if ($is_logged_in) {
             } else {
                 renderAudit([]);
             }
+            renderCopyRoundOptions();
+            renderTeamsheetRows();
+        }
+
+        async function copyRoundTeamsheet() {
+            const select = document.getElementById('dts-copy-source-select');
+            const sourceId = parseInt(select?.value || '0', 10);
+            if (!sourceId || !dtsState.selectedRound) {
+                showDtsAlert('Choose a saved round to copy from first.', 'warn');
+                return;
+            }
+            const hasCurrentSelections = collectTeamsheetEntries().some(entry => entry.selected_swimmers.length || entry.pb_snapshot || entry.notes);
+            if (hasCurrentSelections && !confirm('Copying another round will replace the current selections shown in the builder. Continue?')) {
+                return;
+            }
+            try {
+                const payload = await dtsApi('teamsheet', { id: sourceId });
+                dtsState.loadedEntries = {};
+                (payload.entries || []).forEach(entry => {
+                    dtsState.loadedEntries[entry.event_id] = {
+                        event_id: entry.event_id,
+                        selected_swimmers: entry.selected_swimmers || [],
+                        pb_snapshot: entry.pb_snapshot || '',
+                        notes: entry.notes || ''
+                    };
+                });
+                renderTeamsheetRows();
+                scheduleTeamsheetAutosave();
+                showDtsAlert('Round copied into the current builder. Review and save when ready.', 'success');
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not copy that round.', 'error');
+            }
+        }
+
+        function getSelectedAvailabilityKey() {
+            return dtsState.selectedRound?.round_key?.startsWith('round_') ? dtsState.selectedRound.round_key : 'final';
+        }
+
+        function isSwimmerAvailableForSelectedRound(swimmer) {
+            if (!dtsState.showAvailableOnly) return true;
+            const key = getSelectedAvailabilityKey();
+            return !!(swimmer?.availability && swimmer.availability[key] === true);
+        }
+
+        function toggleAvailableOnly(checked) {
+            cacheCurrentTeamsheetEntries();
+            dtsState.swimmers = collectSwimmers();
+            dtsState.showAvailableOnly = !!checked;
             renderTeamsheetRows();
         }
 
@@ -2039,6 +2365,7 @@ if ($is_logged_in) {
             const groups = ['11/U', '13/U', '15/U', 'Open', 'Unassigned'];
             const grouped = Object.fromEntries(groups.map(group => [group, []]));
             dtsState.swimmers.forEach(swimmer => {
+                if (!isSwimmerAvailableForSelectedRound(swimmer)) return;
                 const ageGroup = groups.includes(swimmer.age_group) ? swimmer.age_group : 'Unassigned';
                 grouped[ageGroup].push(swimmer);
             });
@@ -2086,13 +2413,15 @@ if ($is_logged_in) {
             const meta = document.getElementById('dts-teamsheet-meta');
             if (!body || !meta) return;
             if (!dtsState.selectedRound) {
-                body.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">No round draw found for this season.</td></tr>';
+                body.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No round draw found for this season.</td></tr>';
                 meta.textContent = 'Digital teamsheets will appear once the season draw is available.';
                 return;
             }
             const status = dtsState.activeTeamsheet?.status || 'draft';
             const submitted = dtsState.activeTeamsheet?.submitted_at ? `Submitted ${dtsState.activeTeamsheet.submitted_at}` : 'Not submitted yet';
-            meta.innerHTML = `<strong class="text-cyan-300">${dtsEscape(dtsState.selectedRound.label)}</strong> · ${dtsEscape(status.toUpperCase())} · ${dtsEscape(submitted)} · Shared with: ${dtsEscape(dtsState.selectedRound.teams.join(', '))}`;
+            const availableCount = dtsState.swimmers.filter(swimmer => !!(swimmer.availability && swimmer.availability[getSelectedAvailabilityKey()] === true)).length;
+            const filterText = dtsState.showAvailableOnly ? ` · Showing ${availableCount} available swimmer${availableCount === 1 ? '' : 's'}` : '';
+            meta.innerHTML = `<strong class="text-cyan-300">${dtsEscape(dtsState.selectedRound.label)}</strong> · ${dtsEscape(status.toUpperCase())} · ${dtsEscape(submitted)} · Shared with: ${dtsEscape(dtsState.selectedRound.teams.join(', '))}${filterText}`;
             body.innerHTML = dtsState.events.map(event => {
                 const loaded = dtsState.loadedEntries[event.id] || {};
                 const selected = loaded.selected_swimmers || [];
@@ -2119,10 +2448,12 @@ if ($is_logged_in) {
                             </div>
                         </td>
                         <td class="px-3 py-2 text-center font-mono text-red-300">${dtsEscape(getEventCutOff(event))}</td>
-                        <td class="dts-collapsible-cell px-3 py-2">${buildSwimmerPickerHtml(limit, selected)}</td>
+                        <td class="dts-collapsible-cell px-3 py-2">
+                            <div class="dts-event-warning hidden mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-100"></div>
+                            ${buildSwimmerPickerHtml(limit, selected)}
+                        </td>
                         <td class="dts-collapsible-cell px-3 py-2"><input value="${dtsEscape(pbValue)}" ${isTeamEvent ? 'readonly aria-readonly="true" placeholder="No PB needed"' : ''} class="dts-event-pb w-full border rounded px-2 py-1 font-mono ${isTeamEvent ? 'bg-slate-800/70 border-slate-700 text-slate-500 cursor-not-allowed placeholder:text-slate-500' : 'bg-slate-900 border-slate-700 text-white'}"></td>
                         <td class="dts-collapsible-cell px-3 py-2"><input value="${dtsEscape(loaded.notes || '')}" class="dts-event-notes w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></td>
-                        <td class="dts-collapsible-cell px-3 py-2 text-center"><span class="dts-event-warning text-[10px]"></span></td>
                     </tr>
                 `;
             }).join('');
@@ -2147,9 +2478,58 @@ if ($is_logged_in) {
             }
         }
 
+        function warningSignature(messages) {
+            return messages.map(message => `${message.type}:${message.detail}`).join('|');
+        }
+
+        function renderTeamsheetWarning(row, messages) {
+            const panel = row.querySelector('.dts-event-warning');
+            if (!panel) return;
+            const eventId = row.dataset.eventId;
+            if (!messages.length) {
+                panel.classList.add('hidden');
+                panel.innerHTML = '';
+                delete dtsState.ignoredWarnings[eventId];
+                return;
+            }
+            const signature = warningSignature(messages);
+            if (dtsState.ignoredWarnings[eventId] === signature) {
+                panel.classList.add('hidden');
+                panel.innerHTML = '';
+                return;
+            }
+            panel.dataset.warningSignature = signature;
+            panel.classList.remove('hidden');
+            panel.innerHTML = `
+                <div class="flex items-start justify-between gap-2">
+                    <div class="space-y-1">
+                        <div class="font-bold text-amber-200 flex items-center gap-1.5">
+                            <i data-lucide="triangle-alert" class="w-3.5 h-3.5"></i>
+                            Check this entry
+                        </div>
+                        ${messages.map(message => `<div>${dtsEscape(message.text)}</div>`).join('')}
+                    </div>
+                    <button type="button" onclick="ignoreTeamsheetWarning(this)"
+                        class="shrink-0 bg-amber-500/10 hover:bg-amber-500/20 text-amber-100 border border-amber-400/30 rounded px-2 py-1 text-[10px] font-bold">
+                        Ignore
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function ignoreTeamsheetWarning(button) {
+            const row = button.closest('tr');
+            const panel = row?.querySelector('.dts-event-warning');
+            if (!row || !panel?.dataset.warningSignature) return;
+            dtsState.ignoredWarnings[row.dataset.eventId] = panel.dataset.warningSignature;
+            panel.classList.add('hidden');
+            panel.innerHTML = '';
+        }
+
         function updateTeamsheetRow(row) {
             if (!row || !row.dataset.eventId) return;
-	            const selected = Array.from(row.querySelectorAll('.dts-event-swimmers')).map(select => select.value).filter(Boolean);
+            const selected = Array.from(row.querySelectorAll('.dts-event-swimmers')).map(select => select.value).filter(Boolean);
             const limit = parseInt(row.dataset.limit, 10);
             const pbField = row.dataset.pbField;
             const pbInput = row.querySelector('.dts-event-pb');
@@ -2157,25 +2537,42 @@ if ($is_logged_in) {
                 const swimmer = dtsState.swimmers.find(s => s.swimmer_name === selected[0]);
                 if (swimmer && !pbInput.value) pbInput.value = swimmer[pbField] || '';
             }
-            const warning = row.querySelector('.dts-event-warning');
-            const availabilityKey = dtsState.selectedRound?.round_key?.startsWith('round_') ? dtsState.selectedRound.round_key : 'final';
+            const availabilityKey = getSelectedAvailabilityKey();
             const unavailable = selected.filter(name => {
                 const swimmer = dtsState.swimmers.find(s => s.swimmer_name === name);
                 return swimmer?.availability && swimmer.availability[availabilityKey] === false;
             });
-	            const duplicateCount = selected.length - new Set(selected).size;
-	            const messages = [];
-	            if (selected.length && selected.length !== limit) messages.push(`${selected.length}/${limit}`);
-	            if (duplicateCount > 0) messages.push('duplicate');
-	            if (unavailable.length) messages.push('availability');
-            warning.textContent = messages.join(', ');
-            warning.className = messages.length ? 'dts-event-warning text-[10px] text-amber-300 font-bold' : 'dts-event-warning text-[10px] text-slate-600';
+            const duplicateCount = selected.length - new Set(selected).size;
+            const swimmerWord = limit === 1 ? 'swimmer' : 'swimmers';
+            const messages = [];
+            if (selected.length && selected.length !== limit) {
+                messages.push({
+                    type: 'count',
+                    detail: `${selected.length}/${limit}`,
+                    text: `This event expects ${limit} ${swimmerWord}, but ${selected.length} selected.`
+                });
+            }
+            if (duplicateCount > 0) {
+                messages.push({
+                    type: 'duplicate',
+                    detail: selected.join(','),
+                    text: 'The same swimmer has been selected more than once in this event.'
+                });
+            }
+            if (unavailable.length) {
+                messages.push({
+                    type: 'availability',
+                    detail: unavailable.join(','),
+                    text: `${unavailable.join(', ')} ${unavailable.length === 1 ? 'is' : 'are'} marked unavailable for this round/final.`
+                });
+            }
+            renderTeamsheetWarning(row, messages);
         }
 
         function collectTeamsheetEntries() {
             return Array.from(document.querySelectorAll('#dts-events-body tr[data-event-id]')).map(row => ({
                 event_id: parseInt(row.dataset.eventId, 10),
-	                selected_swimmers: Array.from(row.querySelectorAll('.dts-event-swimmers')).map(select => select.value).filter(Boolean),
+                selected_swimmers: Array.from(row.querySelectorAll('.dts-event-swimmers')).map(select => select.value).filter(Boolean),
                 pb_snapshot: row.querySelector('.dts-event-pb').value.trim(),
                 notes: row.querySelector('.dts-event-notes').value.trim()
             }));
@@ -2295,8 +2692,7 @@ if ($is_logged_in) {
             const id = dtsState.activeTeamsheet?.id;
             const exportLink = document.getElementById('dts-export-link');
             const programmeLink = document.getElementById('dts-programme-link');
-            const matcherLink = document.getElementById('dts-matcher-link');
-            [exportLink, programmeLink, matcherLink].forEach(link => {
+            [exportLink, programmeLink].forEach(link => {
                 if (!link) return;
                 link.classList.toggle('hidden', !id);
                 link.classList.toggle('inline-flex', !!id);
@@ -2304,7 +2700,6 @@ if ($is_logged_in) {
             if (id) {
                 exportLink.href = `digital_teamsheet_export.php?id=${id}`;
                 programmeLink.href = `smartprogrammenew.php?digital_teamsheet_id=${id}`;
-                matcherLink.href = `smart-results-matcher.php?digital_teamsheet_id=${id}`;
             }
         }
 

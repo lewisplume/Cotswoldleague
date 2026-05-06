@@ -94,6 +94,9 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $round_number = (int)$venue_row['round_number'];
         $gala_type = $venue_row['gala_type'] ?: $gala_type;
         $host_club_id = (int)$venue_row['club_id'];
+        if (((int)$venue_row['round_number'] === 99 || in_array($gala_type, ['a_final', 'b_final', 'c_final'], true)) && !empty($venue_row['team_1_id'])) {
+            $host_club_id = (int)$venue_row['team_1_id'];
+        }
         $team_count = 0;
         for ($i = 1; $i <= 8; $i++) {
             if (!empty($venue_row["team_{$i}_id"])) {
@@ -109,7 +112,7 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Check for existing scoresheet
-    $check = $conn->prepare("SELECT id FROM gala_scoresheets WHERE venue_detail_id = ? AND season_year = ?");
+    $check = $conn->prepare("SELECT id FROM gala_scoresheets WHERE venue_detail_id = ? AND season_year = ? ORDER BY updated_at DESC, id DESC LIMIT 1");
     $check->bind_param("ii", $venue_detail_id, $season_year);
     $check->execute();
     $existing = $check->get_result();
@@ -569,7 +572,7 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $v_check->close();
 
     // Check if scoresheet exists
-    $s = $conn->prepare("SELECT id, status FROM gala_scoresheets WHERE venue_detail_id = ? AND season_year = ?");
+    $s = $conn->prepare("SELECT id, status FROM gala_scoresheets WHERE venue_detail_id = ? AND season_year = ? ORDER BY updated_at DESC, id DESC LIMIT 1");
     $s->bind_param("ii", $venue_detail_id, $season);
     $s->execute();
     $sr = $s->get_result();

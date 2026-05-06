@@ -10,17 +10,20 @@ if ($current_club_id) {
     $draws_sql = "SELECT vd.*, c_host.name AS host_name
                   FROM venue_details vd
                   LEFT JOIN clubs c_host ON vd.club_id = c_host.id
-                  WHERE (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?)
+                  WHERE vd.season_year = ? AND (vd.club_id = ? OR vd.team_1_id = ? OR vd.team_2_id = ? OR vd.team_3_id = ? OR vd.team_4_id = ?
+                        OR vd.team_5_id = ? OR vd.team_6_id = ? OR vd.team_7_id = ? OR vd.team_8_id = ?)
                   AND vd.results_file IS NOT NULL
                   ORDER BY vd.round_number ASC";
     $d_stmt = $conn->prepare($draws_sql);
     if ($d_stmt) {
-        $d_stmt->bind_param("iiiii", $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
+        $d_stmt->bind_param("iiiiiiiiii", $current_season_year, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id, $current_club_id);
         $d_stmt->execute();
         $d_res = $d_stmt->get_result();
         while ($row = $d_res->fetch_assoc()) {
+            $gala_type = $row['gala_type'] ?? 'round';
+            $label = $gala_type === 'round' ? 'Round ' . $row['round_number'] : ucwords(str_replace('_', ' ', $gala_type));
             $available_results[] = [
-                'name' => 'Round ' . $row['round_number'] . ' - ' . $row['host_name'],
+                'name' => $label . ' - ' . $row['host_name'],
                 'file' => $row['results_file']
             ];
         }
@@ -28,7 +31,7 @@ if ($current_club_id) {
     }
     
     // Calculate Finals Tier
-    $standings_sql = "SELECT c.id FROM results r JOIN clubs c ON r.club_id = c.id ORDER BY (r.round_1 + r.round_2 + r.round_3 + r.round_4) DESC, c.name ASC";
+    $standings_sql = "SELECT c.id FROM results r JOIN clubs c ON r.club_id = c.id WHERE r.season_year = $current_season_year ORDER BY (r.round_1 + r.round_2 + r.round_3 + r.round_4) DESC, c.name ASC";
     $s_res = $conn->query($standings_sql);
     if ($s_res) {
         $pos = 1;

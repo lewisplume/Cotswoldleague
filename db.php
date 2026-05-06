@@ -217,6 +217,15 @@ $conn->query("CREATE TABLE IF NOT EXISTS club_teamsheet_audit (
     FOREIGN KEY (club_id) REFERENCES clubs(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+try {
+    $conn->query("UPDATE gala_scoresheets gs
+                  JOIN venue_details vd ON gs.venue_detail_id = vd.id
+                  SET gs.host_club_id = vd.team_1_id
+                  WHERE (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
+                    AND vd.team_1_id IS NOT NULL
+                    AND gs.host_club_id <> vd.team_1_id");
+} catch (Exception $e) {}
+
 // Auto-seed events if the table is empty
 $event_check = $conn->query("SELECT COUNT(*) as cnt FROM gala_events");
 if ($event_check) {

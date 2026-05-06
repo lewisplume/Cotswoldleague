@@ -152,7 +152,9 @@ The event builder mirrors the Google Sheet workflow in a portal-native way:
 - relays and cannons use multiple dropdowns, one per position, instead of a browser multiselect
 - relay/cannon PB fields are greyed out because those events do not use PBs
 - each event row has a minimise/expand control so completed events can be collapsed
-- host notes and warning text remain visible in the row flow
+- validation warnings appear above the swimmer selector only when needed, explain the issue, and can be ignored for that event/selection
+- the builder has a default-off `Show Available Only` toggle that filters dropdowns to swimmers checked as available for the selected round or final
+- `Copy Round` lets a club copy selections, PB snapshots, and notes from another saved teamsheet in the same season into the current builder, then edit from there
 
 ### Shared Teamsheets
 
@@ -176,13 +178,21 @@ Digital Teamsheets is now the default team-facing path. The old Google Sheet lin
 
 The old storage columns and legacy import tools still exist in the codebase, so the Google Sheet route could be restored if needed, but clubs should no longer be directed there.
 
-### Smart Programme / Results Matcher
+### Generate Programme / Results Matcher
 
 The downstream tools were updated so they can load either:
 - a legacy Google Sheet, or
 - a portal-generated digital teamsheet export
 
 That keeps the rest of the gala pipeline usable while the teamsheet workflow migrates.
+
+Current portal placement:
+- `smartprogrammenew.php` is linked as `Generate Programme` from the Teamsheet Builder once the selected digital teamsheet has been saved, using `digital_teamsheet_id`
+- `smart-results-matcher.php` is linked from the main portal `My Round Draws & Results` cards
+- the matcher button is enabled only when a results file exists and the club has submitted its digital teamsheet for that gala
+- before a results file is uploaded it remains greyed out, which will be the normal 2027 behaviour until post-gala upload
+- finals use `team_1_id` as the deemed host for Team Portal scoresheet and venue-edit access; placeholder `club_id` values must not make the placeholder club see all three finals
+- round/results cards only show a final when that club is assigned to the relevant A/B/C Final team slots, and the portal joins only the latest related scoresheet/teamsheet row so duplicate backend records do not create duplicate cards
 
 ## Bugs Found And Fixed
 
