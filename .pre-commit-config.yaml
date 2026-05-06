@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.15.0
+    hooks:
+      - id: markdownlint
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell
+        args: [--ignore-words-list=teh,fo]
+        files: \.(php|md|txt|yaml|yml)$
+
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.2.0
+    hooks:
+      - id: sqlfluff-lint
+
+  - repo: local
+    hooks:
+      - id: php-lint
+        name: PHP Lint
+        entry: php -l
+        language: system
+        types: [php]

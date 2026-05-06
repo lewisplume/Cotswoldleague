@@ -48,6 +48,19 @@ This project is a personal initiative to streamline league operations. It is cur
 * **Cloudflare Tunnels:** Securely exposes the local server to the public domain.
 * **GitHub:** Version control and remote backup.
 
+## Pre Commit
+
+### Installing
+First install the pre commit package manager: https://pre-commit.com/. e.g `pip install pre-commit` or `brew install pre-commit`.
+
+Install pre commit into the repo via `pre-commit install`, will install at `.git/hooks/pre-commit`.
+
+### Running
+This will now run and validate on every commit to the git repo.
+
+### Updating
+Update the following file `.pre-commit-config.yaml` found at the base of the repo.
+
 ## Maintenance
 
 Managed and maintained by **Lewis Plume** (League Secretary).
