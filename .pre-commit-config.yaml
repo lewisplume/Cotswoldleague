@@ -12,7 +12,6 @@ repos:
         args: [--fix=lf]
       - id: detect-private-key
       - id: check-merge-conflict
-      - id: debug-statements
 
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.15.0
