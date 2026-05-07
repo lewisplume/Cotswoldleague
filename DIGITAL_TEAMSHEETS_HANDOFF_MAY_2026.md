@@ -64,6 +64,7 @@ The swimmer list is intentionally spreadsheet-like:
 - previous season swimmers can be copied forward and then adjusted
 - TeamUnify best-times CSV exports can be previewed and imported
 - Swim Club Manager group PB XLSX exports can be previewed and imported
+- Hy-Tek Team Manager top-times CSV exports can be previewed and imported
 - autosave is enabled so edits do not vanish if the user forgets to press save
 
 ### TeamUnify Import
@@ -144,6 +145,25 @@ Mapped Swim Club Manager events:
 - `100 IM`
 
 The Swim Club Manager importer does not calculate age from DOB because the export does not include DOB.
+
+### Hy-Tek Team Manager Import
+
+The Hy-Tek Team Manager importer was added after inspecting legacy `.xls` and CSV `Top Times Spreadsheet Report` exports from Team Manager 8.0. The `.xls` layout was rejected because the same visual columns can represent different events for different swimmers. The CSV is the supported source because each swimmer row repeats the event layout for that row:
+- report metadata rows at the top
+- distance headings such as `25`, `50`, `100`, `200`, `400`, `800`, and `1500`
+- stroke headings such as `Free`, `Back`, `Breast`, `Fly`, and `IM`
+- age/gender section rows such as `Girls 11-12`
+- swimmer names in `Firstname Surname (age)` format, followed by times aligned to that row's repeated distance/stroke headings
+
+The importer:
+- accepts only `.csv` uploads from the unified import dropdown
+- reads the CSV in the browser with SheetJS, avoiding a PHP Excel dependency
+- shows the age in the preview for reference but leaves the league age group blank because Hy-Tek exports are not reliable enough for the league age-as-at-finals rule
+- maps supported Cotswold League PB columns from the distance/stroke headings
+- ignores unsupported longer-distance columns while reporting them in the preview
+- applies imports using the same merge behaviour as TeamUnify and Swim Club Manager
+
+Mapped Hy-Tek Team Manager events are the same supported PB events as TeamUnify and Swim Club Manager. Longer events such as `200 Free`, `400 Free`, `800 Free`, and `1500 Free` remain unsupported because the swimmer table has no columns for them.
 
 ### Teamsheet Builder
 

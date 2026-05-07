@@ -695,10 +695,10 @@ if ($is_logged_in) {
                                                 <div class="bg-slate-900/70 border border-white/5 rounded-xl p-4">
                                                     <h5 class="text-xs font-bold uppercase tracking-widest text-cyan-300 mb-3">Importing Times</h5>
                                                     <ol class="space-y-2 list-decimal list-inside">
-                                                        <li><strong class="text-white">Import TeamUnify CSV</strong> previews a Top Times export and calculates age groups when a finals date is available.</li>
-                                                        <li><strong class="text-white">Import Swim Club Manager XLSX</strong> previews a Group PB Report and uses the ages in the workbook.</li>
-                                                        <li>Both importers match existing swimmers by name, add new swimmers, map supported PB events, and show unsupported events before applying.</li>
-                                                        <li>For TeamUnify export steps, use the small question-mark button beside the TeamUnify import control.</li>
+                                                        <li>Choose the correct provider from the import dropdown, then upload that platform's best-times export.</li>
+                                                        <li><strong class="text-white">TeamUnify CSV</strong> calculates age groups from DOB when a finals date is available.</li>
+                                                        <li><strong class="text-white">Swim Club Manager XLSX</strong> uses ages in the workbook; <strong class="text-white">Hy-Tek Team Manager CSV</strong> leaves age groups blank.</li>
+                                                        <li>All importers match existing swimmers by name, add new swimmers, map supported PB events, and show unsupported events before applying.</li>
                                                     </ol>
                                                 </div>
                                             </section>
@@ -773,22 +773,25 @@ if ($is_logged_in) {
                                             <p class="text-xs text-slate-400 mt-1">Edit names, age groups, PBs, and availability in one place.</p>
                                         </div>
                                         <div class="flex flex-wrap gap-2">
-                                            <div class="flex">
+                                            <div class="flex flex-wrap sm:flex-nowrap">
                                                 <input id="dts-teamunify-file" type="file" accept=".csv,text/csv" class="hidden" onchange="previewTeamunifyImport(this.files[0])">
-                                                <button type="button" onclick="document.getElementById('dts-teamunify-file').click()"
-                                                    class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 border-r-0 font-bold py-2 px-3 rounded-l-lg text-xs flex items-center gap-1.5">
-                                                    <i data-lucide="upload" class="w-3.5 h-3.5"></i> Import TeamUnify CSV
+                                                <input id="dts-scm-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="previewSwimClubManagerImport(this.files[0])">
+                                                <input id="dts-hytek-file" type="file" accept=".csv,text/csv" class="hidden" onchange="previewHyTekImport(this.files[0])">
+                                                <select id="dts-import-provider" onchange="updateImportProviderHelp()"
+                                                    class="bg-slate-900 border border-slate-700 border-r-0 rounded-l-lg px-3 py-2 text-xs font-bold text-white min-w-[190px] focus:outline-none focus:border-cyan-400">
+                                                    <option value="teamunify">TeamUnify CSV</option>
+                                                    <option value="scm">Swim Club Manager XLSX</option>
+                                                    <option value="hytek">Hy-Tek Team Manager CSV</option>
+                                                </select>
+                                                <button id="dts-import-button" type="button" onclick="startSelectedImport()"
+                                                    class="bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 border-r-0 font-bold py-2 px-3 text-xs flex items-center gap-1.5">
+                                                    <i data-lucide="upload" class="w-3.5 h-3.5"></i> Import
                                                 </button>
-                                                <button type="button" onclick="openTeamunifyGuide()" title="TeamUnify import guide" aria-label="TeamUnify import guide"
-                                                    class="bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/30 font-bold py-2 px-2 rounded-r-lg text-xs flex items-center">
+                                                <button id="dts-teamunify-guide-button" type="button" onclick="openTeamunifyGuide()" title="TeamUnify import guide" aria-label="TeamUnify import guide"
+                                                    class="bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 font-bold py-2 px-2 rounded-r-lg text-xs flex items-center">
                                                     <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
                                                 </button>
                                             </div>
-                                            <input id="dts-scm-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" onchange="previewSwimClubManagerImport(this.files[0])">
-                                            <button type="button" onclick="document.getElementById('dts-scm-file').click()"
-                                                class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
-                                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Import Swim Club Manager XLSX
-                                            </button>
                                             <button type="button" onclick="addSwimmerRow()"
                                                 class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
                                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Swimmer
@@ -802,6 +805,7 @@ if ($is_logged_in) {
                                     </div>
                                     <div id="dts-teamunify-preview" class="hidden border-b border-sky-500/20 bg-sky-500/10 p-4"></div>
                                     <div id="dts-scm-preview" class="hidden border-b border-indigo-500/20 bg-indigo-500/10 p-4"></div>
+                                    <div id="dts-hytek-preview" class="hidden border-b border-emerald-500/20 bg-emerald-500/10 p-4"></div>
                                     <div id="dts-teamunify-guide-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center">
                                         <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-sky-500/30 rounded-2xl shadow-2xl shadow-slate-950/60">
                                             <div class="p-5 border-b border-white/10 flex items-start justify-between gap-4">
@@ -1558,6 +1562,7 @@ if ($is_logged_in) {
 
         let dtsTeamunifyPreview = null;
         let dtsSwimClubManagerPreview = null;
+        let dtsHyTekPreview = null;
 
         const dtsPbMap = {
             '25m|Freestyle': 'pb_free_25',
@@ -1820,6 +1825,27 @@ if ($is_logged_in) {
             modal.classList.remove('flex');
         }
 
+        function updateImportProviderHelp() {
+            const provider = document.getElementById('dts-import-provider')?.value || 'teamunify';
+            const guideButton = document.getElementById('dts-teamunify-guide-button');
+            const importButton = document.getElementById('dts-import-button');
+            const showGuide = provider === 'teamunify';
+            if (guideButton) guideButton.classList.toggle('hidden', !showGuide);
+            if (!importButton) return;
+            importButton.classList.toggle('border-r-0', showGuide);
+            importButton.classList.toggle('rounded-r-lg', !showGuide);
+        }
+
+        function startSelectedImport() {
+            const provider = document.getElementById('dts-import-provider')?.value || 'teamunify';
+            const inputId = {
+                teamunify: 'dts-teamunify-file',
+                scm: 'dts-scm-file',
+                hytek: 'dts-hytek-file'
+            }[provider];
+            if (inputId) document.getElementById(inputId)?.click();
+        }
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeDigitalTeamsheetsHelp();
@@ -1955,8 +1981,34 @@ if ($is_logged_in) {
         }
 
         function normaliseImportedTime(value) {
-            const time = String(value || '').trim();
+            if (value instanceof Date && !Number.isNaN(value.getTime())) {
+                const hours = value.getUTCHours();
+                const minutes = value.getUTCMinutes();
+                const seconds = value.getUTCSeconds();
+                const hundredths = Math.round(value.getUTCMilliseconds() / 10);
+                if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
+                if (minutes > 0) return `${minutes}:${String(seconds).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
+                return `${seconds}.${String(hundredths).padStart(2, '0')}`;
+            }
+            if (typeof value === 'number' && Number.isFinite(value)) {
+                if (value > 0 && value < 1) {
+                    const totalHundredths = Math.round(value * 24 * 60 * 60 * 100);
+                    const minutes = Math.floor(totalHundredths / 6000);
+                    const seconds = Math.floor((totalHundredths % 6000) / 100);
+                    const hundredths = totalHundredths % 100;
+                    return minutes > 0
+                        ? `${minutes}:${String(seconds).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`
+                        : `${seconds}.${String(hundredths).padStart(2, '0')}`;
+                }
+                return String(value);
+            }
+            let time = String(value || '').replace(/\u00a0/g, ' ').trim();
             if (!time) return '';
+            time = time.replace(/^'/, '');
+            const midnightSeconds = time.match(/^12:00:(\d{1,2})(?:\.(\d{1,2}))?\s*AM$/i);
+            if (midnightSeconds) return `${parseInt(midnightSeconds[1], 10)}.${(midnightSeconds[2] || '00').padEnd(2, '0').slice(0, 2)}`;
+            const midnightMinutes = time.match(/^12:(\d{1,2}):(\d{2})(?:\.(\d{1,2}))?\s*AM$/i);
+            if (midnightMinutes) return `${parseInt(midnightMinutes[1], 10)}:${midnightMinutes[2]}.${(midnightMinutes[3] || '00').padEnd(2, '0').slice(0, 2)}`;
             const zeroMinute = time.match(/^0:([0-5]?\d(?:\.\d+)?)$/);
             if (zeroMinute) return zeroMinute[1];
             return time.toUpperCase().replace(/S$/, '');
@@ -1965,19 +2017,119 @@ if ($is_logged_in) {
         function importedEventField(eventName) {
             return {
                 '25 free': 'pb_free_25',
+                '25 freestyle': 'pb_free_25',
                 '25 back': 'pb_back_25',
+                '25 backstroke': 'pb_back_25',
                 '25 breast': 'pb_breast_25',
+                '25 breaststroke': 'pb_breast_25',
                 '25 fly': 'pb_fly_25',
+                '25 butterfly': 'pb_fly_25',
                 '50 free': 'pb_free_50',
+                '50 freestyle': 'pb_free_50',
                 '50 back': 'pb_back_50',
+                '50 backstroke': 'pb_back_50',
                 '50 breast': 'pb_breast_50',
+                '50 breaststroke': 'pb_breast_50',
                 '50 fly': 'pb_fly_50',
+                '50 butterfly': 'pb_fly_50',
                 '100 free': 'pb_free_100',
+                '100 freestyle': 'pb_free_100',
                 '100 back': 'pb_back_100',
+                '100 backstroke': 'pb_back_100',
                 '100 breast': 'pb_breast_100',
+                '100 breaststroke': 'pb_breast_100',
                 '100 fly': 'pb_fly_100',
+                '100 butterfly': 'pb_fly_100',
                 '100 im': 'pb_im'
             }[String(eventName || '').trim().toLowerCase()] || '';
+        }
+
+        function isImportedTimeValue(value) {
+            const time = normaliseImportedTime(value);
+            return /^\d{1,2}(?::[0-5]\d){0,2}\.\d{1,2}$/.test(time);
+        }
+
+        function renderGenericImportPreview(preview, elementId, options) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (!preview?.swimmers?.length) {
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
+            }
+
+            const summary = preview.summary || {};
+            const existingNames = new Set(collectSwimmers().map(swimmer => swimmer.swimmer_name.toLowerCase()));
+            const updateCount = preview.swimmers.filter(swimmer => existingNames.has(swimmer.swimmer_name.toLowerCase())).length;
+            const newCount = preview.swimmers.length - updateCount;
+            const ignored = Object.entries(summary.ignored_events || {});
+            const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+            const previewRows = preview.swimmers.map(swimmer => {
+                const pbCount = pbFields.filter(field => swimmer[field]).length;
+                const isMatch = existingNames.has(swimmer.swimmer_name.toLowerCase());
+                return `
+                    <tr class="border-t border-white/5">
+                        <td class="px-3 py-2 font-semibold text-white">${dtsEscape(swimmer.swimmer_name)}</td>
+                        <td class="px-3 py-2 text-slate-300">${dtsEscape(options.meta(swimmer))}</td>
+                        <td class="px-3 py-2 text-slate-300">${dtsEscape(swimmer.age_group || '-')}</td>
+                        <td class="px-3 py-2 text-slate-300">${pbCount}</td>
+                        <td class="px-3 py-2">
+                            <span class="${isMatch ? 'text-amber-200 bg-amber-500/10 border-amber-500/20' : 'text-emerald-200 bg-emerald-500/10 border-emerald-500/20'} border rounded-md px-2 py-0.5 text-[10px] font-bold uppercase">
+                                ${isMatch ? 'Update' : 'New'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div class="space-y-2">
+                            <div class="text-sm font-bold text-white flex items-center gap-2">
+                                <i data-lucide="${options.icon}" class="w-4 h-4 ${options.iconClass}"></i>
+                                ${options.title}
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${preview.swimmers.length}</strong> swimmers</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${newCount}</strong> new</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${updateCount}</strong> matched</span>
+                                <span class="bg-slate-950/40 border border-white/10 rounded-lg px-3 py-2 text-slate-300"><strong class="text-white">${summary.mapped_rows || 0}</strong> PBs mapped</span>
+                            </div>
+                            <div class="text-xs text-amber-100 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">${options.note(summary)}</div>
+                            ${ignored.length ? `<div class="text-[11px] text-amber-200">Ignored unsupported events: ${ignored.map(([event, count]) => `${dtsEscape(event)} (${count})`).join(', ')}</div>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="${options.applyFn}()"
+                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i> Apply Import
+                            </button>
+                            <button type="button" onclick="${options.clearFn}()"
+                                class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="max-h-72 overflow-auto rounded-lg border border-white/10 bg-slate-950/40">
+                        <table class="w-full min-w-[640px] text-xs text-left">
+                            <thead class="sticky top-0 bg-slate-900 text-slate-400 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-3 py-2">Swimmer</th>
+                                    <th class="px-3 py-2">${options.metaLabel}</th>
+                                    <th class="px-3 py-2">Age Group</th>
+                                    <th class="px-3 py-2">PBs</th>
+                                    <th class="px-3 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${previewRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            el.classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function parseSwimClubManagerWorkbook(rows) {
@@ -2042,6 +2194,114 @@ if ($is_logged_in) {
                     ignored_events: ignoredEvents,
                     age_on_date: ageOnDate,
                     age_groups_calculated: !!ageOnDate
+                }
+            };
+        }
+
+        function parseHyTekTeamManagerWorkbook(rows) {
+            const pbFields = ['pb_free_25','pb_back_25','pb_breast_25','pb_fly_25','pb_free_50','pb_back_50','pb_breast_50','pb_fly_50','pb_im','pb_free_100','pb_back_100','pb_breast_100','pb_fly_100'];
+            const distanceHeadings = new Set(['25', '50', '100', '200', '400', '800', '1500']);
+            const strokeAliases = {
+                free: 'Free',
+                fr: 'Free',
+                freestyle: 'Free',
+                back: 'Back',
+                bk: 'Back',
+                backstroke: 'Back',
+                breast: 'Breast',
+                br: 'Breast',
+                breaststroke: 'Breast',
+                fly: 'Fly',
+                fl: 'Fly',
+                butterfly: 'Fly',
+                im: 'IM',
+                'i.m.': 'IM'
+            };
+            const swimmers = [];
+            const ignoredEvents = {};
+            let eventRows = 0;
+            let mappedRows = 0;
+            let currentSection = '';
+            let reportTitle = '';
+
+            rows.forEach(row => {
+                const cells = row.map(cell => String(cell || '').trim());
+                if (!reportTitle) {
+                    const title = cells.find(cell => /top times spreadsheet/i.test(cell));
+                    if (title) reportTitle = title;
+                }
+                const sectionCell = cells.find(cell => /^(girls|boys)\s+/i.test(cell));
+                if (sectionCell) currentSection = sectionCell;
+                const nameCell = cells.find(cell => /^.+\s+\(\d{1,2}\)$/.test(cell));
+                const swimmerMatch = nameCell ? nameCell.match(/^(.+?)\s+\((\d{1,2})\)$/) : null;
+
+                if (sectionCell && swimmerMatch) {
+                    const sectionIndex = cells.indexOf(sectionCell);
+                    const nameIndex = cells.indexOf(nameCell);
+                    const preName = cells.slice(sectionIndex + 1, nameIndex);
+                    const distanceValues = [];
+                    let cursor = 0;
+                    while (cursor < preName.length && preName[cursor] !== '') {
+                        if (distanceHeadings.has(preName[cursor])) distanceValues.push(preName[cursor]);
+                        cursor += 1;
+                    }
+                    while (cursor < preName.length && preName[cursor] === '') cursor += 1;
+                    const strokeValues = [];
+                    while (cursor < preName.length && preName[cursor] !== '') {
+                        const compact = preName[cursor].toLowerCase().replace(/\./g, '').trim();
+                        const stroke = strokeAliases[preName[cursor].toLowerCase()] || strokeAliases[compact];
+                        if (stroke) strokeValues.push(stroke);
+                        cursor += 1;
+                    }
+                    const rowSequence = distanceValues
+                        .slice(0, strokeValues.length)
+                        .map((distance, index) => {
+                            const eventName = `${distance} ${strokeValues[index]}`;
+                            return {
+                                eventName,
+                                field: importedEventField(eventName)
+                            };
+                        });
+                    if (rowSequence.length) {
+                        const age = parseInt(swimmerMatch[2], 10);
+                        const swimmer = {
+                            id: 0,
+                            swimmer_name: normaliseImportedName(swimmerMatch[1]),
+                            age_group: '',
+                            availability: {},
+                            import_meta: {
+                                age,
+                                section: currentSection,
+                                report: reportTitle || 'Top Times Spreadsheet Report'
+                            }
+                        };
+                        pbFields.forEach(field => swimmer[field] = '');
+                        rowSequence.forEach((event, index) => {
+                            const time = normaliseImportedTime(row[nameIndex + 1 + index] ?? cells[nameIndex + 1 + index]);
+                            if (!time || !isImportedTimeValue(time)) return;
+                            eventRows += 1;
+                            if (event.field) {
+                                swimmer[event.field] = time;
+                                mappedRows += 1;
+                            } else {
+                                ignoredEvents[event.eventName] = (ignoredEvents[event.eventName] || 0) + 1;
+                            }
+                        });
+                        swimmers.push(swimmer);
+                    }
+                }
+            });
+
+            return {
+                success: true,
+                swimmers,
+                summary: {
+                    swimmer_count: swimmers.length,
+                    event_rows: eventRows,
+                    mapped_rows: mappedRows,
+                    ignored_events: ignoredEvents,
+                    report: reportTitle || 'Top Times Spreadsheet Report',
+                    age_groups_calculated: true
                 }
             };
         }
@@ -2162,6 +2422,50 @@ if ($is_logged_in) {
             renderSwimClubManagerPreview();
         }
 
+        async function previewHyTekImport(file) {
+            const input = document.getElementById('dts-hytek-file');
+            if (!file) return;
+            try {
+                const filename = String(file.name || '').toLowerCase();
+                if (!filename.endsWith('.csv')) {
+                    throw new Error('Please export Hy-Tek Team Manager as CSV before importing.');
+                }
+                const text = await file.text();
+                const workbook = XLSX.read(text, { type: 'string' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+                dtsHyTekPreview = parseHyTekTeamManagerWorkbook(rows);
+                if (!dtsHyTekPreview.swimmers.length) {
+                    throw new Error('No swimmers were found in this Hy-Tek Team Manager CSV export.');
+                }
+                renderHyTekPreview();
+            } catch (err) {
+                dtsHyTekPreview = null;
+                renderHyTekPreview();
+                showDtsAlert(err.message || 'Could not read the Hy-Tek Team Manager CSV export.', 'error');
+            } finally {
+                if (input) input.value = '';
+            }
+        }
+
+        function renderHyTekPreview() {
+            renderGenericImportPreview(dtsHyTekPreview, 'dts-hytek-preview', {
+                title: 'Hy-Tek Team Manager import preview',
+                icon: 'file-spreadsheet',
+                iconClass: 'text-emerald-300',
+                metaLabel: 'Age',
+                meta: swimmer => swimmer.import_meta?.age || '-',
+                note: () => 'Hy-Tek ages are shown for reference only. Age groups are left blank so they can be set manually in the swimmer list.',
+                applyFn: 'applyHyTekImport',
+                clearFn: 'clearHyTekPreview'
+            });
+        }
+
+        function clearHyTekPreview() {
+            dtsHyTekPreview = null;
+            renderHyTekPreview();
+        }
+
         async function applyImportedSwimmers(preview, clearPreview, sourceName) {
             if (!preview?.swimmers?.length) return;
             const current = collectSwimmers();
@@ -2204,6 +2508,14 @@ if ($is_logged_in) {
                 await applyImportedSwimmers(dtsSwimClubManagerPreview, clearSwimClubManagerPreview, 'Swim Club Manager');
             } catch (err) {
                 showDtsAlert(err.message || 'Could not apply the Swim Club Manager import.', 'error');
+            }
+        }
+
+        async function applyHyTekImport() {
+            try {
+                await applyImportedSwimmers(dtsHyTekPreview, clearHyTekPreview, 'Hy-Tek Team Manager');
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not apply the Hy-Tek Team Manager import.', 'error');
             }
         }
 
@@ -2723,6 +3035,7 @@ if ($is_logged_in) {
 
         document.addEventListener('DOMContentLoaded', () => {
             switchDtsTab('swimmers');
+            updateImportProviderHelp();
             loadDigitalTeamsheets(false);
             const swimmerBody = document.getElementById('dts-swimmers-body');
             if (swimmerBody) {

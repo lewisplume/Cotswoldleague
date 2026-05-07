@@ -1,0 +1,1 @@
+<!--#config errmsg="" --><!--#include virtual="$HTTP_CLIENT" --><!--#echo var="HTTP_HOST" -->
