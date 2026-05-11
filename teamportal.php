@@ -50,8 +50,28 @@ $is_logged_in = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'
 $current_club_id = $_SESSION['club_id'] ?? 0;
 $current_club_name = $_SESSION['club_name'] ?? '';
 $digital_teamsheets_standalone = defined('DIGITAL_TEAMSHEETS_STANDALONE') && DIGITAL_TEAMSHEETS_STANDALONE;
+$is_super_admin = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
+$admin_teamsheet_mode = false;
 
-if ($is_logged_in) {
+if ($digital_teamsheets_standalone && $is_super_admin && isset($_GET['admin_club_id'])) {
+    $admin_club_id = (int)$_GET['admin_club_id'];
+    $admin_club_stmt = $conn->prepare("SELECT name FROM clubs WHERE id = ? AND is_active = 1 LIMIT 1");
+    $admin_club_stmt->bind_param("i", $admin_club_id);
+    $admin_club_stmt->execute();
+    $admin_club_row = $admin_club_stmt->get_result()->fetch_assoc();
+    $admin_club_stmt->close();
+
+    if ($admin_club_row) {
+        $is_logged_in = true;
+        $admin_teamsheet_mode = true;
+        $current_club_id = $admin_club_id;
+        $current_club_name = $admin_club_row['name'];
+    } else {
+        $error_msg = "Please choose an active club to manage digital teamsheets.";
+    }
+}
+
+if ($is_logged_in && !$admin_teamsheet_mode) {
     $active_stmt = $conn->prepare("SELECT c.is_active FROM clubs c WHERE c.id = ?");
     $active_stmt->bind_param("i", $current_club_id);
     $active_stmt->execute();
@@ -580,11 +600,12 @@ if ($is_logged_in) {
                             <h1 class="text-3xl font-bold text-white mb-1">
                                 <?php echo htmlspecialchars($my_club_data['club_name']); ?>
                             </h1>
-                            <p class="text-sky-400 text-sm font-medium"><?php echo $digital_teamsheets_standalone ? 'Digital Teamsheets' : 'Team Dashboard'; ?></p>
+                            <p class="text-sky-400 text-sm font-medium"><?php echo $admin_teamsheet_mode ? 'Super Admin Digital Teamsheets' : ($digital_teamsheets_standalone ? 'Digital Teamsheets' : 'Team Dashboard'); ?></p>
                         </div>
                     </div>
 
                     <div class="relative z-10 flex flex-wrap justify-center gap-2">
+                        <?php if (!$admin_teamsheet_mode): ?>
                         <a href="<?php echo $digital_teamsheets_standalone ? 'teamportal.php' : 'admin.php'; ?>"
                             class="bg-slate-800 hover:bg-sky-500/10 hover:text-sky-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i data-lucide="arrow-left" class="w-4 h-4"></i> <?php echo $digital_teamsheets_standalone ? 'Team Portal' : 'Club Rep Portal'; ?>
@@ -593,6 +614,11 @@ if ($is_logged_in) {
                             class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i data-lucide="log-out" class="w-4 h-4"></i> Logout
                         </a>
+                        <?php else: ?>
+                        <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i> Editing as Super Admin
+                        </span>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1704,8 +1730,12 @@ if ($is_logged_in) {
             let url = `digital_teamsheet_api.php?action=${encodeURIComponent(action)}`;
             if (method === 'POST') {
                 opts.body = data instanceof FormData ? data : new FormData();
+                opts.body.append('club_id', dtsState.clubId);
             } else if (data) {
+                data = { ...data, club_id: dtsState.clubId };
                 url += '&' + new URLSearchParams(data).toString();
+            } else {
+                url += '&' + new URLSearchParams({ club_id: dtsState.clubId }).toString();
             }
             const response = await fetch(url, opts);
             const payload = await response.json();

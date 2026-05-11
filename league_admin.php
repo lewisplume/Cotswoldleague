@@ -834,6 +834,9 @@ function cotswold_render_admin_club_card($club) {
                     <button onclick="openTab(event, 'tab-gala-results')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all text-slate-400 hover:bg-white/5 hover:text-white">
                         <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Gala Results
                     </button>
+                    <button onclick="openTab(event, 'tab-digital-teamsheets')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all text-slate-400 hover:bg-white/5 hover:text-white">
+                        <i data-lucide="clipboard-list" class="w-4 h-4"></i> Digital Teamsheets
+                    </button>
                     <button onclick="openTab(event, 'tab-events')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all text-slate-400 hover:bg-white/5 hover:text-white">
                         <i data-lucide="calendar" class="w-4 h-4"></i> Event Management
                     </button>
@@ -903,6 +906,13 @@ function cotswold_render_admin_club_card($club) {
                             </div>
                             <h3 class="font-bold text-white">Gala Scoresheets</h3>
                             <p class="text-xs text-slate-400 mt-1">View all team scoresheets.</p>
+                        </a>
+                        <a href="#" onclick="document.querySelector('button[onclick*=\'tab-digital-teamsheets\']').click(); return false;" class="glass-panel p-6 rounded-2xl hover:bg-cyan-900/30 transition-all group border border-cyan-500/20">
+                            <div class="h-12 w-12 bg-cyan-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="clipboard-check" class="w-6 h-6 text-cyan-400"></i>
+                            </div>
+                            <h3 class="font-bold text-white">Digital Teamsheets</h3>
+                            <p class="text-xs text-slate-400 mt-1">Open any club's swimmer list and round teamsheets.</p>
                         </a>
                         <a href="update_scores.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-sky-900/30 transition-all group border border-sky-500/20">
                             <div class="h-12 w-12 bg-sky-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -1279,6 +1289,38 @@ function cotswold_render_admin_club_card($club) {
                     <?php include 'admin_gala_results.php'; ?>
                 </div>
 
+                <!-- TAB: DIGITAL TEAMSHEETS -->
+                <div id="tab-digital-teamsheets" class="tab-content hidden space-y-6">
+                    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold flex items-center gap-2"><i data-lucide="clipboard-list" class="w-5 h-5 text-cyan-400"></i> Digital Teamsheets</h2>
+                            <p class="text-sm text-slate-400 mt-1">Select a club to edit its swimmer list and current teamsheets using the same portal view club reps use.</p>
+                        </div>
+                        <div class="bg-slate-900/60 border border-white/10 rounded-2xl p-3 flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <label for="adminDigitalClubSelect" class="text-xs font-bold uppercase tracking-widest text-slate-400">Club</label>
+                            <select id="adminDigitalClubSelect" onchange="loadAdminDigitalTeamsheets()"
+                                class="bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-white text-sm min-w-[260px] focus:outline-none focus:border-cyan-400">
+                                <?php foreach($active_clubs_data as $index => $club): ?>
+                                    <option value="<?php echo (int)$club['id']; ?>" <?php echo $index === 0 ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($club['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <a id="adminDigitalTeamsheetsOpenLink" href="#" target="_blank"
+                                class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+                                <i data-lucide="external-link" class="w-4 h-4"></i> Open
+                            </a>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-2xl border border-cyan-500/20 overflow-hidden">
+                        <?php if (empty($active_clubs_data)): ?>
+                            <div class="p-8 text-center text-slate-400">No active clubs are available.</div>
+                        <?php else: ?>
+                            <iframe id="adminDigitalTeamsheetsFrame" title="Selected club digital teamsheets" class="w-full h-[82vh] bg-slate-950" loading="lazy"></iframe>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <!-- TAB: EVENT MANAGEMENT -->
                 <div id="tab-events" class="tab-content hidden space-y-6">
                     <?php include 'admin_gala_events.php'; ?>
@@ -1312,10 +1354,21 @@ function cotswold_render_admin_club_card($club) {
         
         // Ensure first tab works dynamically
         <?php if ($is_logged_in): ?>
+            function loadAdminDigitalTeamsheets() {
+                const select = document.getElementById('adminDigitalClubSelect');
+                const frame = document.getElementById('adminDigitalTeamsheetsFrame');
+                const openLink = document.getElementById('adminDigitalTeamsheetsOpenLink');
+                if (!select || !select.value) return;
+                const url = `digital-teamsheets.php?admin_club_id=${encodeURIComponent(select.value)}`;
+                if (frame && frame.getAttribute('src') !== url) frame.setAttribute('src', url);
+                if (openLink) openLink.setAttribute('href', url);
+            }
+
             const initialAdminTab = <?php echo json_encode($active_admin_tab); ?>;
             const initialAdminButton = Array.from(document.querySelectorAll(".tab-btn"))
                 .find(button => (button.getAttribute("onclick") || "").includes(`'${initialAdminTab}'`));
             (initialAdminButton || document.getElementById("defaultOpen")).click();
+            loadAdminDigitalTeamsheets();
         <?php endif; ?>
     </script>
 </body>

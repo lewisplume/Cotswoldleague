@@ -18,6 +18,34 @@ if (!$is_logged_in && !$is_super_admin) {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+function resolve_digital_teamsheet_club($conn, $is_super_admin, $session_club_id, $session_club_name)
+{
+    $requested_club_id = (int)($_GET['club_id'] ?? $_POST['club_id'] ?? 0);
+    $club_id = ($is_super_admin && $requested_club_id > 0) ? $requested_club_id : (int)$session_club_id;
+    if ($club_id <= 0) {
+        return [0, $session_club_name ?: 'Club User'];
+    }
+
+    $stmt = $conn->prepare("SELECT name FROM clubs WHERE id = ? AND is_active = 1 LIMIT 1");
+    $stmt->bind_param("i", $club_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$row) {
+        return [0, $session_club_name ?: 'Club User'];
+    }
+
+    $club_name = $is_super_admin ? 'Super Admin for ' . $row['name'] : ($session_club_name ?: $row['name']);
+    return [$club_id, $club_name];
+}
+
+[$target_club_id, $target_club_name] = resolve_digital_teamsheet_club($conn, $is_super_admin, $current_club_id, $current_club_name);
+if ($target_club_id <= 0) {
+    echo json_encode(['error' => 'No club selected']);
+    exit;
+}
+
 function json_input($key, $default = [])
 {
     $raw = $_POST[$key] ?? null;
@@ -421,7 +449,7 @@ function load_teamsheet_payload($conn, $teamsheet_id, $viewer_club_id)
 
 if ($action === 'load') {
     $season = (int)($_GET['season'] ?? $active_season_year);
-    $club_id = $is_super_admin && isset($_GET['club_id']) ? (int)$_GET['club_id'] : $current_club_id;
+    $club_id = $target_club_id;
 
     $swimmers = [];
     $stmt = $conn->prepare("SELECT * FROM club_swimmers WHERE club_id = ? AND season_year = ? AND is_active = 1 ORDER BY swimmer_name ASC");
@@ -536,7 +564,7 @@ if ($action === 'copy_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         FROM club_swimmers
         WHERE club_id = ? AND season_year = ? AND is_active = 1";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iii", $target_year, $current_club_id, $source_year);
+    $stmt->bind_param("iii", $target_year, $target_club_id, $source_year);
     $stmt->execute();
     $copied = $stmt->affected_rows;
     $stmt->close();
@@ -607,7 +635,7 @@ if ($action === 'save_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param(
             "iiissssssssssssssss",
             $id,
-            $current_club_id,
+            $target_club_id,
             $season,
             $name,
             $age,
@@ -639,10 +667,10 @@ if ($action === 'save_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($seen_ids)) {
         $id_list = implode(',', array_map('intval', array_filter($seen_ids)));
         if ($id_list !== '') {
-            $conn->query("UPDATE club_swimmers SET is_active = 0 WHERE club_id = $current_club_id AND season_year = $season AND id NOT IN ($id_list)");
+            $conn->query("UPDATE club_swimmers SET is_active = 0 WHERE club_id = $target_club_id AND season_year = $season AND id NOT IN ($id_list)");
         }
     } else {
-        $conn->query("UPDATE club_swimmers SET is_active = 0 WHERE club_id = $current_club_id AND season_year = $season");
+        $conn->query("UPDATE club_swimmers SET is_active = 0 WHERE club_id = $target_club_id AND season_year = $season");
     }
 
     echo json_encode(['success' => true, 'swimmers' => $saved_swimmers]);
@@ -664,7 +692,7 @@ if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $existing = null;
     $check = $conn->prepare("SELECT * FROM club_teamsheets WHERE club_id = ? AND season_year = ? AND round_key = ?");
-    $check->bind_param("iis", $current_club_id, $season, $round_key);
+    $check->bind_param("iis", $target_club_id, $season, $round_key);
     $check->execute();
     $existing = $check->get_result()->fetch_assoc();
     $check->close();
@@ -676,7 +704,7 @@ if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$existing) {
         $stmt = $conn->prepare("INSERT INTO club_teamsheets (club_id, season_year, round_key, gala_type, venue_detail_id) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("iissi", $current_club_id, $season, $round_key, $gala_type, $venue_detail_id);
+        $stmt->bind_param("iissi", $target_club_id, $season, $round_key, $gala_type, $venue_detail_id);
         $stmt->execute();
         $teamsheet_id = $conn->insert_id;
         $stmt->close();
@@ -690,7 +718,7 @@ if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $old_snapshot = [];
     if ($existing && $existing['status'] === 'submitted') {
-        $old_payload = load_teamsheet_payload($conn, $teamsheet_id, $current_club_id);
+        $old_payload = load_teamsheet_payload($conn, $teamsheet_id, $target_club_id);
         $old_snapshot = $old_payload['entries'] ?? [];
     }
 
@@ -738,7 +766,7 @@ if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $snapshot = json_encode(['before' => $old_snapshot, 'after' => $entries]);
         $audit = $conn->prepare("INSERT INTO club_teamsheet_audit (teamsheet_id, club_id, changed_by, reason, change_summary, snapshot_json) VALUES (?, ?, ?, ?, ?, ?)");
-        $audit->bind_param("iissss", $teamsheet_id, $current_club_id, $current_club_name, $reason, $summary, $snapshot);
+        $audit->bind_param("iissss", $teamsheet_id, $target_club_id, $target_club_name, $reason, $summary, $snapshot);
         $audit->execute();
         $audit->close();
     }
@@ -754,16 +782,16 @@ if ($action === 'submit_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     $stmt = $conn->prepare("UPDATE club_teamsheets SET status = 'submitted', submitted_at = COALESCE(submitted_at, NOW()), submitted_by = ? WHERE id = ? AND club_id = ?");
-    $stmt->bind_param("sii", $current_club_name, $teamsheet_id, $current_club_id);
+    $stmt->bind_param("sii", $target_club_name, $teamsheet_id, $target_club_id);
     $stmt->execute();
     $ok = $stmt->affected_rows >= 0;
     $stmt->close();
 
-    $snapshot = load_teamsheet_payload($conn, $teamsheet_id, $current_club_id);
+    $snapshot = load_teamsheet_payload($conn, $teamsheet_id, $target_club_id);
     $summary = 'Teamsheet submitted to league';
     $snap_json = json_encode($snapshot);
     $audit = $conn->prepare("INSERT INTO club_teamsheet_audit (teamsheet_id, club_id, changed_by, reason, change_summary, snapshot_json) VALUES (?, ?, ?, '', ?, ?)");
-    $audit->bind_param("iisss", $teamsheet_id, $current_club_id, $current_club_name, $summary, $snap_json);
+    $audit->bind_param("iisss", $teamsheet_id, $target_club_id, $target_club_name, $summary, $snap_json);
     $audit->execute();
     $audit->close();
 
@@ -773,7 +801,7 @@ if ($action === 'submit_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($action === 'teamsheet') {
     $teamsheet_id = (int)($_GET['id'] ?? 0);
-    $payload = $teamsheet_id ? load_teamsheet_payload($conn, $teamsheet_id, $current_club_id) : null;
+    $payload = $teamsheet_id ? load_teamsheet_payload($conn, $teamsheet_id, $target_club_id) : null;
     if (!$payload) {
         echo json_encode(['error' => 'Teamsheet not found or not shared yet']);
         exit;
