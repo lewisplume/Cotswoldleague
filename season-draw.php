@@ -61,6 +61,25 @@ if ($v_res && $v_res->num_rows > 0) {
     }
 }
 
+$live_scoresheets = [];
+$live_sql = "SELECT gs.id, gs.venue_detail_id, gs.updated_at, c.name AS host_club_name
+             FROM gala_scoresheets gs
+             JOIN clubs c ON gs.host_club_id = c.id
+             WHERE gs.season_year = $active_season_year
+               AND gs.live_public_enabled = 1
+               AND gs.status = 'in_progress'
+               AND gs.venue_detail_id IS NOT NULL";
+$live_res = $conn->query($live_sql);
+if ($live_res && $live_res->num_rows > 0) {
+    while ($row = $live_res->fetch_assoc()) {
+        $live_scoresheets[(int)$row['venue_detail_id']] = [
+            'id' => (int)$row['id'],
+            'updated_at' => $row['updated_at'],
+            'host_club_name' => $row['host_club_name'],
+        ];
+    }
+}
+
 // Helper to get points
 function getPoints($round, $team, $completed_points)
 {
@@ -80,6 +99,7 @@ function getPoints($round, $team, $completed_points)
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="gala_scoresheet.js?v=20260514-public-live"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -173,7 +193,7 @@ function getPoints($round, $team, $completed_points)
         }
 
         $has_card = stripos($payment_info_raw, 'Card') !== false;
-        $embedUrl = $gala['embedUrl'] ?? '';
+        $live_info = ($venue_info && isset($live_scoresheets[(int)$venue_info['id']])) ? $live_scoresheets[(int)$venue_info['id']] : null;
 ?>
 
                     <div
@@ -314,9 +334,9 @@ function getPoints($round, $team, $completed_points)
         endif; ?>
                             </div>
 
-                            <?php if ($embedUrl): ?>
+                            <?php if ($live_info): ?>
                             <div class="mt-4 pt-4 border-t border-white/5">
-                                <button onclick="toggleLive(<?php echo $round_num; ?>, <?php echo $index; ?>)"
+                                <button onclick="toggleLive(<?php echo (int)$live_info['id']; ?>, <?php echo $round_num; ?>, <?php echo $index; ?>)"
                                     class="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase rounded-lg transition-all flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50">
                                     <i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> <span>Live Results</span>
                                 </button>
@@ -542,11 +562,11 @@ endforeach; ?>
             closeLive();
         }
 
-        function toggleLive(roundNum, galaIndex) {
+        async function toggleLive(scoresheetId, roundNum, galaIndex) {
             const viewer = document.getElementById('liveViewer');
             const round = drawData.find(r => r.round === roundNum);
             const gala = round.galas[galaIndex];
-            const galaId = `${roundNum}-${galaIndex}`;
+            const galaId = `${roundNum}-${galaIndex}-${scoresheetId}`;
 
             if (currentActiveGala === galaId && !viewer.classList.contains('hidden')) {
                 closeLive();
@@ -555,42 +575,169 @@ endforeach; ?>
 
             currentActiveGala = galaId;
             viewer.classList.remove('hidden');
-
-            viewer.innerHTML = `
-                <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-red-500/20 p-2 rounded-lg border border-red-500/30">
-                            <i data-lucide="radio" class="w-6 h-6 text-red-500 animate-pulse"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-white leading-none">Live Results</h3>
-                            <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">${gala.host} Gala • Round ${roundNum}</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Auto-refreshing every 60s</p>
-                        </div>
-                    </div>
-                    <button onclick="closeLive()" class="group bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white p-2 rounded-lg transition-all border border-slate-700 hover:border-slate-500">
-                        <span class="sr-only">Close</span>
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                <div class="bg-white w-full h-[800px] md:h-[900px] relative">
-                     <iframe id="live-iframe" width="100%" height="100%" frameborder="0" scrolling="no" src="${gala.embedUrl}" class="absolute inset-0"></iframe>
-                </div>
-            `;
-
+            viewer.innerHTML = renderLiveShell(gala.host, roundNum, '<div class="p-6 text-slate-400">Loading live results...</div>');
             lucide.createIcons();
 
+            await loadLiveScoresheet(scoresheetId, gala.host, roundNum);
+
             if (liveRefreshInterval) clearInterval(liveRefreshInterval);
-            liveRefreshInterval = setInterval(() => {
-                const iframe = document.getElementById('live-iframe');
-                if (iframe) {
-                    iframe.src = iframe.src;
-                }
-            }, 60000);
+            liveRefreshInterval = setInterval(() => loadLiveScoresheet(scoresheetId, gala.host, roundNum, false), 30000);
 
             setTimeout(() => {
                 viewer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 50);
+        }
+
+        function renderLiveShell(host, roundNum, bodyHtml) {
+            return `
+                <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="bg-red-500/20 p-2 rounded-lg border border-red-500/30 shrink-0">
+                            <i data-lucide="radio" class="w-6 h-6 text-red-500 animate-pulse"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="text-xl font-bold text-white leading-none">Live Results</h3>
+                            <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1 truncate">${host} Gala - Round ${roundNum}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Auto-refreshing every 30s</p>
+                        </div>
+                    </div>
+                    <button onclick="closeLive()" class="group bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white p-2 rounded-lg transition-all border border-slate-700 hover:border-slate-500 shrink-0">
+                        <span class="sr-only">Close</span>
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div id="liveResultsBody">${bodyHtml}</div>
+            `;
+        }
+
+        async function loadLiveScoresheet(scoresheetId, host, roundNum, showErrors = true) {
+            try {
+                const resp = await fetch(`gala_live_public_api.php?scoresheet_id=${scoresheetId}&t=${Date.now()}`);
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error);
+
+                const body = document.getElementById('liveResultsBody');
+                if (body) body.innerHTML = renderLiveScoresheet(data);
+                lucide.createIcons();
+            } catch (err) {
+                if (!showErrors) return;
+                const body = document.getElementById('liveResultsBody');
+                if (body) {
+                    body.innerHTML = `<div class="p-6 text-red-300 bg-red-500/10 border-t border-red-500/20">${escapeHtml(err.message)}</div>`;
+                }
+            }
+        }
+
+        function renderLiveScoresheet(data) {
+            const resultsMap = {};
+            data.results.forEach(r => {
+                resultsMap[`${r.event_id}_${r.club_id}`] = r;
+            });
+
+            const calc = GalaEngine.calculateFullScoresheet(data.events, data.teams, resultsMap);
+            const activeTeams = data.teams.filter(t => !t.is_absent);
+            const filledEvents = new Set();
+            data.results.forEach(r => {
+                if (r.time_ms !== null || r.is_dq) filledEvents.add(r.event_id);
+            });
+
+            const leaderboard = calc.leaderboard.map((team, idx) => `
+                <div class="flex items-center justify-between gap-3 rounded-lg bg-slate-900/70 border border-white/5 px-3 py-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-6 h-6 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/20 flex items-center justify-center text-xs font-black shrink-0">${idx + 1}</span>
+                        <span class="text-sm font-bold text-white truncate">${escapeHtml(team.club_name)}</span>
+                    </div>
+                    <span class="text-lg font-black text-emerald-400">${team.total_points}</span>
+                </div>
+            `).join('');
+
+            const rows = data.events.map(event => {
+                const cells = activeTeams.map(team => {
+                    const key = `${event.id}_${team.club_id}`;
+                    const raw = resultsMap[key] || {};
+                    const scored = calc.scored[key] || {};
+                    let value = '-';
+                    let meta = '';
+
+                    if (raw.is_dq) {
+                        value = 'DQ';
+                        meta = '0 pts';
+                    } else if (raw.time_ms !== null && raw.time_ms !== undefined) {
+                        value = GalaEngine.formatTime(raw.time_ms);
+                        meta = scored.status === 'too_fast' ? 'Too fast' : `${ordinalSuffix(scored.place)} - ${scored.points} pts`;
+                    }
+
+                    return `<td class="px-3 py-2 text-center border-l border-white/5">
+                        <div class="font-bold ${raw.is_dq ? 'text-red-300' : 'text-white'}">${escapeHtml(value)}</div>
+                        <div class="text-[10px] uppercase tracking-wide text-slate-500">${escapeHtml(meta)}</div>
+                    </td>`;
+                }).join('');
+
+                return `<tr class="border-t border-white/5">
+                    <td class="px-3 py-2 min-w-[220px]">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded bg-slate-950 border border-slate-700 text-slate-400 text-xs font-bold flex items-center justify-center shrink-0">${event.event_number}</span>
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-white truncate">${escapeHtml(event.event_name)}</div>
+                                <div class="text-[10px] uppercase tracking-wide text-slate-500">${escapeHtml(event.distance)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    ${cells}
+                </tr>`;
+            }).join('');
+
+            const teamHeads = activeTeams.map(team => `
+                <th class="px-3 py-3 text-center border-l border-white/5 min-w-[130px]">
+                    <div class="text-[10px] text-sky-400 uppercase tracking-wider">Lane ${team.lane_number || '-'}</div>
+                    <div class="text-xs text-white truncate">${escapeHtml(team.club_name)}</div>
+                </th>
+            `).join('');
+
+            return `
+                <div class="p-4 sm:p-6 bg-slate-950/40">
+                    <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
+                        <aside>
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-black uppercase tracking-wider text-slate-400">Current Standings</h4>
+                                <span class="text-xs text-slate-500">${filledEvents.size}/${data.events.length} events</span>
+                            </div>
+                            <div class="space-y-2">${leaderboard}</div>
+                            <p class="text-[10px] text-slate-500 mt-3">Last update: ${escapeHtml(data.scoresheet.updated_at || '')}</p>
+                        </aside>
+                        <div class="overflow-auto rounded-xl border border-white/5 bg-slate-950/50">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-900 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-3 py-3 text-xs uppercase tracking-wider text-slate-400 min-w-[220px]">Event</th>
+                                        ${teamHeads}
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function ordinalSuffix(i) {
+            if (!i) return '-';
+            const j = i % 10, k = i % 100;
+            if (j === 1 && k !== 11) return i + 'st';
+            if (j === 2 && k !== 12) return i + 'nd';
+            if (j === 3 && k !== 13) return i + 'rd';
+            return i + 'th';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
         }
 
         function closeLive() {

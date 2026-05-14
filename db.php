@@ -112,6 +112,9 @@ $conn->query("CREATE TABLE IF NOT EXISTS gala_scoresheets (
     FOREIGN KEY (host_club_id) REFERENCES clubs(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+try { $conn->query("ALTER TABLE gala_scoresheets ADD COLUMN live_public_enabled TINYINT(1) NOT NULL DEFAULT 0"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE gala_scoresheets ADD COLUMN live_public_started_at TIMESTAMP NULL DEFAULT NULL"); } catch (Exception $e) {}
+
 // 3. gala_teams — Teams participating in a specific gala scoresheet
 $conn->query("CREATE TABLE IF NOT EXISTS gala_teams (
     id INT PRIMARY KEY AUTO_INCREMENT,

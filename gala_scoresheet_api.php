@@ -327,6 +327,7 @@ if ($action === 'load' && $_SERVER['REQUEST_METHOD'] === 'GET') {
             'team_count' => (int)$scoresheet['team_count'],
             'status' => $scoresheet['status'],
             'recorder_name' => $scoresheet['recorder_name'],
+            'live_public_enabled' => (int)($scoresheet['live_public_enabled'] ?? 0),
         ],
         'teams' => $teams,
         'events' => $events,
@@ -516,13 +517,44 @@ if ($action === 'save_batch' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // =====================================================
+// POST: Toggle public live results
+// =====================================================
+if ($action === 'set_live_public' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
+    $enabled = intval($_POST['enabled'] ?? 0) ? 1 : 0;
+
+    if (!$scoresheet_id) {
+        echo json_encode(['error' => 'Missing scoresheet_id']);
+        exit;
+    }
+
+    if ($enabled) {
+        $stmt = $conn->prepare("UPDATE gala_scoresheets SET live_public_enabled = 1, live_public_started_at = COALESCE(live_public_started_at, NOW()), updated_at = NOW() WHERE id = ? AND status = 'in_progress'");
+    } else {
+        $stmt = $conn->prepare("UPDATE gala_scoresheets SET live_public_enabled = 0, updated_at = NOW() WHERE id = ?");
+    }
+    $stmt->bind_param("i", $scoresheet_id);
+    $stmt->execute();
+    $affected = $stmt->affected_rows;
+    $stmt->close();
+
+    if ($enabled && $affected === 0) {
+        echo json_encode(['error' => 'This scoresheet cannot be published live.']);
+        exit;
+    }
+
+    echo json_encode(['success' => true, 'live_public_enabled' => $enabled]);
+    exit;
+}
+
+// =====================================================
 // POST: Submit scoresheet
 // =====================================================
 if ($action === 'submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
     $total_points_json = $_POST['total_points_json'] ?? null;
 
-    $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'submitted', submitted_at = NOW(), total_points_json = ? WHERE id = ? AND status IN ('draft', 'in_progress')");
+    $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'submitted', submitted_at = NOW(), total_points_json = ?, live_public_enabled = 0 WHERE id = ? AND status IN ('draft', 'in_progress')");
     $stmt->bind_param("si", $total_points_json, $scoresheet_id);
     $stmt->execute();
     $stmt->close();

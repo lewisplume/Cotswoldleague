@@ -213,6 +213,25 @@ The first real-world team withdrawal scenario led to a safer club lifecycle mode
 *   **Add Club Hardening**: The Add New Club form now validates required fields and an optional initial Team Portal PIN, prevents duplicate names including retired duplicates, explicitly creates new clubs as active, and writes the club/contact/results rows inside a transaction.
 *   **Finals Eligibility**: Finals syncing now ranks active clubs plus any club that already has results in the selected season, preserving current-season history while excluding retired clubs from clean future seasons.
 
+## 15. Live Public Results for Hosted Galas
+The gala scoresheet now has a spectator-facing live results mode that bridges the host poolside workflow and the public Season Draw page.
+
+*   **Host-Controlled Publishing**:
+    *   Added a `Publish Live` button to `gala_scoresheet.php` so the hosting club can switch public results on once setup is locked and recording is underway.
+    *   The live state is stored on `gala_scoresheets` using new `live_public_enabled` and `live_public_started_at` fields, so the public view can be tracked per gala.
+*   **Public Season Draw Integration**:
+    *   `season-draw.php` now shows a `Live Results` button on the relevant gala card whenever that hosted gala has live publishing enabled.
+    *   The spectator view opens an auto-refreshing live table and standings panel driven by the scoresheet data, so the public page stays in sync without exposing the editing interface.
+*   **Read-Only Live API**:
+    *   Added `gala_live_public_api.php` to serve live gala data without requiring the scoresheet UI.
+    *   The public endpoint is read-only and only returns scoresheets that are actively published for live viewing.
+*   **Submit-To-League Behavior**:
+    *   The `Submit to League` action now uses the existing submit flow, saves total points, and automatically turns public live results off at submission time.
+    *   This keeps the live spectator page available only while the gala is actively being run at the pool.
+*   **Help Text and Operator Guidance**:
+    *   The scoresheet help modal now explains how to enable public live results, what spectators can see, and that submitting to the league automatically switches the public view off.
+    *   The guide was updated so host teams have one place to review the live/public workflow alongside setup, DQs, offline sync, and submission.
+
 ---
 **Summary Checklist**
 - [x] Multi-Season capability integrated into front & backend.
@@ -257,3 +276,16 @@ The first real-world team withdrawal scenario led to a safer club lifecycle mode
 - [x] Club retirement workflow implemented without deleting historic results or draws.
 - [x] Retired clubs blocked from Team Portal login and hidden from the contacts directory.
 - [x] Add New Club flow hardened with active status, initial PIN, duplicate checks, and transaction-safe setup.
+- [x] Public live results publishing added to hosted gala scoresheets.
+- [x] Public Season Draw live viewer now shows active gala results for spectators.
+- [x] Submit to League now turns off public live results automatically.
+- [x] Scoresheet help modal now documents the public live workflow.
+
+## 16. Teamsheet Builder Polishing
+Today's teamsheet work focused on making the builder clearer for clubs that submit their own document and tightening a few event-specific rules.
+
+*   **Uploaded Teamsheets**: Clubs can now tick an upload option in the Teamsheet Builder, attach their own PDF/Word/Excel-style document for the selected round or final, and submit it as the teamsheet for that gala. The uploaded sheet still appears in the shared submitted teamsheets area for the other clubs in the same gala.
+*   **Upload Caveats Explained**: Added contextual `?` help for uploaded teamsheets and Cannon events so clubs can see the key restrictions and requirements directly beside the relevant control.
+*   **Individual Medley Fix**: Events 1-4 are now treated as single-swimmer Individual Medley events instead of 4-swimmer relays.
+*   **Medley Team Labels**: Medley Team events now label the four picks as Backstroke, Breaststroke, Butterfly, and Freestyle rather than generic Leg 1-4.
+*   **Cannon Rules Help**: Added a Cannon help pop-out explaining the 8x1 format, age-order swim sequence, and restriction against swimming up an age group.

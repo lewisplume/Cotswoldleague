@@ -136,6 +136,9 @@ while ($row = $res_clubs->fetch_assoc()) {
                 <button id="btn-edit-setup" class="hidden bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg flex items-center gap-2">
                     <i data-lucide="settings" class="w-4 h-4"></i> Edit Setup
                 </button>
+                <button id="btn-live-public" class="hidden bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg flex items-center gap-2">
+                    <i data-lucide="radio" class="w-4 h-4"></i> Publish Live
+                </button>
                 <button id="btn-submit-league" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg font-bold text-sm transition-all shadow-lg flex items-center gap-2">
                     <i data-lucide="send" class="w-4 h-4"></i> Submit to League
                 </button>
@@ -287,7 +290,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
                         <i data-lucide="circle-help" class="w-5 h-5 text-sky-300"></i> Digital Scoresheet Guide
                     </h3>
-                    <p class="text-xs text-slate-400 mt-1">Poolside recording, offline use, lane setup, DQs, and league submission.</p>
+                    <p class="text-xs text-slate-400 mt-1">Poolside recording, live spectator results, offline use, lane setup, DQs, and league submission.</p>
                 </div>
                 <button type="button" onclick="closeScoresheetHelp()" aria-label="Close scoresheet guide"
                     class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 p-2 rounded-lg">
@@ -350,12 +353,24 @@ while ($row = $res_clubs->fetch_assoc()) {
                     </div>
                 </section>
 
+                <section class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-red-300 mb-3">Public Live Results</h4>
+                    <ol class="space-y-2 list-decimal list-inside">
+                        <li>After setup is locked, use <strong class="text-white">Publish Live</strong> if spectators should follow the gala from the public Season Draw page.</li>
+                        <li>The Season Draw page shows a <strong class="text-white">Live Results</strong> button on this gala card while public live results are switched on.</li>
+                        <li>Spectators can view the current standings, entered event times, DQs, places, and points; the public view refreshes automatically.</li>
+                        <li>Use <strong class="text-white">Live On</strong> to stop publishing if you need to hide the public view during the gala.</li>
+                        <li>Public live results need an internet connection; offline entries will appear publicly after this device reconnects and syncs.</li>
+                    </ol>
+                </section>
+
                 <section class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
                     <h4 class="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-3">Submitting To The League</h4>
                     <ol class="space-y-2 list-decimal list-inside">
-                        <li>Review all event times, DQs, and the live standings before publishing.</li>
+                        <li>Review all event times, DQs, and the live standings before submitting.</li>
                         <li>Use <strong class="text-white">Submit to League</strong> when the gala record is complete.</li>
-                        <li>Publishing locks the scoresheet and makes the results available for league verification and downstream results tools.</li>
+                        <li>Submitting switches off the public live results view automatically.</li>
+                        <li>The submitted scoresheet is then available for league verification and downstream results tools.</li>
                     </ol>
                 </section>
             </div>
@@ -414,7 +429,8 @@ while ($row = $res_clubs->fetch_assoc()) {
             events: [],
             results: {}, // key: "eventId_clubId"
             online: navigator.onLine,
-            isSetupLocked: false
+            isSetupLocked: false,
+            lastCalc: null
         };
 
         // DOM Elements
@@ -426,6 +442,7 @@ while ($row = $res_clubs->fetch_assoc()) {
         const btnLockSetup = document.getElementById('btn-lock-setup');
 
         document.getElementById('btn-edit-setup').addEventListener('click', unlockSetup);
+        document.getElementById('btn-live-public').addEventListener('click', togglePublicLiveResults);
 
         async function substituteTeam(oldClubId) {
             const sel = document.getElementById(`sub-${oldClubId}`);
@@ -720,27 +737,66 @@ while ($row = $res_clubs->fetch_assoc()) {
 
         // Submission Listener
         document.getElementById('btn-submit-league').addEventListener('click', async () => {
-            if (!confirm("Are you sure you want to publish these results? This will lock the scoresheet and notify the league.")) return;
+            if (!confirm("Are you sure you want to submit these results to the league? This will remove any public live view for spectators.")) return;
             
             try {
+                const calc = appState.lastCalc || GalaEngine.calculateFullScoresheet(appState.events, appState.teams, appState.results);
+                const totalPoints = {};
+                Object.values(calc.totals || {}).forEach(team => {
+                    totalPoints[team.club_id] = team.total_points;
+                });
+
                 const fd = new FormData();
-                fd.append('action', 'publish');
+                fd.append('action', 'submit');
                 fd.append('scoresheet_id', appState.scoresheet.id);
+                fd.append('total_points_json', JSON.stringify(totalPoints));
                 
                 const resp = await fetch('gala_scoresheet_api.php', { method: 'POST', body: fd });
                 const res = await resp.json();
                 if (res.success) {
-                    appState.scoresheet.status = 'published';
+                    appState.scoresheet.status = 'submitted';
+                    appState.scoresheet.live_public_enabled = 0;
                     renderUI();
-                    alert("Gala results published successfully!");
+                    alert("Gala results submitted to the league. The public live view has been switched off.");
                 } else {
-                    alert("Publishing failed: " + (res.error || 'Unknown error'));
+                    alert("Submission failed: " + (res.error || 'Unknown error'));
                 }
             } catch (err) {
                 console.error(err);
                 alert("Error connecting to server.");
             }
         });
+
+        async function togglePublicLiveResults() {
+            if (!appState.scoresheet) return;
+
+            const isLive = !!parseInt(appState.scoresheet.live_public_enabled || 0);
+            const nextState = isLive ? 0 : 1;
+            const message = nextState
+                ? 'Publish these live results to the Season Draw page for spectators?'
+                : 'Stop showing these live results on the Season Draw page?';
+
+            if (!confirm(message)) return;
+
+            try {
+                const fd = new FormData();
+                fd.append('action', 'set_live_public');
+                fd.append('scoresheet_id', appState.scoresheet.id);
+                fd.append('enabled', nextState);
+
+                const resp = await fetch('gala_scoresheet_api.php', { method: 'POST', body: fd });
+                const res = await resp.json();
+                if (res.success) {
+                    appState.scoresheet.live_public_enabled = res.live_public_enabled;
+                    renderUI();
+                } else {
+                    alert("Live publish failed: " + (res.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to server.");
+            }
+        }
 
         async function loadFromLocalFallback(id) {
             const localData = await GalaEngine.loadFromLocal(id);
@@ -809,7 +865,8 @@ while ($row = $res_clubs->fetch_assoc()) {
             // Update Header
             const titlePrefix = initParams.is_sandbox ? '[SANDBOX] ' : '';
             elGalaTitle.innerText = titlePrefix + `Round ${appState.scoresheet.round_number} @ ${appState.scoresheet.host_club_name}`;
-            elGalaSubtitle.innerText = `Gala Type: ${appState.scoresheet.gala_type.toUpperCase()} | Status: ${appState.scoresheet.status.toUpperCase()}`;
+            const liveLabel = parseInt(appState.scoresheet.live_public_enabled || 0) ? ' | PUBLIC LIVE ON' : '';
+            elGalaSubtitle.innerText = `Gala Type: ${appState.scoresheet.gala_type.toUpperCase()} | Status: ${appState.scoresheet.status.toUpperCase()}${liveLabel}`;
             
             // Determine which stage to show
             // Are all non-absent teams assigned a lane?
@@ -822,10 +879,23 @@ while ($row = $res_clubs->fetch_assoc()) {
             }
 
             // Button Visibility
-            if (appState.scoresheet.status !== 'draft') {
+            if (appState.scoresheet.status === 'in_progress') {
                 document.getElementById('btn-submit-league').classList.remove('hidden');
             } else {
                 document.getElementById('btn-submit-league').classList.add('hidden');
+            }
+
+            const liveBtn = document.getElementById('btn-live-public');
+            if (!initParams.is_sandbox && appState.scoresheet.status === 'in_progress') {
+                const isLive = parseInt(appState.scoresheet.live_public_enabled || 0) === 1;
+                liveBtn.classList.remove('hidden');
+                liveBtn.classList.toggle('bg-red-600', isLive);
+                liveBtn.classList.toggle('text-white', isLive);
+                liveBtn.innerHTML = isLive
+                    ? '<i data-lucide="radio" class="w-4 h-4 animate-pulse"></i> Live On'
+                    : '<i data-lucide="radio" class="w-4 h-4"></i> Publish Live';
+            } else {
+                liveBtn.classList.add('hidden');
             }
 
             if (appState.isSetupLocked) {
@@ -1306,6 +1376,7 @@ while ($row = $res_clubs->fetch_assoc()) {
         function recalculateAll() {
             // Run data through Engine
             const calc = GalaEngine.calculateFullScoresheet(appState.events, appState.teams, appState.results);
+            appState.lastCalc = calc;
             
             // 1. Update Cell UIs (Points, Places, Backgrounds)
             Object.keys(calc.scored).forEach(key => {
