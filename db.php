@@ -85,6 +85,11 @@ $conn->query("CREATE TABLE IF NOT EXISTS gala_events (
     UNIQUE KEY uk_event_season (event_number, season_year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+$conn->query("UPDATE gala_events
+              SET event_type = 'Individual'
+              WHERE event_number IN (1, 2, 3, 4)
+                AND event_name LIKE '%Ind. Medley%'");
+
 // 2. gala_scoresheets — One scoresheet per gala per venue
 $conn->query("CREATE TABLE IF NOT EXISTS gala_scoresheets (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -181,6 +186,11 @@ $conn->query("CREATE TABLE IF NOT EXISTS club_teamsheets (
     round_key VARCHAR(20) NOT NULL,
     gala_type ENUM('round','b_final','c_final','a_final') DEFAULT 'round',
     venue_detail_id INT DEFAULT NULL,
+    submission_type ENUM('builder','upload') DEFAULT 'builder',
+    upload_file_path VARCHAR(255) DEFAULT NULL,
+    upload_original_name VARCHAR(255) DEFAULT NULL,
+    upload_mime_type VARCHAR(120) DEFAULT NULL,
+    upload_file_size INT DEFAULT NULL,
     status ENUM('draft','submitted') DEFAULT 'draft',
     submitted_at TIMESTAMP NULL DEFAULT NULL,
     submitted_by VARCHAR(120) DEFAULT NULL,
@@ -191,6 +201,12 @@ $conn->query("CREATE TABLE IF NOT EXISTS club_teamsheets (
     INDEX idx_teamsheet_round (season_year, round_key, venue_detail_id),
     FOREIGN KEY (club_id) REFERENCES clubs(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+try { $conn->query("ALTER TABLE club_teamsheets ADD COLUMN submission_type ENUM('builder','upload') DEFAULT 'builder'"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE club_teamsheets ADD COLUMN upload_file_path VARCHAR(255) DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE club_teamsheets ADD COLUMN upload_original_name VARCHAR(255) DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE club_teamsheets ADD COLUMN upload_mime_type VARCHAR(120) DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE club_teamsheets ADD COLUMN upload_file_size INT DEFAULT NULL"); } catch (Exception $e) {}
 
 $conn->query("CREATE TABLE IF NOT EXISTS club_teamsheet_entries (
     id INT PRIMARY KEY AUTO_INCREMENT,

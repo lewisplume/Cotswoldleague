@@ -144,6 +144,29 @@ function normalise_teamunify_time($time)
     return rtrim($time, 'S');
 }
 
+function safe_download_name($name)
+{
+    $name = trim((string)$name);
+    $name = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $name);
+    $name = preg_replace('/\s+/', ' ', $name);
+    return trim($name, ' .') ?: 'teamsheet';
+}
+
+function safe_filename_token($value)
+{
+    $value = trim((string)$value);
+    $value = preg_replace('/[^A-Za-z0-9_-]+/', '_', $value);
+    return trim($value, '_') ?: 'teamsheet';
+}
+
+function ensure_upload_dir($dir)
+{
+    if (!is_dir($dir) && !mkdir($dir, 0777, true)) {
+        return false;
+    }
+    return is_dir($dir) && is_writable($dir);
+}
+
 function teamunify_event_field($event)
 {
     $event = strtolower(trim((string)$event));
@@ -436,6 +459,11 @@ function load_teamsheet_payload($conn, $teamsheet_id, $viewer_club_id)
             'round_key' => $teamsheet['round_key'],
             'gala_type' => $teamsheet['gala_type'],
             'venue_detail_id' => $teamsheet['venue_detail_id'] ? (int)$teamsheet['venue_detail_id'] : null,
+            'submission_type' => $teamsheet['submission_type'] ?: 'builder',
+            'upload_original_name' => $teamsheet['upload_original_name'],
+            'upload_mime_type' => $teamsheet['upload_mime_type'],
+            'upload_file_size' => $teamsheet['upload_file_size'] ? (int)$teamsheet['upload_file_size'] : null,
+            'upload_url' => !empty($teamsheet['upload_file_path']) ? 'digital_teamsheet_file.php?id=' . (int)$teamsheet['id'] : '',
             'status' => $teamsheet['status'],
             'submitted_at' => $teamsheet['submitted_at'],
             'updated_at' => $teamsheet['updated_at'],
@@ -494,7 +522,7 @@ if ($action === 'load') {
     $e_stmt->close();
 
     $teamsheets = [];
-    $ts_stmt = $conn->prepare("SELECT id, round_key, venue_detail_id, status, submitted_at, updated_at FROM club_teamsheets WHERE club_id = ? AND season_year = ?");
+    $ts_stmt = $conn->prepare("SELECT id, round_key, venue_detail_id, status, submitted_at, updated_at, submission_type, upload_original_name FROM club_teamsheets WHERE club_id = ? AND season_year = ?");
     $ts_stmt->bind_param("ii", $club_id, $season);
     $ts_stmt->execute();
     $ts_res = $ts_stmt->get_result();
@@ -506,6 +534,8 @@ if ($action === 'load') {
             'status' => $row['status'],
             'submitted_at' => $row['submitted_at'],
             'updated_at' => $row['updated_at'],
+            'submission_type' => $row['submission_type'] ?: 'builder',
+            'upload_original_name' => $row['upload_original_name'],
         ];
     }
     $ts_stmt->close();
@@ -515,7 +545,8 @@ if ($action === 'load') {
         $venue_ids = array_values(array_unique(array_filter(array_map(fn($r) => (int)$r['venue_detail_id'], $rounds))));
         if (!empty($venue_ids)) {
             $in = implode(',', array_map('intval', $venue_ids));
-            $res = $conn->query("SELECT ts.id, ts.club_id, ts.round_key, ts.venue_detail_id, ts.status, ts.submitted_at, ts.updated_at, c.name AS club_name
+            $res = $conn->query("SELECT ts.id, ts.club_id, ts.round_key, ts.venue_detail_id, ts.status, ts.submitted_at, ts.updated_at,
+                    ts.submission_type, ts.upload_original_name, ts.upload_file_size, c.name AS club_name
                 FROM club_teamsheets ts JOIN clubs c ON ts.club_id = c.id
                 WHERE ts.season_year = $season AND ts.venue_detail_id IN ($in) AND ts.status = 'submitted'
                 ORDER BY ts.round_key ASC, c.name ASC");
@@ -529,6 +560,10 @@ if ($action === 'load') {
                     'status' => $row['status'],
                     'submitted_at' => $row['submitted_at'],
                     'updated_at' => $row['updated_at'],
+                    'submission_type' => $row['submission_type'] ?: 'builder',
+                    'upload_original_name' => $row['upload_original_name'],
+                    'upload_file_size' => $row['upload_file_size'] ? (int)$row['upload_file_size'] : null,
+                    'upload_url' => ($row['submission_type'] ?? '') === 'upload' ? 'digital_teamsheet_file.php?id=' . (int)$row['id'] : '',
                     'is_mine' => (int)$row['club_id'] === (int)$club_id,
                 ];
             }
@@ -703,14 +738,14 @@ if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$existing) {
-        $stmt = $conn->prepare("INSERT INTO club_teamsheets (club_id, season_year, round_key, gala_type, venue_detail_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO club_teamsheets (club_id, season_year, round_key, gala_type, venue_detail_id, submission_type) VALUES (?, ?, ?, ?, ?, 'builder')");
         $stmt->bind_param("iissi", $target_club_id, $season, $round_key, $gala_type, $venue_detail_id);
         $stmt->execute();
         $teamsheet_id = $conn->insert_id;
         $stmt->close();
     } else {
         $teamsheet_id = (int)$existing['id'];
-        $stmt = $conn->prepare("UPDATE club_teamsheets SET gala_type = ?, venue_detail_id = ?, last_reason = NULLIF(?, '') WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE club_teamsheets SET gala_type = ?, venue_detail_id = ?, submission_type = 'builder', last_reason = NULLIF(?, '') WHERE id = ?");
         $stmt->bind_param("sisi", $gala_type, $venue_detail_id, $reason, $teamsheet_id);
         $stmt->execute();
         $stmt->close();
@@ -770,6 +805,136 @@ if ($action === 'save_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $audit->execute();
         $audit->close();
     }
+
+    echo json_encode(['success' => true, 'teamsheet_id' => $teamsheet_id]);
+    exit;
+}
+
+if ($action === 'upload_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $season = (int)($_POST['season'] ?? $active_season_year);
+    $round_key = $_POST['round_key'] ?? '';
+    $gala_type = $_POST['gala_type'] ?? 'round';
+    $venue_detail_id = (int)($_POST['venue_detail_id'] ?? 0);
+    $reason = trim($_POST['reason'] ?? '');
+
+    if ($round_key === '' || $venue_detail_id <= 0) {
+        echo json_encode(['error' => 'Missing round details for the uploaded teamsheet.']);
+        exit;
+    }
+    if (empty($_FILES['teamsheet_file']) || ($_FILES['teamsheet_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        echo json_encode(['error' => 'Please choose a teamsheet document to upload.']);
+        exit;
+    }
+
+    $file = $_FILES['teamsheet_file'];
+    if (($file['size'] ?? 0) <= 0) {
+        echo json_encode(['error' => 'The uploaded file was empty.']);
+        exit;
+    }
+    if (($file['size'] ?? 0) > 10 * 1024 * 1024) {
+        echo json_encode(['error' => 'Uploaded teamsheets must be 10MB or smaller.']);
+        exit;
+    }
+
+    $original_name = safe_download_name($file['name'] ?? 'teamsheet');
+    $ext = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+    $allowed_exts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'rtf', 'odt'];
+    if (!in_array($ext, $allowed_exts, true)) {
+        echo json_encode(['error' => 'Please upload a PDF, Word, Excel, CSV, RTF, or ODT teamsheet.']);
+        exit;
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']) ?: 'application/octet-stream';
+    $allowed_mimes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/csv',
+        'text/plain',
+        'application/rtf',
+        'text/rtf',
+        'application/vnd.oasis.opendocument.text',
+        'application/zip',
+        'application/octet-stream',
+    ];
+    if (!in_array($mime, $allowed_mimes, true)) {
+        echo json_encode(['error' => 'That file type was not recognised as a supported teamsheet document.']);
+        exit;
+    }
+
+    $existing = null;
+    $check = $conn->prepare("SELECT * FROM club_teamsheets WHERE club_id = ? AND season_year = ? AND round_key = ?");
+    $check->bind_param("iis", $target_club_id, $season, $round_key);
+    $check->execute();
+    $existing = $check->get_result()->fetch_assoc();
+    $check->close();
+
+    if ($existing && $existing['status'] === 'submitted' && $reason === '') {
+        echo json_encode(['error' => 'A reason is required when replacing a submitted teamsheet.']);
+        exit;
+    }
+
+    $upload_dir = 'uploads/teamsheets/';
+    if (!ensure_upload_dir($upload_dir)) {
+        echo json_encode(['error' => 'Could not prepare the teamsheet upload folder.']);
+        exit;
+    }
+
+    $token = bin2hex(random_bytes(6));
+    $stored_name = implode('_', [
+        'club' . (int)$target_club_id,
+        safe_filename_token((string)$season),
+        safe_filename_token($round_key),
+        $token
+    ]) . '.' . $ext;
+    $stored_path = $upload_dir . $stored_name;
+    if (!move_uploaded_file($file['tmp_name'], $stored_path)) {
+        echo json_encode(['error' => 'Could not save the uploaded teamsheet.']);
+        exit;
+    }
+
+    if (!$existing) {
+        $stmt = $conn->prepare("INSERT INTO club_teamsheets
+            (club_id, season_year, round_key, gala_type, venue_detail_id, submission_type, upload_file_path, upload_original_name, upload_mime_type, upload_file_size, status, submitted_at, submitted_by)
+            VALUES (?, ?, ?, ?, ?, 'upload', ?, ?, ?, ?, 'submitted', NOW(), ?)");
+        $size = (int)$file['size'];
+        $stmt->bind_param("iississsis", $target_club_id, $season, $round_key, $gala_type, $venue_detail_id, $stored_path, $original_name, $mime, $size, $target_club_name);
+        $stmt->execute();
+        $teamsheet_id = $conn->insert_id;
+        $stmt->close();
+    } else {
+        $teamsheet_id = (int)$existing['id'];
+        $old_path = $existing['upload_file_path'] ?? '';
+        $stmt = $conn->prepare("UPDATE club_teamsheets
+            SET gala_type = ?, venue_detail_id = ?, submission_type = 'upload', upload_file_path = ?, upload_original_name = ?,
+                upload_mime_type = ?, upload_file_size = ?, status = 'submitted', submitted_at = COALESCE(submitted_at, NOW()),
+                submitted_by = ?, last_reason = NULLIF(?, '')
+            WHERE id = ? AND club_id = ?");
+        $size = (int)$file['size'];
+        $stmt->bind_param("sisssissii", $gala_type, $venue_detail_id, $stored_path, $original_name, $mime, $size, $target_club_name, $reason, $teamsheet_id, $target_club_id);
+        $stmt->execute();
+        $stmt->close();
+        if ($old_path && $old_path !== $stored_path && is_file($old_path)) {
+            unlink($old_path);
+        }
+    }
+
+    $summary = $existing && $existing['status'] === 'submitted' ? 'Uploaded replacement teamsheet document' : 'Uploaded teamsheet document';
+    $snapshot = json_encode([
+        'submission_type' => 'upload',
+        'file_name' => $original_name,
+        'mime_type' => $mime,
+        'file_size' => (int)$file['size'],
+        'round_key' => $round_key,
+        'venue_detail_id' => $venue_detail_id,
+    ]);
+    $audit = $conn->prepare("INSERT INTO club_teamsheet_audit (teamsheet_id, club_id, changed_by, reason, change_summary, snapshot_json) VALUES (?, ?, ?, ?, ?, ?)");
+    $audit->bind_param("iissss", $teamsheet_id, $target_club_id, $target_club_name, $reason, $summary, $snapshot);
+    $audit->execute();
+    $audit->close();
 
     echo json_encode(['success' => true, 'teamsheet_id' => $teamsheet_id]);
     exit;

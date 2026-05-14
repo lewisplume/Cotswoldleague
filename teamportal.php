@@ -297,7 +297,8 @@ if ($is_logged_in) {
                          gs.id AS scoresheet_id,
                          gs.status AS scoresheet_status,
                          cts.id AS digital_teamsheet_id,
-                         cts.status AS digital_teamsheet_status
+                         cts.status AS digital_teamsheet_status,
+                         cts.submission_type AS digital_teamsheet_submission_type
                   FROM venue_details vd
                   LEFT JOIN clubs c_host ON vd.club_id = c_host.id
                   LEFT JOIN clubs c1 ON vd.team_1_id = c1.id
@@ -950,7 +951,38 @@ if ($is_logged_in) {
                                     <div id="dts-teamsheet-meta" class="px-4 py-3 bg-slate-900/40 border-b border-white/5 text-xs text-slate-400"></div>
                                     <div id="dts-audit-list" class="hidden px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-100"></div>
 
-                                    <div class="overflow-auto max-h-[68vh]">
+                                    <div class="px-4 py-3 bg-slate-900/30 border-b border-white/5">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <label class="inline-flex items-center gap-2 text-sm text-slate-200 font-bold cursor-pointer">
+                                                <input id="dts-upload-mode-toggle" type="checkbox" onchange="toggleTeamsheetUploadMode(this.checked)"
+                                                    class="rounded border-slate-700 bg-slate-950 text-cyan-500">
+                                                <span>Upload our own teamsheet document</span>
+                                            </label>
+                                            <button type="button" onclick="toggleUploadHelp()"
+                                                class="w-6 h-6 rounded-full bg-slate-800 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-slate-700 hover:border-cyan-500 text-xs font-black flex items-center justify-center"
+                                                aria-expanded="false" aria-controls="dts-upload-help" title="How uploaded teamsheets work">
+                                                ?
+                                            </button>
+                                        </div>
+                                        <div id="dts-upload-help" class="hidden mt-3 rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-xs text-sky-100 leading-relaxed">
+                                            <div class="font-bold text-white mb-1">Uploaded teamsheets must match the digital teamsheet information.</div>
+                                            <div>Your document should include the same details as the builder: every event, selected swimmer names in order, PBs where needed, and any host notes. Once uploaded, it is submitted for this selected round/final and shared with the other clubs in that gala.</div>
+                                            <div class="mt-2 text-sky-200">Uploaded documents cannot be checked by the website event-by-event, copied into another round, exported as a generated CSV, or used by Smart Results Matcher. If you need those tools, use the digital builder instead.</div>
+                                        </div>
+                                        <div id="dts-upload-panel" class="hidden mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+                                            <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+                                                <input id="dts-upload-file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.rtf,.odt"
+                                                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 cursor-pointer">
+                                                <button type="button" onclick="uploadOwnTeamsheet()"
+                                                    class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                                                    <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload & Submit
+                                                </button>
+                                            </div>
+                                            <div id="dts-upload-current" class="mt-2 text-xs text-slate-400"></div>
+                                        </div>
+                                    </div>
+
+                                    <div id="dts-builder-table-wrap" class="overflow-auto max-h-[68vh]">
                                         <table class="min-w-[960px] w-full text-xs text-slate-300">
                                             <thead class="bg-slate-900/95 text-slate-400 uppercase tracking-wider sticky top-0 z-10">
                                                 <tr>
@@ -1352,10 +1384,14 @@ if ($is_logged_in) {
                                                 Results pending
                                             </div>
                                         <?php endif; ?>
-                                        <?php if (!empty($draw['results_file']) && !empty($draw['digital_teamsheet_id']) && ($draw['digital_teamsheet_status'] ?? '') === 'submitted'): ?>
+                                        <?php if (!empty($draw['results_file']) && !empty($draw['digital_teamsheet_id']) && ($draw['digital_teamsheet_status'] ?? '') === 'submitted' && ($draw['digital_teamsheet_submission_type'] ?? 'builder') === 'builder'): ?>
                                             <a href="smart-results-matcher.php?digital_teamsheet_id=<?php echo (int)$draw['digital_teamsheet_id']; ?>" target="_blank" class="w-full bg-purple-600 hover:bg-purple-500 text-white border border-purple-500 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-purple-900/20">
                                                 <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Smart Results Matcher
                                             </a>
+                                        <?php elseif (!empty($draw['results_file']) && ($draw['digital_teamsheet_submission_type'] ?? '') === 'upload'): ?>
+                                            <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
+                                                Results matcher requires builder teamsheet
+                                            </div>
                                         <?php elseif (!empty($draw['results_file'])): ?>
                                             <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
                                                 Submit digital teamsheet to enable matcher
@@ -2693,6 +2729,54 @@ if ($is_logged_in) {
             renderTeamsheetRows();
         }
 
+        function formatFileSize(bytes) {
+            bytes = parseInt(bytes || 0, 10);
+            if (!bytes) return '';
+            if (bytes < 1024) return `${bytes} bytes`;
+            if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        function toggleTeamsheetUploadMode(checked) {
+            const panel = document.getElementById('dts-upload-panel');
+            const tableWrap = document.getElementById('dts-builder-table-wrap');
+            if (panel) panel.classList.toggle('hidden', !checked);
+            if (tableWrap) tableWrap.classList.toggle('hidden', !!checked);
+            if (checked) {
+                window.clearTimeout(dtsAutosave.teamsheetTimer);
+                dtsAutosave.teamsheetDirty = false;
+                showAutosaveStatus('teamsheet', '', 'info');
+            }
+            updateTeamsheetLinks();
+            lucide.createIcons();
+        }
+
+        function toggleUploadHelp() {
+            const help = document.getElementById('dts-upload-help');
+            const button = document.querySelector('[aria-controls="dts-upload-help"]');
+            if (!help) return;
+            const willShow = help.classList.contains('hidden');
+            help.classList.toggle('hidden', !willShow);
+            if (button) button.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+        }
+
+        function renderUploadPanel() {
+            const toggle = document.getElementById('dts-upload-mode-toggle');
+            const current = document.getElementById('dts-upload-current');
+            const isUpload = dtsState.activeTeamsheet?.submission_type === 'upload';
+            if (toggle) {
+                toggle.checked = !!isUpload;
+                toggleTeamsheetUploadMode(toggle.checked);
+            }
+            if (!current) return;
+            if (isUpload && dtsState.activeTeamsheet?.upload_original_name) {
+                const size = formatFileSize(dtsState.activeTeamsheet.upload_file_size);
+                current.innerHTML = `Current submitted file: <a href="${dtsEscape(dtsState.activeTeamsheet.upload_url)}" target="_blank" class="text-cyan-300 hover:text-white font-bold">${dtsEscape(dtsState.activeTeamsheet.upload_original_name)}</a>${size ? ` · ${dtsEscape(size)}` : ''}`;
+            } else {
+                current.textContent = 'PDF, Word, Excel, CSV, RTF, and ODT files are accepted, up to 10MB.';
+            }
+        }
+
         function getEventName(event) {
             if (dtsState.selectedRound?.gala_type === 'a_final' && event.a_final_event_name) {
                 return event.a_final_event_name;
@@ -2708,9 +2792,40 @@ if ($is_logged_in) {
             return event.cut_off;
         }
 
+        function isIndividualMedleyEvent(event) {
+            return /\bInd\.?\s*Medley\b/i.test(getEventName(event)) || /\bIndividual\s*Medley\b/i.test(getEventName(event));
+        }
+
+        function isMedleyTeamEvent(event) {
+            return /\bMedley\s*team\b/i.test(getEventName(event));
+        }
+
+        function getTeamsheetEventLimit(event) {
+            if (event.event_type === 'Cannon') return 8;
+            if (isIndividualMedleyEvent(event)) return 1;
+            return event.event_type === 'Relay' ? 4 : 1;
+        }
+
+        function getRelayLegLabel(event, index, limit) {
+            if (limit === 8) return `Cannon ${index + 1}`;
+            if (isMedleyTeamEvent(event)) {
+                return ['Backstroke', 'Breaststroke', 'Butterfly', 'Freestyle'][index] || `Leg ${index + 1}`;
+            }
+            return `Leg ${index + 1}`;
+        }
+
+        function toggleCannonHelp(button) {
+            const help = button?.closest('td')?.querySelector('.dts-cannon-help');
+            if (!help) return;
+            const willShow = help.classList.contains('hidden');
+            help.classList.toggle('hidden', !willShow);
+            button.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+        }
+
         function getPbField(event) {
-            if (event.event_type !== 'Individual') return '';
             const name = getEventName(event);
+            if (isIndividualMedleyEvent(event)) return 'pb_im';
+            if (event.event_type !== 'Individual') return '';
             const stroke = ['Freestyle', 'Backstroke', 'Breaststroke', 'Butterfly'].find(s => name.includes(s));
             const distance = (dtsState.selectedRound?.gala_type === 'a_final' && event.a_final_distance) ? event.a_final_distance : event.distance;
             if (!stroke) return name.includes('Individual Medley') ? 'pb_im' : '';
@@ -2735,7 +2850,7 @@ if ($is_logged_in) {
             }).join('');
         }
 
-        function buildSwimmerPickerHtml(limit, selected) {
+        function buildSwimmerPickerHtml(event, limit, selected) {
             if (limit === 1) {
                 return `
                     <select onchange="updateTeamsheetRow(this.closest('tr'))"
@@ -2750,8 +2865,8 @@ if ($is_logged_in) {
             return `
                 <div class="dts-relay-picker space-y-2">
                     ${Array.from({ length: limit }, (_, index) => `
-                        <div class="grid grid-cols-[4.5rem_1fr] gap-2 items-center">
-                            <label class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">${limit === 8 ? 'Cannon' : 'Leg'} ${index + 1}</label>
+                        <div class="grid grid-cols-[7rem_1fr] gap-2 items-center">
+                            <label class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">${dtsEscape(getRelayLegLabel(event, index, limit))}</label>
                             <select onchange="updateTeamsheetRow(this.closest('tr'))"
                                 class="dts-event-swimmers w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-400">
                                 <option value="">- Select swimmer -</option>
@@ -2778,12 +2893,11 @@ if ($is_logged_in) {
             const availableCount = dtsState.swimmers.filter(swimmer => !!(swimmer.availability && swimmer.availability[getSelectedAvailabilityKey()] === true)).length;
             const filterText = dtsState.showAvailableOnly ? ` · Showing ${availableCount} available swimmer${availableCount === 1 ? '' : 's'}` : '';
             meta.innerHTML = `<strong class="text-cyan-300">${dtsEscape(dtsState.selectedRound.label)}</strong> · ${dtsEscape(status.toUpperCase())} · ${dtsEscape(submitted)} · Shared with: ${dtsEscape(dtsState.selectedRound.teams.join(', '))}${filterText}`;
+            renderUploadPanel();
             body.innerHTML = dtsState.events.map(event => {
                 const loaded = dtsState.loadedEntries[event.id] || {};
                 const selected = loaded.selected_swimmers || [];
-                const isRelay = event.event_type === 'Relay';
-                const isCannon = event.event_type === 'Cannon';
-                const limit = isCannon ? 8 : (isRelay ? 4 : 1);
+                const limit = getTeamsheetEventLimit(event);
                 const pbField = getPbField(event);
                 const isTeamEvent = limit > 1;
                 const pbValue = isTeamEvent ? '' : (loaded.pb_snapshot || '');
@@ -2793,8 +2907,24 @@ if ($is_logged_in) {
                         <td class="px-3 py-2">
                             <div class="flex items-start justify-between gap-2">
                                 <div>
-                                    <div class="font-semibold text-white">${dtsEscape(getEventName(event))}</div>
+                                    <div class="font-semibold text-white flex flex-wrap items-center gap-2">
+                                        <span>${dtsEscape(getEventName(event))}</span>
+                                        ${event.event_type === 'Cannon' ? `
+                                            <button type="button" onclick="toggleCannonHelp(this)"
+                                                class="w-5 h-5 rounded-full bg-slate-800 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-slate-700 hover:border-cyan-500 text-[10px] font-black flex items-center justify-center"
+                                                aria-expanded="false" title="Cannon event rules">
+                                                ?
+                                            </button>
+                                        ` : ''}
+                                    </div>
                                     <div class="text-[10px] text-slate-500">${dtsEscape(event.event_type)} · ${dtsEscape((dtsState.selectedRound.gala_type === 'a_final' && event.a_final_distance) || event.distance)}</div>
+                                    ${event.event_type === 'Cannon' ? `
+                                        <div class="dts-cannon-help hidden mt-2 rounded-lg border border-sky-500/20 bg-sky-500/10 p-2 text-[11px] leading-relaxed text-sky-100">
+                                            <div>8x1 length: 1 boy and 1 girl from each age group.</div>
+                                            <div>Swum in age order: 11/u up to Open.</div>
+                                            <div>Restriction: swimmers cannot swim up an age group in the Cannon.</div>
+                                        </div>
+                                    ` : ''}
                                 </div>
                                 <button type="button" onclick="toggleTeamsheetEvent(this.closest('tr'))"
                                     class="dts-collapse-btn shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1"
@@ -2806,7 +2936,7 @@ if ($is_logged_in) {
                         <td class="px-3 py-2 text-center font-mono text-red-300">${dtsEscape(getEventCutOff(event))}</td>
                         <td class="dts-collapsible-cell px-3 py-2">
                             <div class="dts-event-warning hidden mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-100"></div>
-                            ${buildSwimmerPickerHtml(limit, selected)}
+                            ${buildSwimmerPickerHtml(event, limit, selected)}
                         </td>
                         <td class="dts-collapsible-cell px-3 py-2"><input value="${dtsEscape(pbValue)}" ${isTeamEvent ? 'readonly aria-readonly="true" placeholder="No PB needed"' : ''} class="dts-event-pb w-full border rounded px-2 py-1 font-mono ${isTeamEvent ? 'bg-slate-800/70 border-slate-700 text-slate-500 cursor-not-allowed placeholder:text-slate-500' : 'bg-slate-900 border-slate-700 text-white'}"></td>
                         <td class="dts-collapsible-cell px-3 py-2"><input value="${dtsEscape(loaded.notes || '')}" class="dts-event-notes w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></td>
@@ -2947,6 +3077,10 @@ if ($is_logged_in) {
         async function saveTeamsheet(shouldSubmit, options = {}) {
             const { silent = false, reload = true, reason: suppliedReason = '' } = options;
             if (!dtsState.selectedRound) return;
+            if (document.getElementById('dts-upload-mode-toggle')?.checked) {
+                if (!silent) showDtsAlert('Upload mode is selected. Use Upload & Submit for your own teamsheet document.', 'warn');
+                return;
+            }
             try {
                 if (!silent) {
                     window.clearTimeout(dtsAutosave.teamsheetTimer);
@@ -3004,6 +3138,50 @@ if ($is_logged_in) {
             }
         }
 
+        async function uploadOwnTeamsheet() {
+            if (!dtsState.selectedRound) return;
+            const input = document.getElementById('dts-upload-file');
+            const file = input?.files?.[0];
+            if (!file) {
+                showDtsAlert('Choose a teamsheet document to upload first.', 'warn');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                showDtsAlert('Uploaded teamsheets must be 10MB or smaller.', 'warn');
+                return;
+            }
+            let reason = '';
+            if (dtsState.activeTeamsheet?.status === 'submitted') {
+                reason = prompt('Reason for replacing this submitted teamsheet:') || '';
+                if (!reason.trim()) {
+                    showDtsAlert('A reason is required when replacing a submitted teamsheet.', 'warn');
+                    return;
+                }
+            }
+            try {
+                const fd = new FormData();
+                fd.append('season', dtsState.season);
+                fd.append('round_key', dtsState.selectedRound.round_key);
+                fd.append('gala_type', dtsState.selectedRound.gala_type);
+                fd.append('venue_detail_id', dtsState.selectedRound.venue_detail_id);
+                fd.append('reason', reason);
+                fd.append('teamsheet_file', file);
+                const saved = await dtsApi('upload_teamsheet', fd, 'POST');
+                showDtsAlert('Teamsheet document uploaded and shared with the clubs in this gala.', 'success');
+                input.value = '';
+                await loadDigitalTeamsheets(false);
+                const index = dtsState.rounds.findIndex(round => round.round_key === fd.get('round_key') && String(round.venue_detail_id) === String(fd.get('venue_detail_id')));
+                if (index >= 0) {
+                    document.getElementById('dts-round-select').value = String(index);
+                    await selectDigitalRound();
+                }
+                return saved;
+            } catch (err) {
+                showDtsAlert(err.message || 'Could not upload teamsheet document.', 'error');
+                throw err;
+            }
+        }
+
         function renderAudit(audit) {
             const el = document.getElementById('dts-audit-list');
             if (!el) return;
@@ -3031,8 +3209,11 @@ if ($is_logged_in) {
                         <div>
                             <div class="text-sm font-bold text-white">${dtsEscape(sheet.club_name)}${sheet.is_mine ? ' <span class="text-cyan-300">(you)</span>' : ''}</div>
                             <div class="text-[11px] text-slate-500">${dtsEscape(sheet.round_key.replace('_', ' ').toUpperCase())} · ${dtsEscape(sheet.submitted_at || 'Submitted')}</div>
+                            ${sheet.submission_type === 'upload' ? `<div class="text-[11px] text-cyan-300 mt-1">${dtsEscape(sheet.upload_original_name || 'Uploaded document')}${sheet.upload_file_size ? ` · ${dtsEscape(formatFileSize(sheet.upload_file_size))}` : ''}</div>` : ''}
                         </div>
-                        <button type="button" onclick="viewSharedTeamsheet(${sheet.id})" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">View</button>
+                        ${sheet.submission_type === 'upload'
+                            ? `<a href="${dtsEscape(sheet.upload_url)}" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">Download</a>`
+                            : `<button type="button" onclick="viewSharedTeamsheet(${sheet.id})" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold">View</button>`}
                     </div>
                 </div>
             `).join('');
@@ -3041,6 +3222,10 @@ if ($is_logged_in) {
         async function viewSharedTeamsheet(id) {
             try {
                 const payload = await dtsApi('teamsheet', { id });
+                if (payload.teamsheet?.submission_type === 'upload' && payload.teamsheet.upload_url) {
+                    window.open(payload.teamsheet.upload_url, '_blank');
+                    return;
+                }
                 const lines = payload.entries.map(entry => `${entry.event_number}. ${entry.event_name}: ${entry.selected_swimmers.join(', ') || '-'}`);
                 alert(`${payload.teamsheet.club_name}\n${payload.teamsheet.round_key}\n\n${lines.join('\n')}`);
             } catch (err) {
@@ -3050,14 +3235,15 @@ if ($is_logged_in) {
 
         function updateTeamsheetLinks() {
             const id = dtsState.activeTeamsheet?.id;
+            const isUpload = dtsState.activeTeamsheet?.submission_type === 'upload';
             const exportLink = document.getElementById('dts-export-link');
             const programmeLink = document.getElementById('dts-programme-link');
             [exportLink, programmeLink].forEach(link => {
                 if (!link) return;
-                link.classList.toggle('hidden', !id);
-                link.classList.toggle('inline-flex', !!id);
+                link.classList.toggle('hidden', !id || isUpload);
+                link.classList.toggle('inline-flex', !!id && !isUpload);
             });
-            if (id) {
+            if (id && !isUpload) {
                 exportLink.href = `digital_teamsheet_export.php?id=${id}`;
                 programmeLink.href = `smartprogrammenew.php?digital_teamsheet_id=${id}`;
             }

@@ -60,6 +60,11 @@ if (!$can_view) {
     die('Teamsheet is not shared with your club');
 }
 
+if (($teamsheet['submission_type'] ?? 'builder') === 'upload') {
+    header('Location: digital_teamsheet_file.php?id=' . (int)$teamsheet_id);
+    exit;
+}
+
 $filename = preg_replace('/[^A-Za-z0-9_-]+/', '_', $teamsheet['club_name'] . '_' . $teamsheet['round_key'] . '_teamsheet') . '.csv';
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');

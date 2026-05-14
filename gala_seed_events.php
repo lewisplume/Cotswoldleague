@@ -16,10 +16,10 @@ if (!isset($conn)) {
 
 $events = [
     // Events 1-10 (Block 1)
-    [1,  'Girls 15/u 4x1 Ind. Medley',       '100m', '15/u',  'Girls', 'Relay',      77750, null, null, null],
-    [2,  'Boys 15/u 4x1 Ind. Medley',        '100m', '15/u',  'Boys',  'Relay',      70390, null, null, null],
-    [3,  'Girls Open 4x1 Ind. Medley',        '100m', 'Open',  'Girls', 'Relay',      75510, null, null, null],
-    [4,  'Boys Open 4x1 Ind. Medley',         '100m', 'Open',  'Boys',  'Relay',      66340, null, null, null],
+    [1,  'Girls 15/u 4x1 Ind. Medley',       '100m', '15/u',  'Girls', 'Individual', 77750, null, null, null],
+    [2,  'Boys 15/u 4x1 Ind. Medley',        '100m', '15/u',  'Boys',  'Individual', 70390, null, null, null],
+    [3,  'Girls Open 4x1 Ind. Medley',        '100m', 'Open',  'Girls', 'Individual', 75510, null, null, null],
+    [4,  'Boys Open 4x1 Ind. Medley',         '100m', 'Open',  'Boys',  'Individual', 66340, null, null, null],
     [5,  'Girls 11/u 25m Freestyle',           '25m',  '11/u',  'Girls', 'Individual', 14780, 'Girls 11/u 50m Freestyle', '50m', 32290],
     [6,  'Boys 11/u 25m Freestyle',            '25m',  '11/u',  'Boys',  'Individual', 14810, 'Boys 11/u 50m Freestyle',  '50m', 31800],
     [7,  'Girls 13/u 50m Breaststroke',        '50m',  '13/u',  'Girls', 'Individual', 41700, null, null, null],
