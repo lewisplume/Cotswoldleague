@@ -818,6 +818,10 @@ if ($is_logged_in) {
                                                     class="bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 font-bold py-2 px-2 rounded-r-lg text-xs flex items-center">
                                                     <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
                                                 </button>
+                                                <button id="dts-scm-guide-button" type="button" onclick="openSwimClubManagerGuide()" title="Swim Club Manager import guide" aria-label="Swim Club Manager import guide"
+                                                    class="hidden bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 font-bold py-2 px-2 rounded-r-lg text-xs flex items-center">
+                                                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                                                </button>
                                             </div>
                                             <button type="button" onclick="addSwimmerRow()"
                                                 class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold py-2 px-3 rounded-lg text-xs flex items-center gap-1.5">
@@ -833,8 +837,8 @@ if ($is_logged_in) {
                                     <div id="dts-teamunify-preview" class="hidden border-b border-sky-500/20 bg-sky-500/10 p-4"></div>
                                     <div id="dts-scm-preview" class="hidden border-b border-indigo-500/20 bg-indigo-500/10 p-4"></div>
                                     <div id="dts-hytek-preview" class="hidden border-b border-emerald-500/20 bg-emerald-500/10 p-4"></div>
-                                    <div id="dts-teamunify-guide-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center">
-                                        <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-sky-500/30 rounded-2xl shadow-2xl shadow-slate-950/60">
+                                        <div id="dts-teamunify-guide-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center">
+                                            <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-sky-500/30 rounded-2xl shadow-2xl shadow-slate-950/60">
                                             <div class="p-5 border-b border-white/10 flex items-start justify-between gap-4">
                                                 <div>
                                                     <h4 class="text-lg font-bold text-white flex items-center gap-2">
@@ -873,6 +877,36 @@ if ($is_logged_in) {
                                                 </div>
                                                 <div class="bg-sky-500/10 border border-sky-500/20 rounded-xl p-4 text-xs text-sky-100 leading-relaxed">
                                                     <strong class="text-white">Pro tip:</strong> TeamUnify and the Teamsheet builder are both browser-based, so keeping them in side-by-side tabs makes it easy to verify that swimmer times have carried over correctly.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="dts-scm-guide-modal" class="hidden fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm p-4 items-center justify-center">
+                                            <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-indigo-500/30 rounded-2xl shadow-2xl shadow-slate-950/60">
+                                                <div class="p-5 border-b border-white/10 flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                                                            <i data-lucide="circle-help" class="w-5 h-5 text-indigo-300"></i> Swim Club Manager Import Guide
+                                                        </h4>
+                                                        <p class="text-xs text-slate-400 mt-1">Generating the correct Group PB report for the league teamsheet.</p>
+                                                    </div>
+                                                    <button type="button" onclick="closeSwimClubManagerGuide()" aria-label="Close Swim Club Manager import guide"
+                                                        class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 p-2 rounded-lg">
+                                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="p-5 space-y-5 text-sm text-slate-300">
+                                                    <div>
+                                                        <h5 class="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-2">Phase 1: Generate The Report In Swim Club Manager</h5>
+                                                        <ol class="space-y-2 list-decimal list-inside">
+                                                            <li>Open <strong class="text-white">Reports &gt; Swim times &gt; Group PBs</strong>.</li>
+                                                            <li>Choose <strong class="text-white">Age as of date</strong>.</li>
+                                                            <li>Set the date to the <strong class="text-white">Final</strong> date for the league.</li>
+                                                            <li>Export the report as <strong class="text-white">XLSX</strong>, then use the Swim Club Manager import option in the Teamsheet Builder.</li>
+                                                        </ol>
+                                                    </div>
+                                                    <div class="rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-4 text-xs text-indigo-100 leading-relaxed">
+                                                        The builder uses the ages in the workbook, so the report needs to be generated using the same final date that the league is using for age-group checks.
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1891,13 +1925,32 @@ if ($is_logged_in) {
             modal.classList.remove('flex');
         }
 
+        function openSwimClubManagerGuide() {
+            const modal = document.getElementById('dts-scm-guide-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeSwimClubManagerGuide() {
+            const modal = document.getElementById('dts-scm-guide-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
         function updateImportProviderHelp() {
             const provider = document.getElementById('dts-import-provider')?.value || 'teamunify';
             const guideButton = document.getElementById('dts-teamunify-guide-button');
+            const scmGuideButton = document.getElementById('dts-scm-guide-button');
             const importButton = document.getElementById('dts-import-button');
-            const showGuide = provider === 'teamunify';
-            if (guideButton) guideButton.classList.toggle('hidden', !showGuide);
+            const showTeamunifyGuide = provider === 'teamunify';
+            const showScmGuide = provider === 'scm';
+            if (guideButton) guideButton.classList.toggle('hidden', !showTeamunifyGuide);
+            if (scmGuideButton) scmGuideButton.classList.toggle('hidden', !showScmGuide);
             if (!importButton) return;
+            const showGuide = showTeamunifyGuide || showScmGuide;
             importButton.classList.toggle('border-r-0', showGuide);
             importButton.classList.toggle('rounded-r-lg', !showGuide);
         }
@@ -1916,6 +1969,7 @@ if ($is_logged_in) {
             if (event.key === 'Escape') {
                 closeDigitalTeamsheetsHelp();
                 closeTeamunifyGuide();
+                closeSwimClubManagerGuide();
             }
         });
 
