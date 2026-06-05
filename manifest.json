@@ -1,0 +1,17 @@
+{
+  "name": "Cotswold League Gala Scoresheet",
+  "short_name": "Gala Scoresheet",
+  "description": "Offline-capable pool-side results calculator.",
+  "start_url": "teamportal.php",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "images/league-logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
