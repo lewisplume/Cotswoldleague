@@ -69,7 +69,7 @@ $navSeasonYear = isset($current_season_year) ? (int)$current_season_year : 2026;
             </div>
             <div class="flex items-center gap-4">
                 <div class="hidden sm:block text-sky-500 font-bold text-sm tracking-wider uppercase">Season <?php echo $navSeasonYear; ?></div>
-                <a href="admin"
+                <a href="teamportal"
                     class="hidden md:inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:bg-sky-400 hover:shadow-sky-400/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:ring-offset-2 focus:ring-offset-slate-900">
                     <i data-lucide="lock" class="w-3 h-3"></i> Team Login
                 </a>
@@ -96,7 +96,7 @@ $navSeasonYear = isset($current_season_year) ? (int)$current_season_year : 2026;
             class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">History</a>
         <a href="join" class="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Join
             Us</a>
-        <a href="admin"
+        <a href="teamportal"
             class="block rounded-md bg-sky-500 px-3 py-2 text-base font-semibold text-white shadow-lg shadow-sky-500/20 transition-colors hover:bg-sky-400 flex items-center gap-2">
             <i data-lucide="lock" class="w-4 h-4"></i> Team Login
         </a>

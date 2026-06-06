@@ -216,6 +216,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $start = $_POST['start_time'];
         $pay = $_POST['payment_info'];
         $park = $_POST['parking_info'];
+        $other = $_POST['other_info'] ?? '';
         $r_date = $_POST['round_date'] ?? null;
         $t1 = !empty($_POST['team_1_id']) ? $_POST['team_1_id'] : null;
         $t2 = !empty($_POST['team_2_id']) ? $_POST['team_2_id'] : null;
@@ -225,6 +226,8 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $t6 = !empty($_POST['team_6_id']) ? $_POST['team_6_id'] : null;
         $t7 = !empty($_POST['team_7_id']) ? $_POST['team_7_id'] : null;
         $t8 = !empty($_POST['team_8_id']) ? $_POST['team_8_id'] : null;
+        $is_final_update = ((int)$round_num === 99) || in_array($_POST['gala_type'] ?? '', ['a_final', 'b_final', 'c_final'], true);
+        $final_scoresheet_club_id = ($is_final_update && !empty($_POST['final_scoresheet_club_id'])) ? (int)$_POST['final_scoresheet_club_id'] : null;
         if ($host_id === null || $round_num === null) {
             $error_msg = "Error: Stale data detected. Please refresh the page and try again to prevent data loss.";
         } else {
@@ -243,35 +246,17 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                 }
             }
 
-            // FILE UPLOAD LOGIC
-            $results_file_name = null;
-            if (isset($_FILES['results_file']) && $_FILES['results_file']['error'] === UPLOAD_ERR_OK) {
-                // Fetch the actual club name for the filename
-                $host_name_query = $conn->query("SELECT name FROM clubs WHERE id=" . (int)$host_id);
-                $host_name_row = $host_name_query->fetch_assoc();
-                $host_club_name = preg_replace('/[^a-zA-Z0-9]/', '', $host_name_row['name']); // Clean for filename
-
-                $upload_dir = 'uploads/results/';
-                if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                $file_info = pathinfo($_FILES['results_file']['name']);
-                $ext = strtolower($file_info['extension']);
-                $new_filename = 'R' . $round_num . '_' . $host_club_name . '_Results.' . $ext;
-                
-                if (move_uploaded_file($_FILES['results_file']['tmp_name'], $upload_dir . $new_filename)) {
-                    $results_file_name = $new_filename;
-                }
-            }
-
-            if ($results_file_name !== null) {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, results_file=? WHERE id=?");
-                $stmt->bind_param("issssssiiiiiiiisi", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $results_file_name, $id);
-            } else {
-                $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=? WHERE id=?");
-                $stmt->bind_param("issssssiiiiiiiii", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $id);
-            }
+            $stmt = $conn->prepare("UPDATE venue_details SET club_id=?, venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, other_info=?, team_1_id=?, team_2_id=?, team_3_id=?, team_4_id=?, team_5_id=?, team_6_id=?, team_7_id=?, team_8_id=?, final_scoresheet_club_id=? WHERE id=?");
+            $stmt->bind_param("isssssssiiiiiiiiii", $host_id, $v_name, $addr, $warm, $start, $pay, $park, $other, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $final_scoresheet_club_id, $id);
             if ($stmt->execute()) {
+                if ($is_final_update && $final_scoresheet_club_id) {
+                    $sync_stmt = $conn->prepare("UPDATE gala_scoresheets SET host_club_id=? WHERE venue_detail_id=? AND season_year=?");
+                    if ($sync_stmt) {
+                        $sync_stmt->bind_param("iii", $final_scoresheet_club_id, $id, $current_season_year);
+                        $sync_stmt->execute();
+                        $sync_stmt->close();
+                    }
+                }
                 $success_msg = "Venue details updated successfully.";
                 $conn->query("INSERT INTO audit_log (club_name, action, change_details) VALUES ('Super Admin', 'Venue Override', 'Overridden details for venue id: $id')");
             } else {
@@ -280,10 +265,9 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         }
     }
 
-    // --- FINALS RESULTS UPLOAD ---
-    if ($_POST['admin_action'] === 'upload_final_results') {
+    // --- FINALS DATE ---
+    if ($_POST['admin_action'] === 'save_finals_date') {
         $active_admin_tab = 'tab-venues';
-        $tier = $_POST['final_tier']; // A, B, or C
         $success_msgs = [];
 
         if (isset($_POST['finals_date']) && trim($_POST['finals_date']) !== '') {
@@ -304,37 +288,11 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                 $error_msg = "Failed to save finals date.";
             }
         }
-        
-        // Handle File Upload
-        if (isset($_FILES['results_file']) && $_FILES['results_file']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'uploads/results/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            $file_info = pathinfo($_FILES['results_file']['name']);
-            $ext = strtolower($file_info['extension']);
-            
-            // Delete old files for this final
-            $existing = glob($upload_dir . "Final_{$tier}_Results.*");
-            if ($existing) {
-                foreach ($existing as $old_file) {
-                    unlink($old_file);
-                }
-            }
-            
-            $new_filename = "Final_{$tier}_Results." . $ext;
-            
-            if (move_uploaded_file($_FILES['results_file']['tmp_name'], $upload_dir . $new_filename)) {
-                $success_msgs[] = "Final {$tier} Results uploaded successfully.";
-            } else {
-                $error_msg = "Failed to move uploaded file.";
-            }
-        }
-        
+
         if (!empty($success_msgs)) {
             $success_msg = implode(" ", $success_msgs);
-        } elseif (empty($error_msg) && empty($_FILES['results_file']['name']) && empty($_POST['finals_date'])) {
-            $error_msg = "No file, link, or finals date provided.";
+        } elseif (empty($error_msg)) {
+            $error_msg = "Please enter a finals date.";
         }
     }
 
@@ -775,7 +733,7 @@ function cotswold_render_admin_club_card($club) {
                         <?php endif; ?>
                     </form>
                     <div class="mt-6 pt-4 border-t border-slate-700/50 text-center">
-                        <a href="admin.php" class="text-slate-500 hover:text-slate-400 text-sm flex items-center justify-center gap-1 transition-colors">
+                        <a href="teamportal.php" class="text-slate-500 hover:text-slate-400 text-sm flex items-center justify-center gap-1 transition-colors">
                             <i data-lucide="arrow-left" class="w-4 h-4"></i> Return to Rep Portal
                         </a>
                     </div>
@@ -936,11 +894,11 @@ function cotswold_render_admin_club_card($club) {
                             <h3 class="font-bold text-white">Audit Log</h3>
                             <p class="text-xs text-slate-400 mt-1">Review actions taken by team representatives.</p>
                         </a>
-                        <a href="admin.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-emerald-900/30 transition-all group border border-emerald-500/20">
+                        <a href="teamportal.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-emerald-900/30 transition-all group border border-emerald-500/20">
                             <div class="h-12 w-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <i data-lucide="layout-dashboard" class="w-6 h-6 text-emerald-400"></i>
                             </div>
-                            <h3 class="font-bold text-white">Club Rep Portal</h3>
+                            <h3 class="font-bold text-white">Team Portal</h3>
                             <p class="text-xs text-slate-400 mt-1">The standard portal for club representatives.</p>
                         </a>
                         <a href="showcase.php" target="_blank" class="glass-panel p-6 rounded-2xl hover:bg-violet-900/30 transition-all group border border-violet-500/20">
@@ -1105,7 +1063,7 @@ function cotswold_render_admin_club_card($club) {
                                 </button>
                             </form>
 
-                            <form method="POST" onsubmit="return confirm('Resync finals team assignments from the current standings? Existing final dates, venue details, uploads and links will be kept.');">
+                            <form method="POST" onsubmit="return confirm('Resync finals team assignments from the current standings? Existing final dates and venue details will be kept.');">
                                 <input type="hidden" name="admin_action" value="generate_finals">
                                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
                                     <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync Finals
@@ -1121,10 +1079,11 @@ function cotswold_render_admin_club_card($club) {
                                 $venue_label = $is_final_venue ? cotswold_final_gala_label($venue['gala_type']) : 'Round ' . (int)$venue['round_number'];
                             ?>
                             <div class="glass-panel p-5 rounded-2xl border border-white/5 relative group">
-                                <form method="POST" class="space-y-4" enctype="multipart/form-data">
+                                <form method="POST" class="space-y-4">
                                     <input type="hidden" name="admin_action" value="update_venue">
                                     <input type="hidden" name="venue_id" value="<?php echo $venue['id']; ?>">
                                     <input type="hidden" name="round_number" value="<?php echo $venue['round_number']; ?>">
+                                    <input type="hidden" name="gala_type" value="<?php echo htmlspecialchars($venue['gala_type'] ?? 'round'); ?>">
                                     
                                     <div class="flex justify-between items-start border-b border-white/5 pb-3">
                                         <div>
@@ -1134,7 +1093,7 @@ function cotswold_render_admin_club_card($club) {
                                             </div>
                                             <div class="mt-1 flex items-center gap-2">
                                                 <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Host:</span>
-                                                <select name="host_club_id" onchange="const form = this.closest('form'); form.querySelector('input[name=venue_name]').value = ''; form.querySelector('textarea[name=address]').value = ''; form.querySelector('input[name=warmup_time]').value = ''; form.querySelector('input[name=start_time]').value = ''; form.querySelector('input[name=payment_info]').value = ''; form.querySelector('input[name=parking_info]').value = '';" class="bg-transparent text-white text-lg font-bold focus:outline-none appearance-none border-b border-transparent hover:border-emerald-500 focus:border-emerald-500 cursor-pointer">
+                                                <select name="host_club_id" onchange="const form = this.closest('form'); form.querySelector('input[name=venue_name]').value = ''; form.querySelector('textarea[name=address]').value = ''; form.querySelector('input[name=warmup_time]').value = ''; form.querySelector('input[name=start_time]').value = ''; form.querySelector('input[name=payment_info]').value = ''; form.querySelector('input[name=parking_info]').value = ''; form.querySelector('textarea[name=other_info]').value = '';" class="bg-transparent text-white text-lg font-bold focus:outline-none appearance-none border-b border-transparent hover:border-emerald-500 focus:border-emerald-500 cursor-pointer">
                                                     <?php foreach($clubs_data as $c): ?>
                                                         <?php
                                                             $is_selected_host = ((int) $venue['club_id'] === (int) $c['id']);
@@ -1147,6 +1106,23 @@ function cotswold_render_admin_club_card($club) {
                                                 </select>
                                                 <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-500/50"></i>
                                             </div>
+                                            <?php if ($is_final_venue): ?>
+                                                <div class="mt-3 max-w-sm">
+                                                    <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Scoresheet Access</label>
+                                                    <select name="final_scoresheet_club_id" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                                                        <option value="">Hidden until assigned</option>
+                                                        <?php foreach($clubs_data as $c): ?>
+                                                            <?php
+                                                                $is_selected_scoresheet = ((int)($venue['final_scoresheet_club_id'] ?? 0) === (int)$c['id']);
+                                                                if (empty($c['is_active']) && !$is_selected_scoresheet) continue;
+                                                            ?>
+                                                            <option value="<?php echo $c['id']; ?>" <?php echo $is_selected_scoresheet ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($c['name'] . (empty($c['is_active']) ? ' (retired)' : '')); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="flex gap-2 flex-shrink-0">
                                             <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition-colors group-hover:scale-105 shadow-lg">
@@ -1160,42 +1136,39 @@ function cotswold_render_admin_club_card($club) {
 
                                     <div class="space-y-3">
                                         <div>
-                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Venue Location</label>
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Venue Name</label>
                                             <input type="text" name="venue_name" value="<?php echo htmlspecialchars($venue['venue_name']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 mb-2">
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Location (Address)</label>
                                             <textarea name="address" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"><?php echo htmlspecialchars($venue['address']); ?></textarea>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Warm Up</label>
-                                                <input type="text" name="warmup_time" value="<?php echo htmlspecialchars($venue['warmup_time']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Doors Open Time</label>
+                                                <input type="text" name="start_time" value="<?php echo htmlspecialchars($venue['start_time']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                             </div>
                                             <div>
-                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Start Time</label>
-                                                <input type="text" name="start_time" value="<?php echo htmlspecialchars($venue['start_time']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Warm Up Time</label>
+                                                <input type="text" name="warmup_time" value="<?php echo htmlspecialchars($venue['warmup_time']); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                             </div>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Payment</label>
+                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Payment Details</label>
                                                 <input type="text" name="payment_info" value="<?php echo htmlspecialchars($venue['payment_info'] ?? ''); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                             </div>
                                             <div>
-                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Parking</label>
+                                                <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Parking Details</label>
                                                 <input type="text" name="parking_info" value="<?php echo htmlspecialchars($venue['parking_info'] ?? ''); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
                                             </div>
                                         </div>
 
-                                        <div class="mt-3">
-                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1 flex items-center justify-between">
-                                                <span>Results Spreadsheet Upload</span>
-                                                <?php if(!empty($venue['results_file'])): ?>
-                                                    <span class="text-emerald-400 normal-case">File: <?php echo htmlspecialchars($venue['results_file']); ?></span>
-                                                <?php endif; ?>
-                                            </label>
-                                            <input type="file" name="results_file" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
+                                        <div>
+                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Any Other Information</label>
+                                            <textarea name="other_info" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"><?php echo htmlspecialchars($venue['other_info'] ?? ''); ?></textarea>
                                         </div>
+
                                     </div>
 
                                     <div class="pt-3 border-t border-white/5 space-y-2">
@@ -1228,11 +1201,11 @@ function cotswold_render_admin_club_card($club) {
                         <?php endforeach; ?>
                     </div>
 
-                    <!-- FINALS RESULTS PANEL -->
+                    <!-- FINALS DATE PANEL -->
                     <div class="mt-10 border-t border-slate-700/50 pt-8">
-                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Date & Results Upload</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <?php 
+                        <h2 class="text-xl font-bold flex items-center gap-2 mb-6"><i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Finals Date</h2>
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 max-w-xl">
+                            <?php
                             $finals_date_value = '';
                             $finals_setting_key = 'finals_date_' . $current_season_year;
                             $finals_setting_stmt = $conn->prepare("SELECT setting_value FROM global_settings WHERE setting_key=? LIMIT 1");
@@ -1249,38 +1222,17 @@ function cotswold_render_admin_club_card($club) {
                                 $finals_date_value = $finals_date_row['round_date'] ?? '';
                             }
                             $finals_date_stmt->close();
-                            foreach(['A', 'B', 'C'] as $tier): 
-                                $existing = glob('uploads/results/Final_' . $tier . '_Results.*');
-                                $has_file = count($existing) > 0;
                             ?>
-                                <div class="glass-panel p-5 rounded-2xl border border-white/5 relative">
-                                    <form method="POST" enctype="multipart/form-data" class="space-y-4">
-                                        <input type="hidden" name="admin_action" value="upload_final_results">
-                                        <input type="hidden" name="final_tier" value="<?php echo $tier; ?>">
-                                        
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h3 class="font-bold text-lg text-white">Final <?php echo $tier; ?></h3>
-                                            <?php if($has_file): ?>
-                                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Results Active</span>
-                                            <?php else: ?>
-                                                <span class="bg-slate-500/20 text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">No Results</span>
-                                            <?php endif; ?>
-                                        </div>
+                            <form method="POST" class="space-y-4">
+                                <input type="hidden" name="admin_action" value="save_finals_date">
 
-                                        <div>
-                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Finals Date</label>
-                                            <input type="text" name="finals_date" placeholder="DD/MM/YYYY" value="<?php echo htmlspecialchars($finals_date_value); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Results File</label>
-                                            <input type="file" name="results_file" accept=".xlsx,.xls,.csv" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
-                                        </div>
-
-                                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-sm border border-slate-700 transition-colors">Save Updates</button>
-                                    </form>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">Finals Date</label>
+                                    <input type="text" name="finals_date" placeholder="DD/MM/YYYY" value="<?php echo htmlspecialchars($finals_date_value); ?>" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
                                 </div>
-                            <?php endforeach; ?>
+
+                                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-sm border border-slate-700 transition-colors">Save Finals Date</button>
+                            </form>
                         </div>
                     </div>
                 </div>

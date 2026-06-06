@@ -21,6 +21,20 @@ if (!$is_super_admin && !$is_club_logged_in) {
     exit;
 }
 
+function cotswold_is_final_venue_row($row) {
+    return ((int)($row['round_number'] ?? 0) === 99) || in_array($row['gala_type'] ?? 'round', ['a_final', 'b_final', 'c_final'], true);
+}
+
+function cotswold_user_can_access_scoresheet_venue($row, $is_super_admin, $current_club_id) {
+    if ($is_super_admin) {
+        return true;
+    }
+    if (!cotswold_is_final_venue_row($row)) {
+        return true;
+    }
+    return !empty($row['final_scoresheet_club_id']) && (int)$row['final_scoresheet_club_id'] === (int)$current_club_id;
+}
+
 // =====================================================
 // GET: Load events for a gala type
 // =====================================================
@@ -75,7 +89,7 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $venue_row = null;
 
     if ($venue_detail_id > 0) {
-        $v_stmt = $conn->prepare("SELECT round_number, gala_type, club_id, season_year, team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id FROM venue_details WHERE id = ?");
+        $v_stmt = $conn->prepare("SELECT round_number, gala_type, club_id, final_scoresheet_club_id, season_year, team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id FROM venue_details WHERE id = ?");
         $v_stmt->bind_param("i", $venue_detail_id);
         $v_stmt->execute();
         $v_res = $v_stmt->get_result();
@@ -92,11 +106,16 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        if (!cotswold_user_can_access_scoresheet_venue($venue_row, $is_super_admin, $current_club_id)) {
+            echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+            exit;
+        }
+
         $round_number = (int)$venue_row['round_number'];
         $gala_type = $venue_row['gala_type'] ?: $gala_type;
         $host_club_id = (int)$venue_row['club_id'];
-        if (((int)$venue_row['round_number'] === 99 || in_array($gala_type, ['a_final', 'b_final', 'c_final'], true)) && !empty($venue_row['team_1_id'])) {
-            $host_club_id = (int)$venue_row['team_1_id'];
+        if (cotswold_is_final_venue_row($venue_row) && !empty($venue_row['final_scoresheet_club_id'])) {
+            $host_club_id = (int)$venue_row['final_scoresheet_club_id'];
         }
         $team_count = 0;
         for ($i = 1; $i <= 8; $i++) {
@@ -241,8 +260,14 @@ if ($action === 'load' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     // Scoresheet header
-    $s = $conn->prepare("SELECT gs.*, c.name AS host_club_name 
-        FROM gala_scoresheets gs JOIN clubs c ON gs.host_club_id = c.id WHERE gs.id = ?");
+    $s = $conn->prepare("SELECT gs.*, c.name AS host_club_name,
+               vd.round_number AS venue_round_number,
+               vd.gala_type AS venue_gala_type,
+               vd.final_scoresheet_club_id
+        FROM gala_scoresheets gs
+        JOIN clubs c ON gs.host_club_id = c.id
+        LEFT JOIN venue_details vd ON gs.venue_detail_id = vd.id
+        WHERE gs.id = ?");
     $s->bind_param("i", $scoresheet_id);
     $s->execute();
     $scoresheet = $s->get_result()->fetch_assoc();
@@ -250,6 +275,16 @@ if ($action === 'load' && $_SERVER['REQUEST_METHOD'] === 'GET') {
 
     if (!$scoresheet) {
         echo json_encode(['error' => 'Scoresheet not found']);
+        exit;
+    }
+
+    $scoresheet_access_row = [
+        'round_number' => $scoresheet['venue_round_number'] ?? $scoresheet['round_number'],
+        'gala_type' => $scoresheet['venue_gala_type'] ?? $scoresheet['gala_type'],
+        'final_scoresheet_club_id' => $scoresheet['final_scoresheet_club_id'] ?? null,
+    ];
+    if (!cotswold_user_can_access_scoresheet_venue($scoresheet_access_row, $is_super_admin, $current_club_id)) {
+        echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
         exit;
     }
 
@@ -594,15 +629,21 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    $v_check = $conn->prepare("SELECT id FROM venue_details WHERE id = ? AND season_year = ?");
+    $v_check = $conn->prepare("SELECT id, round_number, gala_type, final_scoresheet_club_id FROM venue_details WHERE id = ? AND season_year = ?");
     $v_check->bind_param("ii", $venue_detail_id, $season);
     $v_check->execute();
     $v_check_res = $v_check->get_result();
-    if ($v_check_res->num_rows === 0) {
+    $venue_access_row = $v_check_res->fetch_assoc();
+    if (!$venue_access_row) {
         echo json_encode(['error' => 'Venue not found for this season']);
         exit;
     }
     $v_check->close();
+
+    if (!cotswold_user_can_access_scoresheet_venue($venue_access_row, $is_super_admin, $current_club_id)) {
+        echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+        exit;
+    }
 
     // Check if scoresheet exists
     $s = $conn->prepare("SELECT id, status FROM gala_scoresheets WHERE venue_detail_id = ? AND season_year = ? ORDER BY updated_at DESC, id DESC LIMIT 1");

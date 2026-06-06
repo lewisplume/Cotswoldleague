@@ -148,26 +148,18 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $start_time = $_POST['start_time'];
         $payment = $_POST['payment_info'];
         $parking = $_POST['parking_info'];
+        $other_info = $_POST['other_info'] ?? '';
         $target_host_name = $_POST['target_host_name']; // Extracted from form for log
 
         // Audit check old values
         $old_sql = "SELECT * FROM venue_details
                     WHERE id = ?
                       AND season_year = ?
-                      AND (
-                          (
-                              COALESCE(gala_type, 'round') = 'round'
-                              AND round_number <> 99
-                              AND club_id = ?
-                          )
-                          OR
-                          (
-                              (round_number = 99 OR gala_type IN ('a_final','b_final','c_final'))
-                              AND team_1_id = ?
-                          )
-                      )";
+                      AND COALESCE(gala_type, 'round') = 'round'
+                      AND round_number <> 99
+                      AND club_id = ?";
         $old_stmt = $conn->prepare($old_sql);
-        $old_stmt->bind_param("iiii", $venue_id, $active_season_year, $current_club_id, $current_club_id);
+        $old_stmt->bind_param("iii", $venue_id, $active_season_year, $current_club_id);
         $old_stmt->execute();
         $old_res = $old_stmt->get_result();
         $old_row = $old_res->fetch_assoc();
@@ -188,28 +180,21 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $changes[] = "Payment: '{$old_row['payment_info']}' -> '$payment'";
             if ($old_row['parking_info'] != $parking)
                 $changes[] = "Parking: '{$old_row['parking_info']}' -> '$parking'";
+            if (($old_row['other_info'] ?? '') != $other_info)
+                $changes[] = "Other Info: '" . ($old_row['other_info'] ?? '') . "' -> '$other_info'";
 
             if (empty($changes)) {
                 $error_msg = "No changes detected for the venue.";
             } else {
                 $update_sql = "UPDATE venue_details
-                               SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?
+                               SET venue_name=?, address=?, warmup_time=?, start_time=?, payment_info=?, parking_info=?, other_info=?
                                WHERE id=?
                                  AND season_year=?
-                                 AND (
-                                     (
-                                         COALESCE(gala_type, 'round') = 'round'
-                                         AND round_number <> 99
-                                         AND club_id=?
-                                     )
-                                     OR
-                                     (
-                                         (round_number = 99 OR gala_type IN ('a_final','b_final','c_final'))
-                                         AND team_1_id=?
-                                     )
-                                 )";
+                                 AND COALESCE(gala_type, 'round') = 'round'
+                                 AND round_number <> 99
+                                 AND club_id=?";
                 $stmt = $conn->prepare($update_sql);
-                $stmt->bind_param("ssssssiiii", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $venue_id, $active_season_year, $current_club_id, $current_club_id);
+                $stmt->bind_param("sssssssiii", $venue_name, $address, $warm_up, $start_time, $payment, $parking, $other_info, $venue_id, $active_season_year, $current_club_id);
 
                 if ($stmt->execute()) {
                     $success_msg = "Venue details updated successfully.";
@@ -236,6 +221,7 @@ $my_club_data = null;
 $directory_data = [];
 $clubs_dropdown = [];
 $venues = [];
+$scoresheet_venues = [];
 
 if ($is_logged_in) {
     // 1. Fetch My Club Data (Joined with clubs for Logo)
@@ -252,12 +238,12 @@ if ($is_logged_in) {
     $v_sql = "SELECT vd.*,
                      CASE
                          WHEN (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
-                         THEN COALESCE(c_top.name, c.name)
+                         THEN COALESCE(c_scoresheet.name, c.name)
                          ELSE c.name
                      END AS host_club_name
               FROM venue_details vd
               JOIN clubs c ON vd.club_id = c.id
-              LEFT JOIN clubs c_top ON vd.team_1_id = c_top.id
+              LEFT JOIN clubs c_scoresheet ON vd.final_scoresheet_club_id = c_scoresheet.id
               WHERE vd.season_year = ?
                 AND (
                     (
@@ -268,7 +254,7 @@ if ($is_logged_in) {
                     OR
                     (
                         (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
-                        AND vd.team_1_id = ?
+                        AND vd.final_scoresheet_club_id = ?
                     )
                 )
               ORDER BY vd.round_number ASC, FIELD(vd.gala_type, 'round', 'a_final', 'b_final', 'c_final')";
@@ -278,7 +264,10 @@ if ($is_logged_in) {
     $v_res = $v_stmt->get_result();
     if ($v_res->num_rows > 0) {
         while ($row = $v_res->fetch_assoc()) {
-            $venues[] = $row;
+            $scoresheet_venues[] = $row;
+            if (($row['gala_type'] ?? 'round') === 'round' && (int)$row['round_number'] !== 99) {
+                $venues[] = $row;
+            }
         }
     }
     $v_stmt->close();
@@ -410,20 +399,6 @@ if ($is_logged_in) {
         }
     }
 
-    // 5c. Determine My Final Tier
-    $my_final_tier = null;
-    $my_final_file = null;
-    if (in_array($current_club_id, $filter_matrix['finals']['A'])) $my_final_tier = 'A';
-    elseif (in_array($current_club_id, $filter_matrix['finals']['B'])) $my_final_tier = 'B';
-    elseif (in_array($current_club_id, $filter_matrix['finals']['C'])) $my_final_tier = 'C';
-    
-    if ($my_final_tier) {
-        $final_files = glob('uploads/results/Final_' . $my_final_tier . '_Results.*');
-        if (!empty($final_files)) {
-            $my_final_file = basename($final_files[0]);
-        }
-    }
-
     // 5b. Hosted Rounds pulled from venue_details
     $rounds_sql = "SELECT vd.round_number, c.name AS host_name, vd.team_1_id, vd.team_2_id, vd.team_3_id, vd.team_4_id 
                    FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $active_season_year";
@@ -443,6 +418,15 @@ if ($is_logged_in) {
                 $teams[] = (int) $row['team_4_id'];
 
             $filter_matrix['rounds'][$rn][$host] = $teams;
+        }
+    }
+
+    // 6. Recent venue audit logs (Documents tab)
+    $recent_logs = [];
+    $log_res = $conn->query("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 3");
+    if ($log_res && $log_res->num_rows > 0) {
+        while ($l = $log_res->fetch_assoc()) {
+            $recent_logs[] = $l;
         }
     }
 } else {
@@ -507,6 +491,16 @@ if ($is_logged_in) {
 
         ::-webkit-scrollbar-thumb:hover {
             background: #475569;
+        }
+
+        .portal-tab-btn.active {
+            background: rgba(14, 165, 233, 0.2);
+            color: #fff;
+            border-color: rgba(14, 165, 233, 0.4);
+        }
+
+        .portal-doc-row .portal-doc-title {
+            word-break: break-word;
         }
     </style>
 </head>
@@ -575,6 +569,11 @@ if ($is_logged_in) {
                                 class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                         </button>
                     </form>
+                    <div class="mt-6 pt-4 border-t border-slate-700/50 text-center">
+                        <a href="league_admin.php" class="text-slate-500 hover:text-slate-400 text-sm flex items-center justify-center gap-1 transition-colors">
+                            <i data-lucide="shield-alert" class="w-4 h-4"></i> League Admin Login
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -608,10 +607,12 @@ if ($is_logged_in) {
 
                     <div class="relative z-10 flex flex-wrap justify-center gap-2">
                         <?php if (!$admin_teamsheet_mode): ?>
-                        <a href="<?php echo $digital_teamsheets_standalone ? 'teamportal.php' : 'admin.php'; ?>"
+                        <?php if ($digital_teamsheets_standalone): ?>
+                        <a href="teamportal.php"
                             class="bg-slate-800 hover:bg-sky-500/10 hover:text-sky-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
-                            <i data-lucide="arrow-left" class="w-4 h-4"></i> <?php echo $digital_teamsheets_standalone ? 'Team Portal' : 'Club Rep Portal'; ?>
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Portal Home
                         </a>
+                        <?php endif; ?>
                         <a href="?action=logout"
                             class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i data-lucide="log-out" class="w-4 h-4"></i> Logout
@@ -640,10 +641,36 @@ if ($is_logged_in) {
                     </div>
                 <?php endif; ?>
 
-                <div class="grid grid-cols-1 <?php echo $digital_teamsheets_standalone ? '' : 'lg:grid-cols-3'; ?> gap-8">
+                <?php $show_portal_tabs = !$digital_teamsheets_standalone && !$admin_teamsheet_mode; ?>
 
-                    <!-- LEFT COLUMN (Spans 2): Teamsheets & Venues -->
-                    <div class="<?php echo $digital_teamsheets_standalone ? '' : 'lg:col-span-2'; ?> space-y-8">
+                <?php if ($show_portal_tabs): ?>
+                <nav class="glass-panel p-2 rounded-2xl border border-white/5 flex flex-wrap gap-2" aria-label="Team Portal sections">
+                    <button type="button" data-portal-tab="overview" onclick="switchPortalTab('overview')"
+                        class="portal-tab-btn active flex-1 min-w-[7rem] px-4 py-2.5 rounded-xl text-sm font-bold border border-transparent text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Overview
+                    </button>
+                    <button type="button" data-portal-tab="documents" onclick="switchPortalTab('documents')"
+                        class="portal-tab-btn flex-1 min-w-[7rem] px-4 py-2.5 rounded-xl text-sm font-bold border border-transparent text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="files" class="w-4 h-4"></i> Documents
+                    </button>
+                    <button type="button" data-portal-tab="checklist" onclick="switchPortalTab('checklist')"
+                        class="portal-tab-btn flex-1 min-w-[7rem] px-4 py-2.5 rounded-xl text-sm font-bold border border-transparent text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="list-checks" class="w-4 h-4"></i> Host Checklist
+                    </button>
+                    <button type="button" data-portal-tab="directory" onclick="switchPortalTab('directory')"
+                        class="portal-tab-btn flex-1 min-w-[7rem] px-4 py-2.5 rounded-xl text-sm font-bold border border-transparent text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i> Directory
+                    </button>
+                    <button type="button" data-portal-tab="account" onclick="switchPortalTab('account')"
+                        class="portal-tab-btn flex-1 min-w-[7rem] px-4 py-2.5 rounded-xl text-sm font-bold border border-transparent text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i> Account
+                    </button>
+                </nav>
+                <?php endif; ?>
+
+                <section id="portal-overview" class="portal-section <?php echo $show_portal_tabs ? '' : 'block'; ?> space-y-8">
+
+                <div class="space-y-8">
 
                         <!-- DIGITAL TEAMSHEETS -->
                         <?php if ($digital_teamsheets_standalone): ?>
@@ -1090,7 +1117,7 @@ if ($is_logged_in) {
 
                         <!-- GALA SCORESHEET -->
                         <?php if (!$digital_teamsheets_standalone): ?>
-                        <?php if (!empty($venues)): ?>
+                        <?php if (!empty($scoresheet_venues)): ?>
                             <div class="glass-panel p-8 rounded-2xl border border-sky-500/30 bg-gradient-to-br from-sky-900/20 to-transparent relative overflow-hidden group">
                                 <div class="absolute right-0 top-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl group-hover:bg-sky-500/10 transition-colors pointer-events-none"></div>
 
@@ -1106,7 +1133,7 @@ if ($is_logged_in) {
                                     </div>
 
                                     <div class="w-full sm:w-64 flex-shrink-0 flex flex-col gap-3">
-                                        <?php foreach ($venues as $v): ?>
+                                        <?php foreach ($scoresheet_venues as $v): ?>
                                             <?php $venue_gala_label = cotswold_portal_gala_label($v['round_number'], $v['gala_type'] ?? 'round'); ?>
                                             <a href="gala_scoresheet.php?venue_id=<?php echo $v['id']; ?>" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-sky-900/30 flex items-center justify-center gap-2">
                                                 <span><?php echo htmlspecialchars($venue_gala_label); ?> Scoresheet</span>
@@ -1169,7 +1196,7 @@ if ($is_logged_in) {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label class="form-label">Address</label>
+                                                        <label class="form-label">Location (Address)</label>
                                                         <div class="relative">
                                                             <i data-lucide="map-pin"
                                                                 class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
@@ -1184,7 +1211,18 @@ if ($is_logged_in) {
                                                 <div class="space-y-4">
                                                     <div class="grid grid-cols-2 gap-4">
                                                         <div>
-                                                            <label class="form-label">Warm Up</label>
+                                                            <label class="form-label">Doors Open Time</label>
+                                                            <div class="relative">
+                                                                <i data-lucide="door-open"
+                                                                    class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
+                                                                <input type="text" name="start_time"
+                                                                    value="<?php echo htmlspecialchars($venue['start_time'] ?? ''); ?>"
+                                                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors text-white"
+                                                                    placeholder="Doors 6:00pm">
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label class="form-label">Warm Up Time</label>
                                                             <div class="relative">
                                                                 <i data-lucide="clock"
                                                                     class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
@@ -1194,21 +1232,10 @@ if ($is_logged_in) {
                                                                     placeholder="18:00">
                                                             </div>
                                                         </div>
-                                                        <div>
-                                                            <label class="form-label">Start Time</label>
-                                                            <div class="relative">
-                                                                <i data-lucide="play-circle"
-                                                                    class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
-                                                                <input type="text" name="start_time"
-                                                                    value="<?php echo htmlspecialchars($venue['start_time'] ?? ''); ?>"
-                                                                    class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors text-white"
-                                                                    placeholder="18:30">
-                                                            </div>
-                                                        </div>
                                                     </div>
 
                                                     <div>
-                                                        <label class="form-label">Payment Info</label>
+                                                        <label class="form-label">Payment Details (Amount, Cash/Card accepted)</label>
                                                         <div class="relative">
                                                             <i data-lucide="credit-card"
                                                                 class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
@@ -1220,7 +1247,7 @@ if ($is_logged_in) {
                                                     </div>
 
                                                     <div>
-                                                        <label class="form-label">Parking Info</label>
+                                                        <label class="form-label">Parking Details</label>
                                                         <div class="relative">
                                                             <i data-lucide="car"
                                                                 class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
@@ -1229,6 +1256,17 @@ if ($is_logged_in) {
                                                                 class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors text-white"
                                                                 placeholder="Free 3hrs / Pay & Display">
                                                         </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="md:col-span-2">
+                                                    <label class="form-label">Any Other Information</label>
+                                                    <div class="relative">
+                                                        <i data-lucide="info"
+                                                            class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
+                                                        <textarea name="other_info" rows="2"
+                                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 focus:outline-none transition-colors text-white"
+                                                            placeholder="Spectator access, cafe details, changing room notes"><?php echo htmlspecialchars($venue['other_info'] ?? ''); ?></textarea>
                                                     </div>
                                                 </div>
 
@@ -1246,116 +1284,9 @@ if ($is_logged_in) {
                         </div>
                         <?php endif; ?>
 
-
-
-                    </div>
-
-                    <!-- RIGHT COLUMN: Contacts & Security -->
-                    <?php if (!$digital_teamsheets_standalone): ?>
-                    <div class="space-y-8">
-
-                        <!-- EDIT CONTACTS -->
-                        <form method="POST" class="glass-panel p-6 rounded-2xl border border-white/5">
-                            <input type="hidden" name="action" value="update_contacts">
-                            <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
-                                <i data-lucide="users" class="w-5 h-5 text-indigo-400"></i> Edit Team Contacts
-                            </h2>
-
-                            <div class="space-y-5">
-                                <!-- Contact 1 -->
-                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Primary
-                                        Contact</h3>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <input type="text" name="c1_name"
-                                                value="<?php echo htmlspecialchars($my_club_data['contact1_name']); ?>"
-                                                class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
-                                                placeholder="Name">
-                                        </div>
-                                        <div>
-                                            <input type="email" name="c1_email"
-                                                value="<?php echo htmlspecialchars($my_club_data['contact1_email']); ?>"
-                                                class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
-                                                placeholder="Email">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Contact 2 -->
-                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Contact 2
-                                    </h3>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <input type="text" name="c2_name"
-                                                value="<?php echo htmlspecialchars($my_club_data['contact2_name']); ?>"
-                                                class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
-                                                placeholder="Name">
-                                        </div>
-                                        <div>
-                                            <input type="email" name="c2_email"
-                                                value="<?php echo htmlspecialchars($my_club_data['contact2_email']); ?>"
-                                                class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
-                                                placeholder="Email">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Contact 3 -->
-                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
-                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Contact 3
-                                    </h3>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <input type="text" name="c3_name"
-                                                value="<?php echo htmlspecialchars($my_club_data['contact3_name']); ?>"
-                                                class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
-                                                placeholder="Name">
-                                        </div>
-                                        <div>
-                                            <input type="email" name="c3_email"
-                                                value="<?php echo htmlspecialchars($my_club_data['contact3_email']); ?>"
-                                                class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600"
-                                                placeholder="Email">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-5">
-                                <button type="submit"
-                                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-900/20 text-sm">
-                                    Save Contacts
-                                </button>
-                            </div>
-                        </form>
-
-                        <!-- SECURITY -->
-                        <form method="POST" class="glass-panel p-6 rounded-2xl border border-orange-500/20 bg-orange-900/5">
-                            <input type="hidden" name="action" value="change_pin">
-                            <h2 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                                <i data-lucide="lock" class="w-5 h-5 text-orange-400"></i> Security PIN
-                            </h2>
-                            <p class="text-xs text-slate-400 mb-4 leading-relaxed">Update your 4-digit dashboard access PIN.
-                                Share this only with authorized club representatives.</p>
-
-                            <div class="flex gap-3">
-                                <input type="text" name="new_pin" placeholder="0000" maxlength="4" pattern="\d{4}"
-                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-white focus:outline-none focus:border-orange-500 transition-all placeholder-slate-600 text-center tracking-[0.3em] font-mono font-bold"
-                                    required>
-                                <button type="submit"
-                                    class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-4 rounded-xl transition-all flex-shrink-0 text-sm">
-                                    Update
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <?php endif; ?>
-
                 </div>
 
-                <!-- ROUND DRAWS FULL WIDTH -->
+                <!-- ROUND DRAWS -->
                 <?php if (!$digital_teamsheets_standalone): ?>
                 <div class="glass-panel p-6 rounded-3xl overflow-hidden border border-white/5 mb-8">
                     <h2 class="text-xl font-bold flex items-center gap-2 mb-6">
@@ -1446,41 +1377,229 @@ if ($is_logged_in) {
                                 </div>
                             <?php endforeach; ?>
                             
-                            <!-- FINALS CARD -->
-                            <?php if ($my_final_tier): ?>
-                                <div class="bg-sky-900/30 p-4 rounded-xl border border-sky-500/30 flex flex-col justify-between relative overflow-hidden group">
-                                    <div class="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-sky-500 to-transparent opacity-50"></div>
-                                    <div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="bg-sky-500/20 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Final <?php echo $my_final_tier; ?></span>
-                                            <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
-                                        </div>
-                                        <div class="mb-3">
-                                            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest block mb-1">Status</span>
-                                            <div class="text-white text-sm font-bold flex items-center gap-1.5">
-                                                Qualified
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="pt-3 border-t border-white/5 mt-auto space-y-2">
-                                        <?php if ($my_final_file): ?>
-                                            <a href="uploads/results/<?php echo htmlspecialchars($my_final_file); ?>" download class="w-full bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
-                                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Results
-                                            </a>
-                                        <?php else: ?>
-                                            <div class="w-full text-center text-[11px] text-slate-500 border border-slate-700/50 py-2 rounded-lg bg-slate-800/30">
-                                                Results pending
-                                            </div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
 
-                <!-- DIRECTORY SECTION (From Contacts) -->
-                <div class="glass-panel rounded-3xl overflow-hidden border border-white/5 mb-20">
+                </section>
+
+                <?php if ($show_portal_tabs): ?>
+                <section id="portal-documents" class="portal-section hidden space-y-8 mb-8">
+
+                    <div class="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-emerald-900/10">
+                        <h2 class="text-lg font-bold text-emerald-300 mb-3 flex items-center gap-2">
+                            <i data-lucide="calendar-days" class="w-5 h-5"></i> AGM Invitation
+                        </h2>
+                        <p class="text-sm text-slate-200">Saturday 6th June at 9.45am</p>
+                        <p class="text-sm text-slate-300">Burnham United Football Club, Cassis Close, Burnham-On-Sea</p>
+                        <p class="text-sm text-slate-300 mt-2">Attendance is mandatory, either in person or virtually. Anyone from your club can attend. Teas and coffees provided.</p>
+                        <p class="text-xs text-slate-400 mt-1">Free parking available. Playing fields on site if you want to bring children.</p>
+                        <div class="mt-4">
+                            <a target="_blank" rel="noopener noreferrer"
+                                href="https://calendar.google.com/calendar/event?action=TEMPLATE&amp;tmeid=Nmh2NmZwZnVqN28xYTFxbmpkOHJlYjNhdDUgNzU5NzYwZDI1MmQ5YmIwM2ZlNGM3YjY3NDhlYzYyZGE5MzllNWNkZmE2M2RiOWM1YjRkNzMxOTRmY2QzZTM0M0Bn&amp;tmsrc=759760d252d9bb03fe4c7b6748ec62da939e5cdfa63db9c5b4d73194fcd3e343%40group.calendar.google.com">
+                                <img border="0" src="https://calendar.google.com/calendar/images/ext/gc_button1_en-GB.gif" alt="Add to Google Calendar">
+                            </a>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-emerald-500/20">
+                            <p class="text-amber-300 font-semibold text-sm">AGM Agenda now available for team comments.</p>
+                            <p class="text-xs text-slate-400 mt-1">Teams have commenter permissions to add notes and questions ahead of the AGM.</p>
+                            <a target="_blank" rel="noopener noreferrer"
+                                href="https://docs.google.com/document/d/1yyUohpFpOE_aHDNrYEcOIEHs6JiNbLwm/edit?usp=drive_link&amp;ouid=106844982787765338918&amp;rtpof=true&amp;sd=true"
+                                class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 text-xs font-bold uppercase tracking-wide transition-colors">
+                                AGM Agenda <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-sky-400">
+                            <i data-lucide="landmark" class="w-5 h-5"></i> Governance
+                        </h2>
+                        <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-white/5">
+                            <a href="https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link" target="_blank" rel="noopener noreferrer"
+                                class="portal-doc-row flex items-center p-4 hover:bg-white/5 transition-colors group gap-4">
+                                <div class="bg-sky-500/10 p-2 rounded-lg flex-shrink-0"><i data-lucide="gavel" class="text-sky-500 w-5 h-5"></i></div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="portal-doc-title text-sm font-medium text-white">League Rules <?php echo (int)$active_season_year; ?></p>
+                                    <p class="text-xs text-slate-500">Official Rules &amp; Regulations</p>
+                                </div>
+                                <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-amber-400">
+                            <i data-lucide="printer" class="w-5 h-5"></i> Printable Gala Documents
+                        </h2>
+                        <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-white/5">
+                            <?php
+                            $printable_docs = [
+                                ['href' => 'Officials Sign-in.php', 'icon' => 'user-check', 'title' => 'Officials Sign-in', 'desc' => 'Printable Sign-in Form', 'external' => false],
+                                ['href' => 'spectator-programme.php', 'icon' => 'file-text', 'title' => 'Spectator Programme', 'desc' => 'Printable Event List', 'external' => false],
+                                ['href' => 'https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link', 'icon' => 'alert-triangle', 'title' => 'DQ Report Form', 'desc' => 'PDF Printout', 'external' => true],
+                                ['href' => 'Timekeeper-sheets.php', 'icon' => 'clock', 'title' => 'Timekeeper Sheet', 'desc' => 'Printable Form Tool', 'external' => false],
+                                ['href' => 'ChiefTKSlips.php', 'icon' => 'clipboard', 'title' => 'Chief Timekeeper Slips', 'desc' => 'Printable Slips for Rounds &amp; Finals', 'external' => false],
+                                ['href' => 'Announcers-guide.php', 'icon' => 'mic', 'title' => 'Announcers Guide', 'desc' => 'Script for volunteers', 'external' => false],
+                            ];
+                            foreach ($printable_docs as $doc):
+                            ?>
+                            <a href="<?php echo htmlspecialchars($doc['href']); ?>" <?php echo $doc['external'] ? 'target="_blank" rel="noopener noreferrer"' : 'target="_blank"'; ?>
+                                class="portal-doc-row flex items-center p-4 hover:bg-white/5 transition-colors group gap-4">
+                                <div class="bg-amber-500/10 p-2 rounded-lg flex-shrink-0"><i data-lucide="<?php echo htmlspecialchars($doc['icon']); ?>" class="text-amber-500 w-5 h-5"></i></div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="portal-doc-title text-sm font-medium text-white"><?php echo htmlspecialchars($doc['title']); ?></p>
+                                    <p class="text-xs text-slate-500"><?php echo $doc['desc']; ?></p>
+                                </div>
+                                <?php if ($doc['external']): ?><i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i><?php endif; ?>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-emerald-400">
+                            <i data-lucide="calculator" class="w-5 h-5"></i> Teamsheets &amp; Results
+                        </h2>
+                        <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-white/5">
+                            <a href="digital-teamsheets.php"
+                                class="portal-doc-row flex items-center p-4 hover:bg-white/5 transition-colors group gap-4">
+                                <div class="bg-emerald-500/10 p-2 rounded-lg flex-shrink-0"><i data-lucide="clipboard-list" class="text-emerald-500 w-5 h-5"></i></div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="portal-doc-title text-sm font-medium text-white">Digital Teamsheets</p>
+                                    <p class="text-xs text-slate-500">Manage swimmer lists, submissions, and shared teamsheets.</p>
+                                </div>
+                            </a>
+                            <button type="button" onclick="switchPortalTab('overview')"
+                                class="portal-doc-row w-full flex items-center p-4 hover:bg-white/5 transition-colors group gap-4 text-left">
+                                <div class="bg-emerald-500/10 p-2 rounded-lg flex-shrink-0"><i data-lucide="layout-dashboard" class="text-emerald-500 w-5 h-5"></i></div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="portal-doc-title text-sm font-medium text-white">Gala Scoresheets &amp; Results</p>
+                                    <p class="text-xs text-slate-500">Open the Overview tab for scoresheet links and round results.</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-amber-400">
+                            <i data-lucide="users" class="w-5 h-5"></i> Community &amp; Support
+                        </h2>
+                        <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-white/5">
+                            <?php
+                            $community_links = [
+                                ['href' => 'https://chat.whatsapp.com/KGftukKhKYHGWQgjsoemZz', 'icon' => 'message-circle', 'color' => 'emerald', 'title' => 'WhatsApp Community', 'desc' => 'Join the representative group'],
+                                ['href' => 'https://www.facebook.com/profile.php?id=100094686571540', 'icon' => 'facebook', 'color' => '#1877F2', 'title' => 'Facebook', 'desc' => 'Follow the Cotswold League updates'],
+                                ['href' => 'https://www.instagram.com/thecotswoldleague/', 'icon' => 'instagram', 'color' => '#E1306C', 'title' => 'Instagram', 'desc' => 'Follow the latest photos and highlights'],
+                            ];
+                            foreach ($community_links as $link):
+                            ?>
+                            <a href="<?php echo htmlspecialchars($link['href']); ?>" target="_blank" rel="noopener noreferrer"
+                                class="portal-doc-row flex items-center p-4 hover:bg-white/5 transition-colors group gap-4">
+                                <div class="p-2 rounded-lg flex-shrink-0" style="background-color: <?php echo $link['color'] === 'emerald' ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)'; ?>">
+                                    <i data-lucide="<?php echo htmlspecialchars($link['icon']); ?>" class="w-5 h-5" style="color: <?php echo $link['color'] === 'emerald' ? '#10b981' : htmlspecialchars($link['color']); ?>"></i>
+                                </div>
+                                <div class="flex-grow min-w-0">
+                                    <p class="portal-doc-title text-sm font-medium text-white"><?php echo htmlspecialchars($link['title']); ?></p>
+                                    <p class="text-xs text-slate-500"><?php echo htmlspecialchars($link['desc']); ?></p>
+                                </div>
+                                <i data-lucide="external-link" class="w-4 h-4 text-slate-600 flex-shrink-0"></i>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-emerald-400">
+                            <i data-lucide="activity" class="w-5 h-5"></i> Recent Venue Updates
+                        </h2>
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i> Latest changes
+                                </h3>
+                                <a href="audit_log.php" class="text-[11px] text-slate-400 hover:text-white transition-colors">View Log</a>
+                            </div>
+                            <?php if (!empty($recent_logs)): ?>
+                                <div class="space-y-2.5">
+                                    <?php foreach ($recent_logs as $log): ?>
+                                        <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                                            <div class="flex justify-between items-start gap-2">
+                                                <p class="text-xs font-semibold text-slate-200 break-words"><?php echo htmlspecialchars($log['club_name']); ?></p>
+                                                <span class="text-[10px] text-slate-500 font-mono flex-shrink-0"><?php echo date('d M H:i', strtotime($log['timestamp'])); ?></span>
+                                            </div>
+                                            <p class="text-[11px] text-slate-400 break-words mt-1"><?php echo htmlspecialchars($log['change_details']); ?></p>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-xs text-slate-500">No recent venue changes logged.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl text-center border border-white/5">
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            <i data-lucide="help-circle" class="w-4 h-4 inline mr-1 text-sky-500 relative -top-0.5"></i>
+                            You can reach Lewis via the WhatsApp link above, email at <a href="mailto:lewisplume@gmail.com" class="text-sky-400 hover:text-sky-300 transition-colors font-medium">lewisplume@gmail.com</a>,
+                            or if you have contacts interested in joining, please provide them with the league email: <a href="mailto:admin@thecotswoldleague.co.uk" class="text-sky-400 hover:text-sky-300 transition-colors font-medium">admin@thecotswoldleague.co.uk</a>.
+                        </p>
+                    </div>
+                </section>
+
+                <section id="portal-checklist" class="portal-section hidden mb-8">
+                    <div class="glass-panel p-8 rounded-3xl border border-white/5">
+                        <div class="flex flex-wrap items-center gap-3 mb-6">
+                            <div class="bg-indigo-500/10 p-2 rounded-lg">
+                                <i data-lucide="list-checks" class="text-indigo-400 w-6 h-6"></i>
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <h2 class="text-xl font-bold text-white">Host Team Checklist</h2>
+                                <p class="text-slate-400 text-sm">Essential items for gala day preparation. Progress is saved per club and season.</p>
+                            </div>
+                            <button type="button" onclick="resetHostChecklist()"
+                                class="text-xs text-slate-500 hover:text-red-400 transition-colors">Reset</button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <?php
+                            $checklist_items = [
+                                ['id' => 'rules-printed', 'title' => 'League Rules', 'desc' => 'Bring One Copy To The Gala', 'link' => 'https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link', 'link_label' => 'Print Rules', 'link_icon' => 'external-link', 'external' => true],
+                                ['id' => 'teamsheets-marked', 'title' => 'Teamsheets', 'desc' => 'Teamsheets are available in the Team Portal Overview.', 'link' => 'teamportal.php#overview', 'link_label' => 'Overview', 'link_icon' => 'layout-dashboard', 'external' => false],
+                                ['id' => 'results-calc', 'title' => 'Digital Scoresheet', 'desc' => 'Scoresheets and results are handled in the Team Portal Overview.', 'link' => 'teamportal.php#overview', 'link_label' => 'Overview', 'link_icon' => 'layout-dashboard', 'external' => false],
+                                ['id' => 'officials-signin', 'title' => 'Officials Sign-In Sheet', 'desc' => 'Printed for officials', 'link' => 'Officials Sign-in.php', 'link_label' => 'Print Form', 'link_icon' => 'file-text', 'external' => false],
+                                ['id' => 'dq-forms', 'title' => 'DQ Report Forms', 'desc' => 'Printed for officials', 'link' => 'https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link', 'link_label' => 'Print Form', 'link_icon' => 'file-warning', 'external' => true],
+                                ['id' => 'timekeeper-sheets', 'title' => 'Timekeeper Sheets', 'desc' => 'Print 4x(Rounds) or 6-8x(Finals)', 'link' => 'Timekeeper-sheets.php', 'link_label' => 'Generate Sheets', 'link_icon' => 'clock', 'external' => false],
+                                ['id' => 'chief-tk-slips', 'title' => 'Chief Timekeeper Slips', 'desc' => '53 Required For Each Gala', 'link' => 'ChiefTKSlips.php', 'link_label' => 'Generate Slips', 'link_icon' => 'clipboard-list', 'external' => false],
+                                ['id' => 'blank-programmes', 'title' => 'Blank Programmes', 'desc' => 'Perfect for officials or parents', 'link' => 'spectator-programme.php', 'link_label' => 'Print Programme', 'link_icon' => 'printer', 'external' => false],
+                                ['id' => 'announcers-guide', 'title' => 'Announcers Guide', 'desc' => 'Customisable Gala Script For Volunteers', 'link' => 'Announcers-guide.php', 'link_label' => 'View Script', 'link_icon' => 'mic', 'external' => false],
+                            ];
+                            foreach ($checklist_items as $item):
+                            ?>
+                            <div class="checklist-card bg-slate-900/40 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" class="checklist-item mt-1 w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 bg-slate-800 accent-indigo-500"
+                                        data-id="<?php echo htmlspecialchars($item['id']); ?>">
+                                    <div class="min-w-0">
+                                        <span class="text-slate-200 font-medium block mb-1"><?php echo htmlspecialchars($item['title']); ?></span>
+                                        <span class="text-xs text-slate-500 block break-words"><?php echo htmlspecialchars($item['desc']); ?></span>
+                                    </div>
+                                </label>
+                                <a href="<?php echo htmlspecialchars($item['link']); ?>" <?php echo $item['external'] ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>
+                                    class="mt-3 flex items-center justify-center w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs rounded-lg transition-colors gap-2">
+                                    <i data-lucide="<?php echo htmlspecialchars($item['link_icon']); ?>" class="w-3 h-3"></i> <?php echo htmlspecialchars($item['link_label']); ?>
+                                </a>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </section>
+                <?php endif; ?>
+
+                <?php if (!$digital_teamsheets_standalone): ?>
+                <section id="portal-directory" class="portal-section <?php echo $show_portal_tabs ? 'hidden' : ''; ?> space-y-8 mb-8">
+                <div class="glass-panel rounded-3xl overflow-hidden border border-white/5">
                     <div
                         class="p-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/50">
                         <div>
@@ -1628,6 +1747,64 @@ if ($is_logged_in) {
                         </table>
                     </div>
                 </div>
+                </section>
+
+                <?php if ($show_portal_tabs): ?>
+                <section id="portal-account" class="portal-section hidden space-y-8 mb-20">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
+                        <form method="POST" class="glass-panel p-6 rounded-2xl border border-white/5">
+                            <input type="hidden" name="action" value="update_contacts">
+                            <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                                <i data-lucide="users" class="w-5 h-5 text-indigo-400"></i> Edit Team Contacts
+                            </h2>
+                            <div class="space-y-5">
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Primary Contact</h3>
+                                    <div class="space-y-3">
+                                        <input type="text" name="c1_name" value="<?php echo htmlspecialchars($my_club_data['contact1_name']); ?>"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600" placeholder="Name">
+                                        <input type="email" name="c1_email" value="<?php echo htmlspecialchars($my_club_data['contact1_email']); ?>"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600" placeholder="Email">
+                                    </div>
+                                </div>
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Contact 2</h3>
+                                    <div class="space-y-3">
+                                        <input type="text" name="c2_name" value="<?php echo htmlspecialchars($my_club_data['contact2_name']); ?>"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600" placeholder="Name">
+                                        <input type="email" name="c2_email" value="<?php echo htmlspecialchars($my_club_data['contact2_email']); ?>"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600" placeholder="Email">
+                                    </div>
+                                </div>
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Contact 3</h3>
+                                    <div class="space-y-3">
+                                        <input type="text" name="c3_name" value="<?php echo htmlspecialchars($my_club_data['contact3_name']); ?>"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600" placeholder="Name">
+                                        <input type="email" name="c3_email" value="<?php echo htmlspecialchars($my_club_data['contact3_email']); ?>"
+                                            class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder-slate-600" placeholder="Email">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-5">
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-900/20 text-sm">Save Contacts</button>
+                            </div>
+                        </form>
+                        <form method="POST" class="glass-panel p-6 rounded-2xl border border-orange-500/20 bg-orange-900/5">
+                            <input type="hidden" name="action" value="change_pin">
+                            <h2 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                <i data-lucide="lock" class="w-5 h-5 text-orange-400"></i> Security PIN
+                            </h2>
+                            <p class="text-xs text-slate-400 mb-4 leading-relaxed">Update your 4-digit dashboard access PIN. Share this only with authorized club representatives.</p>
+                            <div class="flex gap-3">
+                                <input type="text" name="new_pin" placeholder="0000" maxlength="4" pattern="\d{4}"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-white focus:outline-none focus:border-orange-500 transition-all placeholder-slate-600 text-center tracking-[0.3em] font-mono font-bold" required>
+                                <button type="submit" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-4 rounded-xl transition-all flex-shrink-0 text-sm">Update</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+                <?php endif; ?>
                 <?php endif; ?>
 
             </div>
@@ -1637,6 +1814,65 @@ if ($is_logged_in) {
 
     <script>
         lucide.createIcons();
+
+        const PORTAL_TABS = ['overview', 'documents', 'checklist', 'directory', 'account'];
+        const portalSeason = <?php echo (int)$active_season_year; ?>;
+        const portalClubId = <?php echo (int)$current_club_id; ?>;
+
+        function switchPortalTab(tabId, updateHash = true) {
+            if (!PORTAL_TABS.includes(tabId)) tabId = 'overview';
+            document.querySelectorAll('.portal-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            const target = document.getElementById('portal-' + tabId);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('.portal-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.portalTab === tabId);
+            });
+            if (updateHash && history.replaceState) {
+                history.replaceState(null, '', tabId === 'overview' ? 'teamportal.php' : 'teamportal.php#' + tabId);
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function initPortalTabsFromHash() {
+            if (!document.querySelector('.portal-tab-btn')) return;
+            const hash = (window.location.hash || '').replace('#', '');
+            switchPortalTab(PORTAL_TABS.includes(hash) ? hash : 'overview', false);
+        }
+
+        function hostChecklistStorageKey(itemId) {
+            return 'host_checklist_' + portalSeason + '_' + portalClubId + '_' + itemId;
+        }
+
+        function initHostChecklist() {
+            const items = document.querySelectorAll('.checklist-item');
+            if (!items.length) return;
+            items.forEach(item => {
+                const id = item.dataset.id;
+                if (!id) return;
+                const savedState = localStorage.getItem(hostChecklistStorageKey(id));
+                if (savedState === 'true') item.checked = true;
+                item.addEventListener('change', (e) => {
+                    localStorage.setItem(hostChecklistStorageKey(id), e.target.checked);
+                });
+            });
+        }
+
+        function resetHostChecklist() {
+            if (!confirm('Are you sure you want to clear all checkboxes for this club and season?')) return;
+            document.querySelectorAll('.checklist-item').forEach(item => {
+                item.checked = false;
+                const id = item.dataset.id;
+                if (id) localStorage.removeItem(hostChecklistStorageKey(id));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initPortalTabsFromHash();
+            initHostChecklist();
+        });
+        window.addEventListener('hashchange', () => initPortalTabsFromHash());
 
         const dtsState = {
             season: <?php echo (int)$active_season_year; ?>,

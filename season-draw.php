@@ -51,6 +51,7 @@ if ($finals_result && $finals_result->num_rows > 0) {
 
 // Fetch Venue Details from DB
 $venue_db = [];
+$final_venue_db = [];
 $v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = $active_season_year";
 $v_res = $conn->query($v_sql);
 if ($v_res && $v_res->num_rows > 0) {
@@ -58,6 +59,10 @@ if ($v_res && $v_res->num_rows > 0) {
         // Key by round and host for lookup
         $key = $row['host_club_name'] . '_' . $row['round_number'];
         $venue_db[$key] = $row;
+
+        if ((int)$row['round_number'] === 99 || in_array($row['gala_type'] ?? '', ['a_final', 'b_final', 'c_final'], true)) {
+            $final_venue_db[$row['gala_type']] = $row;
+        }
     }
 }
 
@@ -87,6 +92,75 @@ function getPoints($round, $team, $completed_points)
         return $completed_points[$round][$team];
     }
     return null;
+}
+
+function cotswold_venue_value($venue_info, $field, $fallback = "Check with host")
+{
+    $value = trim((string)($venue_info[$field] ?? ''));
+    return $value !== '' ? $value : $fallback;
+}
+
+function cotswold_render_venue_details($venue_info)
+{
+    $v_name = trim((string)($venue_info['venue_name'] ?? ''));
+    $v_addr = trim((string)($venue_info['address'] ?? ''));
+    $v_doors = cotswold_venue_value($venue_info, 'start_time');
+    $v_wu = cotswold_venue_value($venue_info, 'warmup_time');
+    $v_pay = cotswold_venue_value($venue_info, 'payment_info');
+    $v_park = cotswold_venue_value($venue_info, 'parking_info');
+    $v_other = trim((string)($venue_info['other_info'] ?? ''));
+    $has_card = stripos((string)($venue_info['payment_info'] ?? ''), 'card') !== false;
+    ?>
+    <div class="text-xs text-slate-300">
+        <?php if ($v_name || $v_addr): ?>
+        <div class="mb-3">
+            <?php if ($v_name): ?>
+            <div class="font-bold text-white text-sm mb-0.5">
+                <?php echo htmlspecialchars($v_name); ?>
+            </div>
+            <?php endif; ?>
+            <?php if ($v_addr): ?>
+            <div class="text-slate-400 leading-snug">
+                <?php echo htmlspecialchars($v_addr); ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
+            <div>
+                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
+                <span class="font-medium text-white"><?php echo htmlspecialchars($v_doors); ?></span>
+            </div>
+            <div>
+                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
+                <span class="font-medium text-white"><?php echo htmlspecialchars($v_wu); ?></span>
+            </div>
+            <div>
+                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Payment Details</span>
+                <span class="font-medium text-white flex items-center gap-2"><?php echo htmlspecialchars($v_pay); ?></span>
+            </div>
+            <div>
+                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Details</span>
+                <span class="font-medium text-white"><?php echo htmlspecialchars($v_park); ?></span>
+            </div>
+            <?php if ($v_other !== ''): ?>
+            <div class="sm:col-span-2">
+                <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Any Other Information</span>
+                <span class="font-medium text-white"><?php echo htmlspecialchars($v_other); ?></span>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($has_card): ?>
+        <div class="mt-2">
+            <span class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-bold">
+                <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
+            </span>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php
 }
 ?>
 <!DOCTYPE html>
@@ -259,73 +333,8 @@ function getPoints($round, $team, $completed_points)
                                 </p>
 
                                 <?php if ($is_db_venue): ?>
-                                <!-- Structured Grid View -->
-                                <div class="text-xs text-slate-300">
-                                    <?php if ($v_name || $v_addr): ?>
-                                    <div class="mb-3">
-                                        <?php if ($v_name): ?>
-                                        <div class="font-bold text-white text-sm mb-0.5">
-                                            <?php echo htmlspecialchars($v_name); ?>
-                                        </div>
-                                        <?php
-                endif; ?>
-                                        <?php if ($v_addr): ?>
-                                        <div class="text-slate-400 leading-snug">
-                                            <?php echo htmlspecialchars($v_addr); ?>
-                                        </div>
-                                        <?php
-                endif; ?>
-                                    </div>
-                                    <?php
-            endif; ?>
-
-                                    <div
-                                        class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
-                                        <div>
-                                            <span
-                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm
-                                                Up</span>
-                                            <span class="font-medium text-white">
-                                                <?php echo htmlspecialchars($v_wu); ?>
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Start
-                                                Time</span>
-                                            <span class="font-medium text-white">
-                                                <?php echo htmlspecialchars($v_st); ?>
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Payment</span>
-                                            <span class="font-medium text-white flex items-center gap-2">
-                                                <?php echo htmlspecialchars($v_pay); ?>
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking
-                                                & Other Info</span>
-                                            <span class="font-medium text-white">
-                                                <?php echo htmlspecialchars($v_park); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <?php if ($has_card): ?>
-                                    <div class="mt-2">
-                                        <span
-                                            class="inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 font-bold">
-                                            <i data-lucide="credit-card" class="w-3 h-3"></i> Card Accepted
-                                        </span>
-                                    </div>
-                                    <?php
-            endif; ?>
-                                </div>
-                                <?php
-        else: ?>
+                                <?php cotswold_render_venue_details($venue_info); ?>
+                                <?php else: ?>
                                 <!-- Fallback View (Raw Text) -->
                                 <p class="text-xs text-slate-300 leading-relaxed">
                                     <?php echo $display_details; ?>
@@ -352,6 +361,35 @@ function getPoints($round, $team, $completed_points)
 endforeach; ?>
 
                 <!-- FINALS SECTION -->
+                <?php
+                $a_final_venue = $final_venue_db['a_final'] ?? [
+                    'venue_name' => 'Hutton Moore Leisure Centre',
+                    'address' => 'Weston-Super-Mare',
+                    'start_time' => '5.45PM',
+                    'warmup_time' => '6.15PM',
+                    'payment_info' => '£5 adults, £3 for children',
+                    'parking_info' => 'Free, must register with reception',
+                    'other_info' => '',
+                ];
+                $b_final_venue = $final_venue_db['b_final'] ?? [
+                    'venue_name' => 'Pontypool Leisure Centre',
+                    'address' => 'Pontypool',
+                    'start_time' => '4.45PM',
+                    'warmup_time' => '5.15PM',
+                    'payment_info' => '£5 adults, £3 for children',
+                    'parking_info' => 'Free parking',
+                    'other_info' => '',
+                ];
+                $c_final_venue = $final_venue_db['c_final'] ?? [
+                    'venue_name' => 'Easton Leisure Centre',
+                    'address' => 'Bristol',
+                    'start_time' => '5.45PM',
+                    'warmup_time' => '6.15PM',
+                    'payment_info' => '£5 adults, £3 for children',
+                    'parking_info' => 'Paid parking',
+                    'other_info' => '',
+                ];
+                ?>
                 <div id="round-Finals" class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                     <!-- A FINAL -->
@@ -365,35 +403,14 @@ endforeach; ?>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
-                                Hutton Moore Leisure Centre
+                                <?php echo htmlspecialchars(cotswold_venue_value($a_final_venue, 'venue_name', 'A Final Venue')); ?>
                             </h3>
                             <div class="mt-4 pt-4 border-t border-white/10">
                                 <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
                                     <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
                                 </p>
+                                <?php cotswold_render_venue_details($a_final_venue); ?>
                                 <div class="text-xs text-slate-300">
-                                    <div class="mb-3">
-                                        <div class="font-bold text-white text-sm mb-0.5">Weston-Super-Mare</div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
-                                            <span class="font-medium text-white">5.45PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
-                                            <span class="font-medium text-white">6.15PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5 adults, £3 for children</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
-                                            <span class="font-medium text-white">Free, must register with reception</span>
-                                        </div>
-                                    </div>
-
                                     <div class="mt-4 pt-4 border-t border-white/10">
                                         <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3">Qualified Teams</p>
                                         <ul class="space-y-1.5">
@@ -420,35 +437,14 @@ endforeach; ?>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
-                                Pontypool Leisure Centre
+                                <?php echo htmlspecialchars(cotswold_venue_value($b_final_venue, 'venue_name', 'B Final Venue')); ?>
                             </h3>
                             <div class="mt-4 pt-4 border-t border-white/10">
                                 <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
                                     <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
                                 </p>
+                                <?php cotswold_render_venue_details($b_final_venue); ?>
                                 <div class="text-xs text-slate-300">
-                                    <div class="mb-3">
-                                        <div class="font-bold text-white text-sm mb-0.5">Pontypool</div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
-                                            <span class="font-medium text-white">4.45PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
-                                            <span class="font-medium text-white">5.15PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5 adults, £3 for children</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
-                                            <span class="font-medium text-white">Free parking</span>
-                                        </div>
-                                    </div>
-
                                     <div class="mt-4 pt-4 border-t border-white/10">
                                         <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3">Qualified Teams</p>
                                         <ul class="space-y-1.5">
@@ -475,35 +471,14 @@ endforeach; ?>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
-                                Easton Leisure Centre
+                                <?php echo htmlspecialchars(cotswold_venue_value($c_final_venue, 'venue_name', 'C Final Venue')); ?>
                             </h3>
                             <div class="mt-4 pt-4 border-t border-white/10">
                                 <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-1">
                                     <i data-lucide="map-pin" class="w-3 h-3"></i> Venue Info
                                 </p>
+                                <?php cotswold_render_venue_details($c_final_venue); ?>
                                 <div class="text-xs text-slate-300">
-                                    <div class="mb-3">
-                                        <div class="font-bold text-white text-sm mb-0.5">Bristol</div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-y-3 gap-x-2 bg-slate-900/40 p-3 rounded-lg border border-white/5">
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Doors Open</span>
-                                            <span class="font-medium text-white">5.45PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Warm Up</span>
-                                            <span class="font-medium text-white">6.15PM</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Spectator Entry</span>
-                                            <span class="font-medium text-white flex items-center gap-2">£5 adults, £3 for children</span>
-                                        </div>
-                                        <div>
-                                            <span class="block text-[10px] uppercase text-sky-500/80 font-bold mb-0.5">Parking Info</span>
-                                            <span class="font-medium text-white">Paid parking</span>
-                                        </div>
-                                    </div>
-
                                     <div class="mt-4 pt-4 border-t border-white/10">
                                         <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-3">Qualified Teams</p>
                                         <ul class="space-y-1.5">
@@ -753,7 +728,7 @@ endforeach; ?>
             }
         }
 
-        filterDraw('Finals');
+        filterDraw(1);
     </script>
 </body>
 

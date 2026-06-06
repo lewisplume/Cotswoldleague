@@ -4,8 +4,12 @@ cotswold_secure_session_start();
 include 'db.php';
 
 // Security Check
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: admin.php");
+$has_legacy_rep_session = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
+$has_team_portal_session = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'] === true;
+$has_super_admin_session = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
+
+if (!$has_legacy_rep_session && !$has_team_portal_session && !$has_super_admin_session) {
+    header("Location: teamportal.php");
     exit;
 }
 
@@ -41,13 +45,13 @@ if ($result && $result->num_rows > 0) {
         
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold flex items-center gap-3">
-                <a href="admin.php" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
+                <a href="teamportal.php" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5 text-slate-400"></i>
                 </a>
                 System <span class="text-sky-500">Audit Log</span>
             </h1>
             <div class="text-end">
-                 <p class="text-xs text-slate-500 uppercase tracking-widest">Logged in as Admin</p>
+                 <p class="text-xs text-slate-500 uppercase tracking-widest">Portal access</p>
             </div>
         </div>
 

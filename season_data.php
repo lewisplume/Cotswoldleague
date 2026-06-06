@@ -145,6 +145,7 @@ if ($can_build_draw) {
                 if (!empty($row['warmup_time'])) $details[] = "W/U {$row['warmup_time']}";
                 if (!empty($row['payment_info'])) $details[] = $row['payment_info'];
                 if (!empty($row['parking_info'])) $details[] = $row['parking_info'];
+                if (!empty($row['other_info'])) $details[] = $row['other_info'];
                 
                 $details_str = implode(". ", $details) . ".";
                 

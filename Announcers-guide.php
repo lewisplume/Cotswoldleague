@@ -97,7 +97,7 @@ foreach ($clubs as $c) {
         
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold flex items-center gap-3">
-                <a href="admin.php" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
+                <a href="teamportal.php" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
                     <i data-lucide="arrow-left" class="w-5 h-5 text-slate-400"></i>
                 </a>
                 Script <span class="text-sky-500">Generator</span>

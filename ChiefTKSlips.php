@@ -157,7 +157,7 @@
             <div class="flex items-center justify-between h-16">
 
                 <div class="flex items-center gap-4">
-                    <a href="admin.php" class="text-white hover:text-sky-400 transition-colors">
+                    <a href="teamportal.php" class="text-white hover:text-sky-400 transition-colors">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </a>
                     <span class="text-white font-bold text-lg hidden md:block">Chief Timekeeper Slips</span>

@@ -134,7 +134,7 @@ $timekeeper_events_json = json_encode($timekeeper_events, JSON_HEX_TAG | JSON_HE
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-4">
-                    <a href="admin.php" class="text-white hover:text-sky-400 transition-colors">
+                    <a href="teamportal.php" class="text-white hover:text-sky-400 transition-colors">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </a>
                     <span class="text-white font-bold text-lg hidden md:block">Timekeeper Sheet</span>

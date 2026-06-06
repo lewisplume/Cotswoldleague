@@ -264,7 +264,7 @@
             <div class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between md:min-h-[70px]">
                 <!-- Left: Home Link and Title -->
                 <div class="flex items-center gap-4">
-                    <a href="admin.php" class="text-white hover:text-sky-400 transition-colors">
+                    <a href="teamportal.php" class="text-white hover:text-sky-400 transition-colors">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
                     </a>
                     <span class="text-white font-bold text-lg hidden md:block">Officials Sign-In</span>

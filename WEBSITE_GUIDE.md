@@ -74,12 +74,13 @@ Provides simple app telemetry metrics.
   * Full CRUD management for clubs, contacts, and venues.
   * Uploading official gala results (PDF/Excel) and mapping Google Sheet teamsheet links.
   * Real-time telemetry monitoring and statistics reset.
-* **Representative Portal (`admin.php`):** A gated dashboard for club reps providing quick access to the Team Portal, the Host Team Checklist, and essential printable documents.
-* **Team Portal (`teamportal.php`):** Protected by club-specific PINs. Features include:
+* **Team Portal (`teamportal.php`):** Protected by club-specific PINs and the main entry point for club representatives from public `Team Login`. Features include:
+  * Tabbed sections: Overview (operations), Documents (governance & printable resources), Host Checklist, League Directory, and Account (contacts/PIN).
   * Integrated Smart Programme & Results Matcher tools.
   * Real-time venue logistics editing (with automated audit logging).
   * **Dynamic Directory Filtering:** A multi-tiered filtering system allowing reps to isolate club contacts based on current standings (Finals A/B/C) or specific match-ups for any given round.
   * One-click "Email Selected" and "Copy List" functionality for club communications.
+  * Host checklist progress stored per club and season in browser `localStorage`.
 
 ## 4. Notable Implementation Updates
 

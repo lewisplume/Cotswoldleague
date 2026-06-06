@@ -68,6 +68,8 @@ try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_6_id INT DEFAULT N
 try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_7_id INT DEFAULT NULL"); } catch (Exception $e) {}
 try { $conn->query("ALTER TABLE venue_details ADD COLUMN team_8_id INT DEFAULT NULL"); } catch (Exception $e) {}
 try { $conn->query("ALTER TABLE venue_details ADD COLUMN round_date VARCHAR(50) DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN other_info TEXT DEFAULT NULL"); } catch (Exception $e) {}
+try { $conn->query("ALTER TABLE venue_details ADD COLUMN final_scoresheet_club_id INT DEFAULT NULL"); } catch (Exception $e) {}
 
 // Results Table Updates for Season Tracking
 try { $conn->query("ALTER TABLE results ADD COLUMN season_year INT NOT NULL DEFAULT 2026"); } catch (Exception $e) {}
@@ -279,10 +281,10 @@ $conn->query("CREATE TABLE IF NOT EXISTS club_teamsheet_audit (
 try {
     $conn->query("UPDATE gala_scoresheets gs
                   JOIN venue_details vd ON gs.venue_detail_id = vd.id
-                  SET gs.host_club_id = vd.team_1_id
+                  SET gs.host_club_id = vd.final_scoresheet_club_id
                   WHERE (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))
-                    AND vd.team_1_id IS NOT NULL
-                    AND gs.host_club_id <> vd.team_1_id");
+                    AND vd.final_scoresheet_club_id IS NOT NULL
+                    AND gs.host_club_id <> vd.final_scoresheet_club_id");
 } catch (Exception $e) {}
 
 // Auto-seed events if the table is empty
