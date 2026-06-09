@@ -146,6 +146,8 @@ while ($row = $res_clubs->fetch_assoc()) {
             </div>
         </div>
 
+        <div id="submission-sync-notice" class="hidden mb-6 rounded-xl border px-4 py-3 text-sm font-bold flex items-center gap-3"></div>
+
         <!-- STAGE 0: SANDBOX INITIALIZATION -->
         <?php if ($is_sandbox && !$scoresheet_id): ?>
         <div id="stage-sandbox-init" class="glass-panel p-8 sm:p-12 rounded-3xl max-w-2xl mx-auto w-full mt-10 shadow-2xl relative overflow-hidden">
@@ -411,6 +413,7 @@ while ($row = $res_clubs->fetch_assoc()) {
 
     <!-- MAIN SCORESHEET LOGIC -->
     <script>
+        window.lucide = window.lucide || { createIcons() {} };
         lucide.createIcons();
 
         // Pass PHP variables to JS
@@ -431,7 +434,8 @@ while ($row = $res_clubs->fetch_assoc()) {
             results: {}, // key: "eventId_clubId"
             online: navigator.onLine,
             isSetupLocked: false,
-            lastCalc: null
+            lastCalc: null,
+            pendingSaves: new Set()
         };
 
         // DOM Elements
@@ -529,6 +533,21 @@ while ($row = $res_clubs->fetch_assoc()) {
             updateNetworkStatus();
             window.addEventListener('online', updateNetworkStatus);
             window.addEventListener('offline', updateNetworkStatus);
+            window.addEventListener('focus', () => {
+                if (initParams.scoresheet_id) {
+                    syncAllPendingWork(initParams.scoresheet_id);
+                }
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && initParams.scoresheet_id) {
+                    syncAllPendingWork(initParams.scoresheet_id);
+                }
+            });
+            window.setInterval(() => {
+                if (navigator.onLine && initParams.scoresheet_id) {
+                    syncAllPendingWork(initParams.scoresheet_id);
+                }
+            }, 15000);
 
             // Navigation Protection
             window.addEventListener('beforeunload', (e) => {
@@ -607,8 +626,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                 elSyncStatus.innerHTML = '<div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div> Online';
                 elSyncStatus.className = 'flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400';
                 if (initParams.scoresheet_id) {
-                    syncPendingLaneAssignments(initParams.scoresheet_id);
-                    GalaEngine.syncToServer(initParams.scoresheet_id);
+                    syncAllPendingWork(initParams.scoresheet_id);
                 }
             } else {
                 elSyncStatus.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div> Offline Mode';
@@ -640,7 +658,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                 fetch(stableUrl, { credentials: 'same-origin', cache: 'reload' })
                     .then((response) => {
                         if (response.ok && 'caches' in window) {
-                            caches.open('gala-scoresheet-v2').then((cache) => cache.put(stableUrl, response.clone()));
+                            caches.open('gala-scoresheet-v3').then((cache) => cache.put(stableUrl, response.clone()));
                         }
                     })
                     .catch(() => {});
@@ -733,34 +751,51 @@ while ($row = $res_clubs->fetch_assoc()) {
                 await loadFromLocalFallback(id);
             }
 
+            applyPendingSubmissionState(id);
             renderUI();
+            if (appState.online) {
+                await syncAllPendingWork(id);
+            }
         }
 
         // Submission Listener
         document.getElementById('btn-submit-league').addEventListener('click', async () => {
-            if (!confirm("Are you sure you want to submit these results to the league? This will remove any public live view for spectators.")) return;
+            const isResubmission = appState.scoresheet?.status === 'submitted';
+            const submitMessage = isResubmission
+                ? "Resubmit these results to the league? This will update the submitted totals using the latest saved edits."
+                : "Are you sure you want to submit these results to the league? This will remove any public live view for spectators.";
+            if (!confirm(submitMessage)) return;
             
             try {
+                if (appState.pendingSaves.size) {
+                    await Promise.allSettled(Array.from(appState.pendingSaves));
+                }
+                if (appState.online) {
+                    await GalaEngine.syncToServer(appState.scoresheet.id);
+                }
                 const calc = appState.lastCalc || GalaEngine.calculateFullScoresheet(appState.events, appState.teams, appState.results);
                 const totalPoints = {};
                 Object.values(calc.totals || {}).forEach(team => {
                     totalPoints[team.club_id] = team.total_points;
                 });
 
-                const fd = new FormData();
-                fd.append('action', 'submit');
-                fd.append('scoresheet_id', appState.scoresheet.id);
-                fd.append('total_points_json', JSON.stringify(totalPoints));
-                
-                const resp = await fetch('gala_scoresheet_api.php', { method: 'POST', body: fd });
-                const res = await resp.json();
-                if (res.success) {
+                try {
+                    await postSubmission(appState.scoresheet.id, totalPoints);
                     appState.scoresheet.status = 'submitted';
                     appState.scoresheet.live_public_enabled = 0;
+                    localStorage.removeItem(pendingSubmitKey(appState.scoresheet.id));
+                    await persistCurrentScoresheetLocally();
                     renderUI();
-                    alert("Gala results submitted to the league. The public live view has been switched off.");
-                } else {
-                    alert("Submission failed: " + (res.error || 'Unknown error'));
+                    alert(isResubmission
+                        ? "Gala results resubmitted to the league."
+                        : "Gala results submitted to the league. The public live view has been switched off.");
+                } catch (submitErr) {
+                    if (!navigator.onLine || !appState.online || submitErr.name === 'TypeError') {
+                        await queueSubmission(appState.scoresheet.id, totalPoints);
+                        alert("You are offline. The submission has been saved on this device and will send automatically when the internet connection returns.");
+                    } else {
+                        throw submitErr;
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -815,6 +850,50 @@ while ($row = $res_clubs->fetch_assoc()) {
             return `pending_lanes_${id}`;
         }
 
+        function pendingSubmitKey(id) {
+            return `pending_submit_${id}`;
+        }
+
+        function submitSuccessKey(id) {
+            return `submit_success_${id}`;
+        }
+
+        function hasPendingSubmission(id) {
+            return !!localStorage.getItem(pendingSubmitKey(id));
+        }
+
+        function applyPendingSubmissionState(id) {
+            if (!appState.scoresheet || !hasPendingSubmission(id)) return;
+            appState.scoresheet.status = 'submitted';
+            appState.scoresheet.live_public_enabled = 0;
+        }
+
+        async function postSubmission(id, totalPoints) {
+            const fd = new FormData();
+            fd.append('action', 'submit');
+            fd.append('scoresheet_id', id);
+            fd.append('total_points_json', JSON.stringify(totalPoints));
+
+            const resp = await fetch('gala_scoresheet_api.php', { method: 'POST', body: fd });
+            const result = await resp.json().catch(() => ({}));
+            if (!resp.ok || !result.success) {
+                throw new Error(result.error || 'Submission failed');
+            }
+            return result;
+        }
+
+        async function queueSubmission(id, totalPoints) {
+            appState.scoresheet.status = 'submitted';
+            appState.scoresheet.live_public_enabled = 0;
+            localStorage.removeItem(submitSuccessKey(id));
+            localStorage.setItem(pendingSubmitKey(id), JSON.stringify({
+                totalPoints,
+                submittedAt: Date.now()
+            }));
+            await persistCurrentScoresheetLocally();
+            renderUI();
+        }
+
         function applyLaneAssignmentsLocally(lanes, recorderName = '') {
             lanes.forEach((lane) => {
                 const team = appState.teams.find(t => t.club_id === parseInt(lane.club_id));
@@ -859,6 +938,55 @@ while ($row = $res_clubs->fetch_assoc()) {
             }
         }
 
+        async function syncPendingSubmission(id) {
+            const pending = localStorage.getItem(pendingSubmitKey(id));
+            if (!pending || !navigator.onLine) return;
+
+            try {
+                const data = JSON.parse(pending);
+                await postSubmission(id, data.totalPoints || {});
+                localStorage.removeItem(pendingSubmitKey(id));
+                localStorage.setItem(submitSuccessKey(id), String(Date.now()));
+                if (appState.scoresheet?.id == id) {
+                    appState.scoresheet.status = 'submitted';
+                    appState.scoresheet.live_public_enabled = 0;
+                    await persistCurrentScoresheetLocally();
+                    renderUI();
+                }
+            } catch (err) {
+                console.warn('Submission sync failed, will retry:', err);
+            }
+        }
+
+        async function syncAllPendingWork(id) {
+            await syncPendingLaneAssignments(id);
+            await GalaEngine.syncToServer(id);
+            await syncPendingSubmission(id);
+        }
+
+        function updateSubmissionNotice() {
+            const notice = document.getElementById('submission-sync-notice');
+            if (!notice || !appState.scoresheet?.id) return;
+
+            const id = appState.scoresheet.id;
+            const pending = hasPendingSubmission(id);
+            const successAt = parseInt(localStorage.getItem(submitSuccessKey(id)) || '0', 10);
+            const recentSuccess = successAt && (Date.now() - successAt < 10 * 60 * 1000);
+
+            notice.className = 'hidden mb-6 rounded-xl border px-4 py-3 text-sm font-bold flex items-center gap-3';
+            notice.innerHTML = '';
+
+            if (pending) {
+                notice.className = 'mb-6 rounded-xl border px-4 py-3 text-sm font-bold flex items-center gap-3 bg-amber-500/10 border-amber-400/40 text-amber-100';
+                notice.innerHTML = '<i data-lucide="clock" class="w-5 h-5 text-amber-300"></i><span>Pending submission - saved on this device and waiting for internet.</span>';
+            } else if (appState.scoresheet.status === 'submitted' || recentSuccess) {
+                notice.className = 'mb-6 rounded-xl border px-4 py-3 text-sm font-bold flex items-center gap-3 bg-emerald-500/10 border-emerald-400/40 text-emerald-100';
+                notice.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-300"></i><span>Submitted successfully.</span>';
+            }
+
+            lucide.createIcons();
+        }
+
         // =========================================================
         // UI RENDERING
         // =========================================================
@@ -868,6 +996,7 @@ while ($row = $res_clubs->fetch_assoc()) {
             elGalaTitle.innerText = titlePrefix + `Round ${appState.scoresheet.round_number} @ ${appState.scoresheet.host_club_name}`;
             const liveLabel = parseInt(appState.scoresheet.live_public_enabled || 0) ? ' | PUBLIC LIVE ON' : '';
             elGalaSubtitle.innerText = `Gala Type: ${appState.scoresheet.gala_type.toUpperCase()} | Status: ${appState.scoresheet.status.toUpperCase()}${liveLabel}`;
+            updateSubmissionNotice();
             
             // Determine which stage to show
             // Are all non-absent teams assigned a lane?
@@ -880,10 +1009,14 @@ while ($row = $res_clubs->fetch_assoc()) {
             }
 
             // Button Visibility
-            if (appState.scoresheet.status === 'in_progress') {
-                document.getElementById('btn-submit-league').classList.remove('hidden');
+            const submitButton = document.getElementById('btn-submit-league');
+            if (appState.scoresheet.status === 'in_progress' || appState.scoresheet.status === 'submitted') {
+                submitButton.classList.remove('hidden');
+                submitButton.innerHTML = appState.scoresheet.status === 'submitted'
+                    ? '<i data-lucide="send" class="w-4 h-4"></i> Resubmit to League'
+                    : '<i data-lucide="send" class="w-4 h-4"></i> Submit to League';
             } else {
-                document.getElementById('btn-submit-league').classList.add('hidden');
+                submitButton.classList.add('hidden');
             }
 
             const liveBtn = document.getElementById('btn-live-public');
@@ -1333,9 +1466,22 @@ while ($row = $res_clubs->fetch_assoc()) {
             // Recalculate everything and update UI
             recalculateAll();
 
+            const affectedResults = appState.teams
+                .filter(team => !team.is_absent)
+                .map(team => {
+                    const affectedKey = `${eventId}_${team.club_id}`;
+                    if (!appState.results[affectedKey]) {
+                        appState.results[affectedKey] = { event_id: eventId, club_id: team.club_id };
+                    }
+                    const scored = appState.lastCalc?.scored?.[affectedKey] || {};
+                    appState.results[affectedKey].points = scored.points || 0;
+                    appState.results[affectedKey].place = scored.place || null;
+                    appState.results[affectedKey].status = scored.status || 'pending';
+                    appState.results[affectedKey].is_verified = appState.results[affectedKey].is_verified || 0;
+                    return { ...appState.results[affectedKey] };
+                });
+
             // Save mechanism (DB + IndexedDB sync queue)
-            const resObj = appState.results[key];
-            
             try {
                 // Always save to IndexedDB state
                 await GalaEngine.saveToLocal(appState.scoresheet.id, {
@@ -1347,24 +1493,28 @@ while ($row = $res_clubs->fetch_assoc()) {
 
                 if (appState.online) {
                     const fd = new FormData();
-                    fd.append('action', 'save_result');
+                    fd.append('action', 'save_batch');
                     fd.append('scoresheet_id', appState.scoresheet.id);
-                    fd.append('event_id', eventId);
-                    fd.append('club_id', clubId);
-                    if (timeMs !== null) fd.append('time_ms', timeMs);
-                    fd.append('is_dq', isDq ? 1 : 0);
-                    if (dqReason) fd.append('dq_reason', dqReason);
-                    // Add other fields as needed
+                    fd.append('results', JSON.stringify(affectedResults));
 
-                    fetch('gala_scoresheet_api.php', { method: 'POST', body: fd })
-                        .catch(err => {
+                    const savePromise = fetch('gala_scoresheet_api.php', { method: 'POST', body: fd })
+                        .then(async response => {
+                            const payload = await response.json().catch(() => ({}));
+                            if (!response.ok || !payload.success) {
+                                throw new Error(payload.error || 'Save request failed');
+                            }
+                        })
+                        .catch(async err => {
                             console.warn("Save request failed, queueing for sync", err);
-                            GalaEngine.queueForSync(appState.scoresheet.id, resObj);
+                            await Promise.all(affectedResults.map(result => GalaEngine.queueForSync(appState.scoresheet.id, result)));
                             updateNetworkStatus(); // Might be offline now
-                        });
+                        })
+                        .finally(() => appState.pendingSaves.delete(savePromise));
+                    appState.pendingSaves.add(savePromise);
+                    await savePromise;
                 } else {
                     // Queue for background sync when back online
-                    await GalaEngine.queueForSync(appState.scoresheet.id, resObj);
+                    await Promise.all(affectedResults.map(result => GalaEngine.queueForSync(appState.scoresheet.id, result)));
                 }
             } catch (e) {
                 console.error("Save error:", e);
@@ -1508,7 +1658,7 @@ while ($row = $res_clubs->fetch_assoc()) {
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
+                navigator.serviceWorker.register('sw.js', { scope: 'gala_scoresheet.php' })
                     .then(reg => console.log('SW registered!', reg))
                     .catch(err => console.log('SW registration failed', err));
             });

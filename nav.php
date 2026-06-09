@@ -8,6 +8,151 @@ $enableLogoFlair = $currentScript !== 'index.php';
 $navSeasonYear = isset($current_season_year) ? (int)$current_season_year : 2026;
 ?>
 
+<?php if ($currentScript !== 'gala_scoresheet.php'): ?>
+<script>
+    (() => {
+        if (!('serviceWorker' in navigator)) return;
+        const cleanupKey = 'cotswold_scoresheet_sw_cleanup_v1';
+        navigator.serviceWorker.getRegistrations()
+            .then((registrations) => Promise.all(registrations.map((registration) => {
+                const activeScript = registration.active?.scriptURL || registration.waiting?.scriptURL || registration.installing?.scriptURL || '';
+                const scopePath = new URL(registration.scope).pathname;
+                if (!activeScript.endsWith('/sw.js') || scopePath !== '/') return Promise.resolve(false);
+                return registration.unregister();
+            })))
+            .then((results) => {
+                const removedRootScoresheetWorker = results.some(Boolean);
+                if (removedRootScoresheetWorker && 'caches' in window) {
+                    caches.keys()
+                        .then((keys) => Promise.all(keys
+                            .filter((key) => key.startsWith('gala-scoresheet-'))
+                            .map((key) => caches.delete(key))))
+                        .catch(() => {});
+                }
+                if (removedRootScoresheetWorker && !sessionStorage.getItem(cleanupKey)) {
+                    sessionStorage.setItem(cleanupKey, '1');
+                    window.location.reload();
+                }
+            })
+            .catch(() => {});
+    })();
+</script>
+<?php endif; ?>
+
+<script>
+    (() => {
+        if (!navigator.onLine || !('localStorage' in window)) return;
+
+        const apiUrl = 'gala_scoresheet_api.php';
+        const pendingLanePrefix = 'pending_lanes_';
+        const pendingSubmitPrefix = 'pending_submit_';
+        const submitSuccessPrefix = 'submit_success_';
+
+        function postForm(fields) {
+            const fd = new FormData();
+            Object.entries(fields).forEach(([key, value]) => fd.append(key, value));
+            return fetch(apiUrl, { method: 'POST', body: fd })
+                .then(async (response) => {
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok || !payload.success) {
+                        throw new Error(payload.error || 'Scoresheet sync failed');
+                    }
+                    return payload;
+                });
+        }
+
+        async function syncPendingLanes() {
+            const keys = Object.keys(localStorage).filter((key) => key.startsWith(pendingLanePrefix));
+            await Promise.all(keys.map(async (key) => {
+                const scoresheetId = key.slice(pendingLanePrefix.length);
+                const data = JSON.parse(localStorage.getItem(key) || '{}');
+                await postForm({
+                    action: 'save_lanes',
+                    scoresheet_id: scoresheetId,
+                    lanes: JSON.stringify(data.lanes || []),
+                    recorder_name: data.recorderName || ''
+                });
+                localStorage.removeItem(key);
+            }));
+        }
+
+        function openScoresheetDb() {
+            return new Promise((resolve) => {
+                if (!('indexedDB' in window)) return resolve(null);
+                const request = indexedDB.open('GalaScoresheets', 1);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function readAllPendingResults(db) {
+            if (!db || !db.objectStoreNames.contains('pendingSync')) return [];
+            return new Promise((resolve) => {
+                const tx = db.transaction('pendingSync', 'readonly');
+                const request = tx.objectStore('pendingSync').getAll();
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => resolve([]);
+            });
+        }
+
+        async function clearPendingResults(db, ids) {
+            if (!db || !ids.length || !db.objectStoreNames.contains('pendingSync')) return;
+            return new Promise((resolve) => {
+                const tx = db.transaction('pendingSync', 'readwrite');
+                const store = tx.objectStore('pendingSync');
+                ids.forEach((id) => store.delete(id));
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => resolve();
+            });
+        }
+
+        async function syncPendingResults() {
+            const db = await openScoresheetDb();
+            const pending = await readAllPendingResults(db);
+            const byScoresheet = pending.reduce((groups, row) => {
+                if (!row.scoresheet_id || !row.result) return groups;
+                groups[row.scoresheet_id] ||= [];
+                groups[row.scoresheet_id].push(row);
+                return groups;
+            }, {});
+
+            for (const [scoresheetId, rows] of Object.entries(byScoresheet)) {
+                await postForm({
+                    action: 'save_batch',
+                    scoresheet_id: scoresheetId,
+                    results: JSON.stringify(rows.map((row) => row.result))
+                });
+                await clearPendingResults(db, rows.map((row) => row.id));
+            }
+        }
+
+        async function syncPendingSubmissions() {
+            const keys = Object.keys(localStorage).filter((key) => key.startsWith(pendingSubmitPrefix));
+            await Promise.all(keys.map(async (key) => {
+                const scoresheetId = key.slice(pendingSubmitPrefix.length);
+                const data = JSON.parse(localStorage.getItem(key) || '{}');
+                await postForm({
+                    action: 'submit',
+                    scoresheet_id: scoresheetId,
+                    total_points_json: JSON.stringify(data.totalPoints || {})
+                });
+                localStorage.removeItem(key);
+                localStorage.setItem(`${submitSuccessPrefix}${scoresheetId}`, String(Date.now()));
+            }));
+        }
+
+        (async () => {
+            try {
+                await syncPendingLanes();
+                await syncPendingResults();
+                await syncPendingSubmissions();
+            } catch (err) {
+                console.warn('Pending scoresheet sync will retry later:', err);
+            }
+        })();
+    })();
+</script>
+
 <style>
     .league-logo-link {
         display: inline-flex;

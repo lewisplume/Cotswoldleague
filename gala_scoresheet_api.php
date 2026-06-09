@@ -35,6 +35,64 @@ function cotswold_user_can_access_scoresheet_venue($row, $is_super_admin, $curre
     return !empty($row['final_scoresheet_club_id']) && (int)$row['final_scoresheet_club_id'] === (int)$current_club_id;
 }
 
+function cotswold_load_scoresheet_access_row($conn, $scoresheet_id) {
+    $stmt = $conn->prepare("SELECT gs.id, COALESCE(vd.round_number, gs.round_number) AS round_number,
+               COALESCE(vd.gala_type, gs.gala_type) AS gala_type,
+               vd.final_scoresheet_club_id
+        FROM gala_scoresheets gs
+        LEFT JOIN venue_details vd ON gs.venue_detail_id = vd.id
+        WHERE gs.id = ?");
+    $stmt->bind_param("i", $scoresheet_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $row ?: null;
+}
+
+function cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id) {
+    if (!$scoresheet_id) {
+        echo json_encode(['error' => 'Missing scoresheet_id']);
+        exit;
+    }
+    $row = cotswold_load_scoresheet_access_row($conn, $scoresheet_id);
+    if (!$row) {
+        echo json_encode(['error' => 'Scoresheet not found']);
+        exit;
+    }
+    if (!cotswold_user_can_access_scoresheet_venue($row, $is_super_admin, $current_club_id)) {
+        echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+        exit;
+    }
+}
+
+function cotswold_precreate_results_for_club($conn, $scoresheet_id, $club_id) {
+    $stmt = $conn->prepare("SELECT IF(gs.season_year = 9999, ?, gs.season_year) AS event_season
+        FROM gala_scoresheets gs
+        WHERE gs.id = ?");
+    global $active_season_year;
+    $stmt->bind_param("ii", $active_season_year, $scoresheet_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$row) {
+        return;
+    }
+
+    $event_season = (int)$row['event_season'];
+    $event_stmt = $conn->prepare("SELECT id FROM gala_events WHERE season_year = ? ORDER BY event_number ASC");
+    $event_stmt->bind_param("i", $event_season);
+    $event_stmt->execute();
+    $events = $event_stmt->get_result();
+    $insert = $conn->prepare("INSERT IGNORE INTO gala_results (scoresheet_id, event_id, club_id) VALUES (?, ?, ?)");
+    while ($event = $events->fetch_assoc()) {
+        $event_id = (int)$event['id'];
+        $insert->bind_param("iii", $scoresheet_id, $event_id, $club_id);
+        $insert->execute();
+    }
+    $insert->close();
+    $event_stmt->close();
+}
+
 // =====================================================
 // GET: Load events for a gala type
 // =====================================================
@@ -384,6 +442,7 @@ if ($action === 'save_lanes' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
     $stmt = $conn->prepare("UPDATE gala_teams SET lane_number = ? WHERE scoresheet_id = ? AND club_id = ?");
     foreach ($lanes as $lane) {
@@ -417,11 +476,29 @@ if ($action === 'substitute_team' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
-    // Replace the old absent team with the new team in gala_teams
+    $check = $conn->prepare("SELECT id FROM gala_teams WHERE scoresheet_id = ? AND club_id = ?");
+    $check->bind_param("ii", $scoresheet_id, $new_club_id);
+    $check->execute();
+    if ($check->get_result()->num_rows > 0) {
+        $check->close();
+        echo json_encode(['error' => 'Team is already in this gala']);
+        exit;
+    }
+    $check->close();
+
     $stmt = $conn->prepare("UPDATE gala_teams SET club_id = ?, is_absent = 0 WHERE scoresheet_id = ? AND club_id = ?");
     $stmt->bind_param("iii", $new_club_id, $scoresheet_id, $old_club_id);
     if ($stmt->execute()) {
+        if ($stmt->affected_rows < 1) {
+            $stmt->close();
+            echo json_encode(['error' => 'Original team was not found in this gala']);
+            exit;
+        }
+        $conn->query("UPDATE gala_results SET club_id = $new_club_id, time_ms = NULL, is_dq = 0, dq_reason = NULL, is_verified = 0, points = 0, place = NULL, status = 'pending' WHERE scoresheet_id = $scoresheet_id AND club_id = $old_club_id");
+        cotswold_precreate_results_for_club($conn, $scoresheet_id, $new_club_id);
+        $conn->query("UPDATE gala_scoresheets SET status = 'in_progress', updated_at = NOW() WHERE id = $scoresheet_id AND status = 'draft'");
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Database error']);
@@ -441,10 +518,15 @@ if ($action === 'mark_absent' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
     $stmt = $conn->prepare("UPDATE gala_teams SET is_absent = 1, lane_number = NULL WHERE scoresheet_id = ? AND club_id = ?");
     $stmt->bind_param("ii", $scoresheet_id, $club_id);
     if ($stmt->execute()) {
+        $clear = $conn->prepare("UPDATE gala_results SET time_ms = NULL, is_dq = 0, dq_reason = NULL, is_verified = 0, points = 0, place = NULL, status = 'pending' WHERE scoresheet_id = ? AND club_id = ?");
+        $clear->bind_param("ii", $scoresheet_id, $club_id);
+        $clear->execute();
+        $clear->close();
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Database error']);
@@ -464,6 +546,7 @@ if ($action === 'add_team' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
     // Check if team already exists
     $check = $conn->query("SELECT id FROM gala_teams WHERE scoresheet_id = $scoresheet_id AND club_id = $new_club_id");
@@ -475,6 +558,8 @@ if ($action === 'add_team' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $conn->prepare("INSERT INTO gala_teams (scoresheet_id, club_id, is_absent, lane_number) VALUES (?, ?, 0, NULL)");
     $stmt->bind_param("ii", $scoresheet_id, $new_club_id);
     if ($stmt->execute()) {
+        cotswold_precreate_results_for_club($conn, $scoresheet_id, $new_club_id);
+        $conn->query("UPDATE gala_scoresheets SET team_count = team_count + 1, status = 'in_progress', updated_at = NOW() WHERE id = $scoresheet_id");
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Database error']);
@@ -498,10 +583,24 @@ if ($action === 'save_result' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $place = isset($_POST['place']) && $_POST['place'] !== '' ? intval($_POST['place']) : null;
     $status = $_POST['status'] ?? 'pending';
 
-    $stmt = $conn->prepare("UPDATE gala_results SET 
-        time_ms = ?, is_dq = ?, dq_reason = ?, is_verified = ?, points = ?, place = ?, status = ?
-        WHERE scoresheet_id = ? AND event_id = ? AND club_id = ?");
-    $stmt->bind_param("iisiiisiii", $time_ms, $is_dq, $dq_reason, $is_verified, $points, $place, $status, $scoresheet_id, $event_id, $club_id);
+    if (!$scoresheet_id || !$event_id || !$club_id) {
+        echo json_encode(['error' => 'Missing data']);
+        exit;
+    }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
+
+    $stmt = $conn->prepare("INSERT INTO gala_results
+        (scoresheet_id, event_id, club_id, time_ms, is_dq, dq_reason, is_verified, points, place, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            time_ms = VALUES(time_ms),
+            is_dq = VALUES(is_dq),
+            dq_reason = VALUES(dq_reason),
+            is_verified = VALUES(is_verified),
+            points = VALUES(points),
+            place = VALUES(place),
+            status = VALUES(status)");
+    $stmt->bind_param("iiiiisiiis", $scoresheet_id, $event_id, $club_id, $time_ms, $is_dq, $dq_reason, $is_verified, $points, $place, $status);
     $stmt->execute();
     $stmt->close();
 
@@ -523,10 +622,19 @@ if ($action === 'save_batch' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
-    $stmt = $conn->prepare("UPDATE gala_results SET 
-        time_ms = ?, is_dq = ?, dq_reason = ?, is_verified = ?, points = ?, place = ?, status = ?
-        WHERE scoresheet_id = ? AND event_id = ? AND club_id = ?");
+    $stmt = $conn->prepare("INSERT INTO gala_results
+        (scoresheet_id, event_id, club_id, time_ms, is_dq, dq_reason, is_verified, points, place, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            time_ms = VALUES(time_ms),
+            is_dq = VALUES(is_dq),
+            dq_reason = VALUES(dq_reason),
+            is_verified = VALUES(is_verified),
+            points = VALUES(points),
+            place = VALUES(place),
+            status = VALUES(status)");
 
     $saved = 0;
     foreach ($results as $r) {
@@ -540,7 +648,7 @@ if ($action === 'save_batch' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $event_id = intval($r['event_id']);
         $club_id = intval($r['club_id']);
 
-        $stmt->bind_param("iisiiisiii", $time_ms, $is_dq, $dq_reason, $is_verified, $points, $place, $status, $scoresheet_id, $event_id, $club_id);
+        $stmt->bind_param("iiiiisiiis", $scoresheet_id, $event_id, $club_id, $time_ms, $is_dq, $dq_reason, $is_verified, $points, $place, $status);
         $stmt->execute();
         $saved++;
     }
@@ -563,6 +671,7 @@ if ($action === 'set_live_public' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing scoresheet_id']);
         exit;
     }
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
     if ($enabled) {
         $stmt = $conn->prepare("UPDATE gala_scoresheets SET live_public_enabled = 1, live_public_started_at = COALESCE(live_public_started_at, NOW()), updated_at = NOW() WHERE id = ? AND status = 'in_progress'");
@@ -589,8 +698,9 @@ if ($action === 'set_live_public' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($action === 'submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
     $total_points_json = $_POST['total_points_json'] ?? null;
+    cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
-    $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'submitted', submitted_at = NOW(), total_points_json = ?, live_public_enabled = 0 WHERE id = ? AND status IN ('draft', 'in_progress')");
+    $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'submitted', submitted_at = NOW(), total_points_json = ?, live_public_enabled = 0 WHERE id = ? AND status IN ('draft', 'in_progress', 'submitted')");
     $stmt->bind_param("si", $total_points_json, $scoresheet_id);
     $stmt->execute();
     $stmt->close();

@@ -2975,8 +2975,15 @@ if ($is_logged_in) {
                 renderTeamsheetRows();
                 return;
             }
+            const previousRound = dtsState.selectedRound;
+            const previousIndex = previousRound ? dtsState.rounds.indexOf(previousRound) : -1;
             if (dtsState.selectedRound && dtsAutosave.teamsheetDirty && !dtsAutosave.teamsheetSaving) {
                 await runTeamsheetAutosave();
+                if (dtsAutosave.teamsheetDirty) {
+                    if (previousIndex >= 0) select.value = String(previousIndex);
+                    showDtsAlert('Save the current teamsheet changes before changing round.', 'warn');
+                    return;
+                }
             }
             const index = select.value === '' ? 0 : parseInt(select.value, 10);
             dtsState.selectedRound = dtsState.rounds[index] || dtsState.rounds[0];

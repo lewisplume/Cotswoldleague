@@ -1142,10 +1142,19 @@ if ($action === 'submit_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Missing teamsheet id']);
         exit;
     }
+    $owner = $conn->prepare("SELECT id FROM club_teamsheets WHERE id = ? AND club_id = ? LIMIT 1");
+    $owner->bind_param("ii", $teamsheet_id, $target_club_id);
+    $owner->execute();
+    $can_submit = $owner->get_result()->num_rows > 0;
+    $owner->close();
+    if (!$can_submit) {
+        echo json_encode(['error' => 'Teamsheet not found for this club']);
+        exit;
+    }
+
     $stmt = $conn->prepare("UPDATE club_teamsheets SET status = 'submitted', submitted_at = COALESCE(submitted_at, NOW()), submitted_by = ? WHERE id = ? AND club_id = ?");
     $stmt->bind_param("sii", $target_club_name, $teamsheet_id, $target_club_id);
     $stmt->execute();
-    $ok = $stmt->affected_rows >= 0;
     $stmt->close();
 
     $snapshot = load_teamsheet_payload($conn, $teamsheet_id, $target_club_id);
@@ -1156,7 +1165,7 @@ if ($action === 'submit_teamsheet' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $audit->execute();
     $audit->close();
 
-    echo json_encode(['success' => $ok]);
+    echo json_encode(['success' => true]);
     exit;
 }
 
