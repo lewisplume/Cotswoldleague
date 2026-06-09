@@ -1387,37 +1387,12 @@ if ($is_logged_in) {
                 <?php if ($show_portal_tabs): ?>
                 <section id="portal-documents" class="portal-section hidden space-y-8 mb-8">
 
-                    <div class="glass-panel p-6 rounded-2xl border border-emerald-500/30 bg-emerald-900/10">
-                        <h2 class="text-lg font-bold text-emerald-300 mb-3 flex items-center gap-2">
-                            <i data-lucide="calendar-days" class="w-5 h-5"></i> AGM Invitation
-                        </h2>
-                        <p class="text-sm text-slate-200">Saturday 6th June at 9.45am</p>
-                        <p class="text-sm text-slate-300">Burnham United Football Club, Cassis Close, Burnham-On-Sea</p>
-                        <p class="text-sm text-slate-300 mt-2">Attendance is mandatory, either in person or virtually. Anyone from your club can attend. Teas and coffees provided.</p>
-                        <p class="text-xs text-slate-400 mt-1">Free parking available. Playing fields on site if you want to bring children.</p>
-                        <div class="mt-4">
-                            <a target="_blank" rel="noopener noreferrer"
-                                href="https://calendar.google.com/calendar/event?action=TEMPLATE&amp;tmeid=Nmh2NmZwZnVqN28xYTFxbmpkOHJlYjNhdDUgNzU5NzYwZDI1MmQ5YmIwM2ZlNGM3YjY3NDhlYzYyZGE5MzllNWNkZmE2M2RiOWM1YjRkNzMxOTRmY2QzZTM0M0Bn&amp;tmsrc=759760d252d9bb03fe4c7b6748ec62da939e5cdfa63db9c5b4d73194fcd3e343%40group.calendar.google.com">
-                                <img border="0" src="https://calendar.google.com/calendar/images/ext/gc_button1_en-GB.gif" alt="Add to Google Calendar">
-                            </a>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-emerald-500/20">
-                            <p class="text-amber-300 font-semibold text-sm">AGM Agenda now available for team comments.</p>
-                            <p class="text-xs text-slate-400 mt-1">Teams have commenter permissions to add notes and questions ahead of the AGM.</p>
-                            <a target="_blank" rel="noopener noreferrer"
-                                href="https://docs.google.com/document/d/1yyUohpFpOE_aHDNrYEcOIEHs6JiNbLwm/edit?usp=drive_link&amp;ouid=106844982787765338918&amp;rtpof=true&amp;sd=true"
-                                class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 text-xs font-bold uppercase tracking-wide transition-colors">
-                                AGM Agenda <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                            </a>
-                        </div>
-                    </div>
-
                     <div class="space-y-4">
                         <h2 class="text-lg font-semibold flex items-center gap-2 px-2 text-sky-400">
                             <i data-lucide="landmark" class="w-5 h-5"></i> Governance
                         </h2>
                         <div class="glass-panel rounded-2xl overflow-hidden divide-y divide-white/5">
-                            <a href="https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link" target="_blank" rel="noopener noreferrer"
+                            <a href="https://docs.google.com/document/d/11Vpu7bLnr_nlMx7_MzTg5SFHsM0qzw7V/edit?usp=sharing&amp;ouid=106844982787765338918&amp;rtpof=true&amp;sd=true" target="_blank" rel="noopener noreferrer"
                                 class="portal-doc-row flex items-center p-4 hover:bg-white/5 transition-colors group gap-4">
                                 <div class="bg-sky-500/10 p-2 rounded-lg flex-shrink-0"><i data-lucide="gavel" class="text-sky-500 w-5 h-5"></i></div>
                                 <div class="flex-grow min-w-0">
@@ -1438,7 +1413,7 @@ if ($is_logged_in) {
                             $printable_docs = [
                                 ['href' => 'Officials Sign-in.php', 'icon' => 'user-check', 'title' => 'Officials Sign-in', 'desc' => 'Printable Sign-in Form', 'external' => false],
                                 ['href' => 'spectator-programme.php', 'icon' => 'file-text', 'title' => 'Spectator Programme', 'desc' => 'Printable Event List', 'external' => false],
-                                ['href' => 'https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link', 'icon' => 'alert-triangle', 'title' => 'DQ Report Form', 'desc' => 'PDF Printout', 'external' => true],
+                                ['href' => 'https://drive.google.com/file/d/1NrkrkY3vOGTMRTDNASrWf7FsRsBRsClO/view?usp=sharing', 'icon' => 'alert-triangle', 'title' => 'DQ Report Form', 'desc' => 'PDF Printout', 'external' => true],
                                 ['href' => 'Timekeeper-sheets.php', 'icon' => 'clock', 'title' => 'Timekeeper Sheet', 'desc' => 'Printable Form Tool', 'external' => false],
                                 ['href' => 'ChiefTKSlips.php', 'icon' => 'clipboard', 'title' => 'Chief Timekeeper Slips', 'desc' => 'Printable Slips for Rounds &amp; Finals', 'external' => false],
                                 ['href' => 'Announcers-guide.php', 'icon' => 'mic', 'title' => 'Announcers Guide', 'desc' => 'Script for volunteers', 'external' => false],
@@ -1565,11 +1540,11 @@ if ($is_logged_in) {
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <?php
                             $checklist_items = [
-                                ['id' => 'rules-printed', 'title' => 'League Rules', 'desc' => 'Bring One Copy To The Gala', 'link' => 'https://docs.google.com/document/d/1RkI13CvpiXTln3UioCIdhvs-aUEwHUZqyOOlcRfJI8A/edit?usp=drive_link', 'link_label' => 'Print Rules', 'link_icon' => 'external-link', 'external' => true],
+                                ['id' => 'rules-printed', 'title' => 'League Rules', 'desc' => 'Bring One Copy To The Gala', 'link' => 'https://docs.google.com/document/d/11Vpu7bLnr_nlMx7_MzTg5SFHsM0qzw7V/edit?usp=sharing&ouid=106844982787765338918&rtpof=true&sd=true', 'link_label' => 'Print Rules', 'link_icon' => 'external-link', 'external' => true],
                                 ['id' => 'teamsheets-marked', 'title' => 'Teamsheets', 'desc' => 'Teamsheets are available in the Team Portal Overview.', 'link' => 'teamportal.php#overview', 'link_label' => 'Overview', 'link_icon' => 'layout-dashboard', 'external' => false],
                                 ['id' => 'results-calc', 'title' => 'Digital Scoresheet', 'desc' => 'Scoresheets and results are handled in the Team Portal Overview.', 'link' => 'teamportal.php#overview', 'link_label' => 'Overview', 'link_icon' => 'layout-dashboard', 'external' => false],
                                 ['id' => 'officials-signin', 'title' => 'Officials Sign-In Sheet', 'desc' => 'Printed for officials', 'link' => 'Officials Sign-in.php', 'link_label' => 'Print Form', 'link_icon' => 'file-text', 'external' => false],
-                                ['id' => 'dq-forms', 'title' => 'DQ Report Forms', 'desc' => 'Printed for officials', 'link' => 'https://drive.google.com/file/d/1rC1xdY6Y2hxoyDJAFdx_P24we9tVvq0P/view?usp=drive_link', 'link_label' => 'Print Form', 'link_icon' => 'file-warning', 'external' => true],
+                                ['id' => 'dq-forms', 'title' => 'DQ Report Forms', 'desc' => 'Printed for officials', 'link' => 'https://drive.google.com/file/d/1NrkrkY3vOGTMRTDNASrWf7FsRsBRsClO/view?usp=sharing', 'link_label' => 'Print Form', 'link_icon' => 'file-warning', 'external' => true],
                                 ['id' => 'timekeeper-sheets', 'title' => 'Timekeeper Sheets', 'desc' => 'Print 4x(Rounds) or 6-8x(Finals)', 'link' => 'Timekeeper-sheets.php', 'link_label' => 'Generate Sheets', 'link_icon' => 'clock', 'external' => false],
                                 ['id' => 'chief-tk-slips', 'title' => 'Chief Timekeeper Slips', 'desc' => '53 Required For Each Gala', 'link' => 'ChiefTKSlips.php', 'link_label' => 'Generate Slips', 'link_icon' => 'clipboard-list', 'external' => false],
                                 ['id' => 'blank-programmes', 'title' => 'Blank Programmes', 'desc' => 'Perfect for officials or parents', 'link' => 'spectator-programme.php', 'link_label' => 'Print Programme', 'link_icon' => 'printer', 'external' => false],
@@ -1654,14 +1629,29 @@ if ($is_logged_in) {
                             <thead>
                                 <tr
                                     class="bg-slate-950/80 text-slate-400 text-xs uppercase tracking-wider border-b border-white/5">
-                                    <th class="p-4 w-12 text-center">
-                                        <input type="checkbox" id="selectAll"
-                                            class="rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-sky-500 cursor-pointer w-4 h-4">
-                                    </th>
+                                    <th class="p-4 w-12 text-center"></th>
                                     <th class="p-4">Club</th>
-                                    <th class="p-4">Contact 1</th>
-                                    <th class="p-4">Contact 2</th>
-                                    <th class="p-4">Contact 3</th>
+                                    <th class="p-4">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" data-contact-header="1"
+                                                class="contact-header-checkbox rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-sky-500 cursor-pointer w-4 h-4">
+                                            <span>Contact 1</span>
+                                        </div>
+                                    </th>
+                                    <th class="p-4">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" data-contact-header="2"
+                                                class="contact-header-checkbox rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-sky-500 cursor-pointer w-4 h-4">
+                                            <span>Contact 2</span>
+                                        </div>
+                                    </th>
+                                    <th class="p-4">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" data-contact-header="3"
+                                                class="contact-header-checkbox rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-sky-500 cursor-pointer w-4 h-4">
+                                            <span>Contact 3</span>
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-white/5 text-sm bg-slate-900/20">
@@ -1695,6 +1685,7 @@ if ($is_logged_in) {
                                                 <div class="flex items-center gap-2 mt-0.5">
                                                     <?php if ($row['contact1_email']): ?>
                                                         <input type="checkbox"
+                                                            data-contact-slot="1"
                                                             class="email-checkbox rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 cursor-pointer w-3.5 h-3.5"
                                                             value="<?php echo htmlspecialchars($row['contact1_email']); ?>">
                                                         <a href="mailto:<?php echo htmlspecialchars($row['contact1_email']); ?>"
@@ -1713,6 +1704,7 @@ if ($is_logged_in) {
                                                 <div class="flex items-center gap-2 mt-0.5">
                                                     <?php if ($row['contact2_email']): ?>
                                                         <input type="checkbox"
+                                                            data-contact-slot="2"
                                                             class="email-checkbox rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 cursor-pointer w-3.5 h-3.5"
                                                             value="<?php echo htmlspecialchars($row['contact2_email']); ?>">
                                                         <a href="mailto:<?php echo htmlspecialchars($row['contact2_email']); ?>"
@@ -1731,6 +1723,7 @@ if ($is_logged_in) {
                                                 <div class="flex items-center gap-2 mt-0.5">
                                                     <?php if ($row['contact3_email']): ?>
                                                         <input type="checkbox"
+                                                            data-contact-slot="3"
                                                             class="email-checkbox rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-emerald-500 cursor-pointer w-3.5 h-3.5"
                                                             value="<?php echo htmlspecialchars($row['contact3_email']); ?>">
                                                         <a href="mailto:<?php echo htmlspecialchars($row['contact3_email']); ?>"
@@ -3607,29 +3600,67 @@ if ($is_logged_in) {
         });
 
         // Checkbox Logic for Directory
-        function toggleAll(source) {
-            const rows = document.querySelectorAll('.dir-row');
-            rows.forEach(row => {
-                if (row.style.display !== 'none') {
-                    const rowCheckbox = row.querySelector('.row-checkbox');
-                    if (rowCheckbox) rowCheckbox.checked = source.checked;
+        function isRowVisible(row) {
+            return row && row.style.display !== 'none';
+        }
 
-                    const emailCheckboxes = row.querySelectorAll('.email-checkbox');
-                    emailCheckboxes.forEach(cb => cb.checked = source.checked);
-                }
-            });
+        function syncRowCheckbox(row) {
+            if (!row) return;
+            const rowCheckbox = row.querySelector('.row-checkbox');
+            const emailCheckboxes = [...row.querySelectorAll('.email-checkbox')];
+            if (!rowCheckbox) return;
+
+            const activeEmailCheckboxes = emailCheckboxes.filter(cb => !cb.disabled);
+            rowCheckbox.checked = activeEmailCheckboxes.length > 0 && activeEmailCheckboxes.every(cb => cb.checked);
+        }
+
+        function syncContactHeader(slot) {
+            const headerCheckbox = document.querySelector(`.contact-header-checkbox[data-contact-header="${slot}"]`);
+            if (!headerCheckbox) return;
+
+            const visibleCheckboxes = [...document.querySelectorAll(`.dir-row .email-checkbox[data-contact-slot="${slot}"]`)]
+                .filter(cb => isRowVisible(cb.closest('.dir-row')));
+
+            headerCheckbox.checked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+        }
+
+        function syncDirectoryCheckboxes() {
+            document.querySelectorAll('.dir-row').forEach(syncRowCheckbox);
+            ['1', '2', '3'].forEach(syncContactHeader);
         }
 
         function toggleRow(source) {
             const row = source.closest('tr');
             const emailCheckboxes = row.querySelectorAll('.email-checkbox');
             emailCheckboxes.forEach(cb => cb.checked = source.checked);
+            ['1', '2', '3'].forEach(syncContactHeader);
         }
 
-        const selectAll = document.getElementById('selectAll');
-        if (selectAll) {
-            selectAll.addEventListener('change', (e) => toggleAll(e.target));
+        function toggleContactColumn(source) {
+            const slot = source.dataset.contactHeader;
+            if (!slot) return;
+
+            document.querySelectorAll(`.dir-row .email-checkbox[data-contact-slot="${slot}"]`).forEach(cb => {
+                if (isRowVisible(cb.closest('.dir-row'))) {
+                    cb.checked = source.checked;
+                    syncRowCheckbox(cb.closest('.dir-row'));
+                }
+            });
         }
+
+        document.querySelectorAll('.contact-header-checkbox').forEach(cb => {
+            cb.addEventListener('change', (e) => toggleContactColumn(e.target));
+        });
+
+        document.querySelectorAll('.email-checkbox').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const row = cb.closest('.dir-row');
+                syncRowCheckbox(row);
+                syncContactHeader(cb.dataset.contactSlot);
+            });
+        });
+
+        syncDirectoryCheckboxes();
 
         function getSelectedEmails() {
             let emails = [];
@@ -3776,16 +3807,7 @@ if ($is_logged_in) {
                     }
                 });
 
-                // Update "Select All" checkbox state
-                const allVisibleCheckboxes = document.querySelectorAll('.dir-row:not([style*="display: none"]) .row-checkbox');
-                const checkedVisible = document.querySelectorAll('.dir-row:not([style*="display: none"]) .row-checkbox:checked');
-                const selectAllCb = document.getElementById('selectAll');
-
-                if (selectAllCb && allVisibleCheckboxes.length > 0) {
-                    selectAllCb.checked = (allVisibleCheckboxes.length === checkedVisible.length);
-                } else if (selectAllCb) {
-                    selectAllCb.checked = false;
-                }
+                syncDirectoryCheckboxes();
             }
         <?php endif; ?>
     </script>

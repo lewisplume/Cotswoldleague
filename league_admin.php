@@ -1,4 +1,5 @@
 <?php
+define('COTSWOLD_ALLOW_SAME_ORIGIN_FRAME_SRC', true);
 require_once __DIR__ . '/security_headers.php';
 cotswold_secure_session_start();
 include 'db.php';

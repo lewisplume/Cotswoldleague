@@ -157,44 +157,36 @@ $programme_events_json = json_encode($programme_events, JSON_HEX_TAG | JSON_HEX_
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
     <?php include 'nav.php'; ?>
 
-    <!-- NAVIGATION & CONTROLS (Hidden on Print/PDF) -->
-    <div class="no-print border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-16 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row items-center justify-between py-4 gap-4">
-                <div class="flex items-center gap-4 w-full md:w-auto">
-                    <a href="spectators.php" class="text-white hover:text-sky-400 transition-colors">
-                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
-                    </a>
-                    <span class="text-white font-bold text-lg hidden md:block">Spectator Programme</span>
-                </div>
-
-                <div
-                    class="controls-container flex flex-wrap items-center justify-center gap-4 bg-slate-800 rounded-lg p-2 px-4 border border-slate-700 w-full md:w-auto">
-                    <div class="flex items-center gap-3">
-                        <label class="text-slate-400 text-xs font-bold uppercase tracking-wider">Programme Type:</label>
-                        <select id="galaType" onchange="generateProgramme()"
-                            class="bg-slate-900 text-white text-base font-bold py-2 px-3 rounded-md border border-slate-600 focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
-                            <option value="round">Rounds Programme</option>
-                            <option value="final_c">C Final Programme</option>
-                            <option value="final_b">B Final Programme</option>
-                            <option value="final_a">A Final Programme</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 w-full md:w-auto">
-                    <button onclick="downloadPDF()" id="downloadBtn"
-                        class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-full font-bold flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
-                        <i data-lucide="download" class="w-4 h-4"></i> Download PDF
-                    </button>
-                    <button onclick="window.print()"
-                        class="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-full font-bold shadow-lg shadow-sky-500/30 flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
-                        <i data-lucide="printer" class="w-4 h-4"></i> Print
-                    </button>
-                </div>
-            </div>
-        </div>
+    <?php
+    $printable_doc_title = 'Spectator Programme';
+    $printable_doc_print_label = 'Print';
+    $printable_doc_back_href = (isset($_GET['from']) && $_GET['from'] === 'spectators')
+        ? 'spectators.php'
+        : 'teamportal.php#documents';
+    ob_start();
+    ?>
+    <div class="flex items-center gap-3">
+        <label class="text-slate-400 text-xs font-bold uppercase tracking-wider">Programme Type:</label>
+        <select id="galaType" onchange="generateProgramme()"
+            class="bg-slate-900 text-white text-base font-bold py-2 px-3 rounded-md border border-slate-600 focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
+            <option value="round">Rounds Programme</option>
+            <option value="final_c">C Final Programme</option>
+            <option value="final_b">B Final Programme</option>
+            <option value="final_a">A Final Programme</option>
+        </select>
     </div>
+    <?php
+    $printable_doc_controls = ob_get_clean();
+    ob_start();
+    ?>
+    <button type="button" onclick="downloadPDF()" id="downloadBtn"
+        class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-full font-bold flex-1 md:flex-none flex items-center justify-center gap-2 transition-all text-sm uppercase tracking-wider">
+        <i data-lucide="download" class="w-4 h-4"></i> Download PDF
+    </button>
+    <?php
+    $printable_doc_extra_actions = ob_get_clean();
+    include 'printable_doc_toolbar.php';
+    ?>
 
     <!-- PRINTABLE SHEET -->
     <main class="flex justify-center p-4 md:p-8 transition-all print:block print:p-0 print:m-0">

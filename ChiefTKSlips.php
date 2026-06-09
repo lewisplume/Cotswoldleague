@@ -152,38 +152,24 @@
 <body class="bg-[#0f172a] text-slate-900 min-h-screen">
     <?php include 'nav.php'; ?>
 
-    <div class="no-print border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-16 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-
-                <div class="flex items-center gap-4">
-                    <a href="teamportal.php" class="text-white hover:text-sky-400 transition-colors">
-                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
-                    </a>
-                    <span class="text-white font-bold text-lg hidden md:block">Chief Timekeeper Slips</span>
-                </div>
-
-                <div
-                    class="controls-container flex items-center gap-2 bg-slate-800 rounded-lg p-1 border border-slate-700">
-                    <div class="flex items-center">
-                        <label for="eventSelector" class="text-slate-400 text-xs font-bold px-2 uppercase">Select
-                            Lanes:</label>
-                        <select id="eventSelector" onchange="renderSlips()"
-                            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
-                            <option value="4">Rounds (4 Lanes)</option>
-                            <option value="6" selected>Finals B & C (6 Lanes)</option>
-                            <option value="8">Finals A (8 Lanes)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button onclick="window.print()"
-                    class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-sky-500/30 flex items-center gap-2 transition-all">
-                    <i data-lucide="printer" class="w-4 h-4"></i> <span class="hidden sm:inline">Print Slips</span>
-                </button>
-            </div>
-        </div>
+    <?php
+    $printable_doc_title = 'Chief Timekeeper Slips';
+    $printable_doc_print_label = 'Print Slips';
+    ob_start();
+    ?>
+    <div class="flex items-center">
+        <label for="eventSelector" class="text-slate-400 text-xs font-bold px-2 uppercase">Select Lanes:</label>
+        <select id="eventSelector" onchange="renderSlips()"
+            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
+            <option value="4">Rounds (4 Lanes)</option>
+            <option value="6" selected>Finals B &amp; C (6 Lanes)</option>
+            <option value="8">Finals A (8 Lanes)</option>
+        </select>
     </div>
+    <?php
+    $printable_doc_controls = ob_get_clean();
+    include 'printable_doc_toolbar.php';
+    ?>
 
     <main class="flex justify-center p-4 md:p-8">
 

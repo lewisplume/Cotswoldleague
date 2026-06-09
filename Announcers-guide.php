@@ -90,21 +90,22 @@ foreach ($clubs as $c) {
         }
     </style>
 </head>
-<body class="text-white font-sans min-h-screen flex flex-col">
+<body class="bg-[#0f172a] text-white font-sans min-h-screen flex flex-col">
     <?php include 'nav.php'; ?>
+
+    <?php
+    $printable_doc_title = 'Announcers Guide';
+    $printable_doc_print_label = 'Print Script';
+    $printable_doc_print_button_id = 'announcers-print-btn';
+    $printable_doc_print_button_class = 'hidden';
+    include 'printable_doc_toolbar.php';
+    ?>
 
     <div class="max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 flex-grow no-print">
         
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold flex items-center gap-3">
-                <a href="teamportal.php" class="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
-                    <i data-lucide="arrow-left" class="w-5 h-5 text-slate-400"></i>
-                </a>
-                Script <span class="text-sky-500">Generator</span>
-            </h1>
-            <div class="text-end">
-                <p class="text-xs text-slate-500 uppercase tracking-widest hidden sm:block">Announcer's Guide</p>
-            </div>
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold">Script <span class="text-sky-500">Generator</span></h1>
+            <p class="text-slate-400 text-sm mt-2">Fill in gala details below to generate a custom printable script for volunteers.</p>
         </div>
 
         <div id="setup-form" class="glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden mb-8">
@@ -224,11 +225,8 @@ foreach ($clubs as $c) {
 
     <!-- Hidden by default, displayed when generated -->
     <div id="generated-script" style="display: none;" class="max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 flex-grow">
-        <div class="no-print flex items-center justify-between mb-6 glass-panel p-4 rounded-2xl border border-white/5">
-            <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-emerald-400"></i> Script Generated Successfully</h2>
-            <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-emerald-900/20">
-                <i data-lucide="printer" class="w-4 h-4"></i> Print Script
-            </button>
+        <div class="no-print mb-6 glass-panel p-4 rounded-2xl border border-white/5">
+            <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-emerald-400"></i> Script generated — use Print Script above when ready.</h2>
         </div>
         
         <!-- The actual printable content -->
@@ -391,6 +389,10 @@ ${finalResultsHtml}                    </div>
 
             document.getElementById('script-content').innerHTML = scriptHTML;
             document.getElementById('generated-script').style.display = 'block';
+
+            const printBtn = document.getElementById('announcers-print-btn');
+            if (printBtn) printBtn.classList.remove('hidden');
+            lucide.createIcons();
             
             // Scroll down to the script smoothly
             document.getElementById('generated-script').scrollIntoView({ behavior: 'smooth' });

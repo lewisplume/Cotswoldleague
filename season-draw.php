@@ -85,6 +85,22 @@ if ($live_res && $live_res->num_rows > 0) {
     }
 }
 
+$completed_scoresheet_venues = [];
+$completed_sql = "SELECT venue_detail_id, status
+                  FROM gala_scoresheets
+                  WHERE season_year = $active_season_year
+                    AND venue_detail_id IS NOT NULL
+                  ORDER BY updated_at DESC, id DESC";
+$completed_res = $conn->query($completed_sql);
+if ($completed_res && $completed_res->num_rows > 0) {
+    while ($row = $completed_res->fetch_assoc()) {
+        $venue_detail_id = (int)$row['venue_detail_id'];
+        if (!isset($completed_scoresheet_venues[$venue_detail_id])) {
+            $completed_scoresheet_venues[$venue_detail_id] = in_array($row['status'], ['verified', 'published'], true);
+        }
+    }
+}
+
 // Helper to get points
 function getPoints($round, $team, $completed_points)
 {
@@ -226,7 +242,6 @@ function cotswold_render_venue_details($venue_info)
             <div id="drawWrapper">
                 <?php foreach ($season_draw as $round_data):
     $round_num = $round_data['round'];
-    $is_completed = $round_num <= 4;
 ?>
                 <div id="round-<?php echo $round_num; ?>"
                     class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
@@ -268,6 +283,7 @@ function cotswold_render_venue_details($venue_info)
 
         $has_card = stripos($payment_info_raw, 'Card') !== false;
         $live_info = ($venue_info && isset($live_scoresheets[(int)$venue_info['id']])) ? $live_scoresheets[(int)$venue_info['id']] : null;
+        $is_completed = $venue_info && !empty($completed_scoresheet_venues[(int)$venue_info['id']]);
 ?>
 
                     <div
@@ -313,7 +329,7 @@ function cotswold_render_venue_details($venue_info)
                                         <?php
             endif; ?>
                                     </div>
-                                    <?php if ($pts !== null): ?>
+                                    <?php if ($is_completed && $pts !== null): ?>
                                     <span
                                         class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
                                         <?php echo $pts; ?> pts

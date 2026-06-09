@@ -165,7 +165,7 @@ function getPoints($round, $team, $completed_points)
                             Get the full race list, time limits, and printable gala notes in one place.
                         </p>
                     </div>
-                    <a href="spectator-programme.php" target="_blank"
+                    <a href="spectator-programme.php?from=spectators" target="_blank"
                         class="inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold text-sm border border-sky-500/40 transition-all whitespace-nowrap">
                         <i data-lucide="download" class="w-4 h-4"></i>
                         Open Programme

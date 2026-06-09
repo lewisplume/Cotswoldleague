@@ -59,14 +59,6 @@
                         View League Table
                     </a>
                 </div>
-
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-slate-300">AGM: Saturday 6th June at 9.45am. Club representatives can view full details below.</p>
-                    <a href="teamportal.php#documents"
-                        class="inline-flex items-center mt-3 px-6 py-3 border border-slate-700 text-base font-medium rounded-full text-white bg-transparent hover:bg-slate-800 transition-colors">
-                        View AGM Details
-                    </a>
-                </div>
             </div>
 
             <!-- COUNTDOWN SECTION -->

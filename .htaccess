@@ -5,13 +5,20 @@ RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.*)$ $1.php [L]
 
 <IfModule mod_headers.c>
+    SetEnvIf Request_URI "(^|/)league_admin(\.php)?($|\?)" COTSWOLD_FRAME_SRC
+    SetEnvIf Request_URI "(^|/)digital-teamsheets(\.php)?($|\?)" COTSWOLD_FRAME_ANCESTORS
+    SetEnvIf Request_URI "(^|/)(league_admin|digital-teamsheets)(\.php)?($|\?)" COTSWOLD_FRAME_EXCEPTION
+
     Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "DENY"
+    Header always set X-Frame-Options "SAMEORIGIN" env=COTSWOLD_FRAME_ANCESTORS
+    Header always set X-Frame-Options "DENY" env=!COTSWOLD_FRAME_ANCESTORS
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
     Header always set Cross-Origin-Opener-Policy "same-origin"
     Header always set X-Permitted-Cross-Domain-Policies "none"
     Header always unset X-Powered-By
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" "expr=%{HTTPS} == 'on'"
-    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://sheets.googleapis.com; frame-src 'none'; upgrade-insecure-requests"
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://sheets.googleapis.com; frame-src 'self'; upgrade-insecure-requests" env=COTSWOLD_FRAME_SRC
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://sheets.googleapis.com; frame-src 'none'; upgrade-insecure-requests" env=COTSWOLD_FRAME_ANCESTORS
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://sheets.googleapis.com; frame-src 'none'; upgrade-insecure-requests" env=!COTSWOLD_FRAME_EXCEPTION
 </IfModule>

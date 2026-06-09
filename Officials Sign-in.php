@@ -171,6 +171,12 @@
                 display: none !important;
             }
 
+            main {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
             /* Scale Header */
             h1 {
                 font-size: 22pt;
@@ -254,60 +260,41 @@
     </style>
 </head>
 
-<body>
+<body class="bg-[#0f172a] text-slate-900 min-h-screen">
     <?php include 'nav.php'; ?>
 
-    <!-- New Navigation Bar (Tailwind Styled) -->
-    <div
-        class="no-print border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-16 left-0 right-0 z-40 min-h-[70px]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-            <div class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between md:min-h-[70px]">
-                <!-- Left: Home Link and Title -->
-                <div class="flex items-center gap-4">
-                    <a href="teamportal.php" class="text-white hover:text-sky-400 transition-colors">
-                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
-                    </a>
-                    <span class="text-white font-bold text-lg hidden md:block">Officials Sign-In</span>
-                </div>
-
-                <!-- Center: Controls -->
-                <div
-                    class="controls-container flex flex-wrap items-center gap-2 bg-slate-800 rounded-lg p-1 border border-slate-700">
-                    <div class="flex items-center">
-                        <label for="galaType" class="text-slate-400 text-xs font-bold px-2 uppercase">Gala:</label>
-                        <select id="galaType" onchange="updateSheet()"
-                            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
-                            <option value="round">League Round</option>
-                            <option value="final_a">A Final (8 Lanes)</option>
-                            <option value="final_b">B Final (6 Lanes)</option>
-                            <option value="final_c">C Final (6 Lanes)</option>
-                        </select>
-                    </div>
-
-                    <div id="roundSelectorContainer" class="flex items-center border-l border-slate-600 ml-1 pl-1">
-                        <label for="roundNum" class="text-slate-400 text-xs font-bold px-2 uppercase">Round:</label>
-                        <select id="roundNum" onchange="updateSheet()"
-                            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer w-16">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Right: Print Button -->
-                <button onclick="window.print()"
-                    class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-sky-500/30 flex items-center gap-2 transition-all">
-                    <i data-lucide="printer" class="w-4 h-4"></i> <span class="hidden sm:inline">Print Form</span>
-                </button>
-            </div>
-        </div>
+    <?php
+    $printable_doc_title = 'Officials Sign-In';
+    $printable_doc_print_label = 'Print Form';
+    ob_start();
+    ?>
+    <div class="flex items-center">
+        <label for="galaType" class="text-slate-400 text-xs font-bold px-2 uppercase">Gala:</label>
+        <select id="galaType" onchange="updateSheet()"
+            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer">
+            <option value="round">League Round</option>
+            <option value="final_a">A Final (8 Lanes)</option>
+            <option value="final_b">B Final (6 Lanes)</option>
+            <option value="final_c">C Final (6 Lanes)</option>
+        </select>
     </div>
+    <div id="roundSelectorContainer" class="flex items-center border-l border-slate-600 ml-1 pl-1">
+        <label for="roundNum" class="text-slate-400 text-xs font-bold px-2 uppercase">Round:</label>
+        <select id="roundNum" onchange="updateSheet()"
+            class="bg-slate-900 text-white text-sm font-bold py-1.5 px-2 rounded-md border-none focus:ring-2 focus:ring-sky-500 outline-none cursor-pointer w-16">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+    </div>
+    <?php
+    $printable_doc_controls = ob_get_clean();
+    include 'printable_doc_toolbar.php';
+    ?>
 
-    <!-- Restored Content Structure -->
+    <main class="flex justify-center p-4 md:p-8 print:block print:p-0 print:m-0">
     <div class="container">
-        <!-- Original Controls Removed (Use Nav Bar above) -->
 
         <header>
             <h1>Cotswold Swimming League <?php echo $current_season_year; ?></h1>
@@ -580,6 +567,7 @@
             Thank you for volunteering! Your support makes the Cotswold League possible for our swimmers.
         </div>
     </div>
+    </main>
 
     <script>
         lucide.createIcons();

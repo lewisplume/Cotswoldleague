@@ -20,12 +20,17 @@ function cotswold_send_security_headers(): void
 
     header_remove('X-Powered-By');
     header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: DENY');
+    $allow_same_origin_frame_ancestors = defined('COTSWOLD_ALLOW_SAME_ORIGIN_FRAME_ANCESTORS') && COTSWOLD_ALLOW_SAME_ORIGIN_FRAME_ANCESTORS;
+    $allow_same_origin_frame_src = defined('COTSWOLD_ALLOW_SAME_ORIGIN_FRAME_SRC') && COTSWOLD_ALLOW_SAME_ORIGIN_FRAME_SRC;
+    $frame_ancestors = $allow_same_origin_frame_ancestors ? "'self'" : "'none'";
+    $frame_src = $allow_same_origin_frame_src ? "'self'" : "'none'";
+
+    header('X-Frame-Options: ' . ($allow_same_origin_frame_ancestors ? 'SAMEORIGIN' : 'DENY'));
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
     header('Cross-Origin-Opener-Policy: same-origin');
     header('X-Permitted-Cross-Domain-Policies: none');
-    header("Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://sheets.googleapis.com; frame-src 'none'; upgrade-insecure-requests");
+    header("Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors {$frame_ancestors}; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.sheetjs.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://sheets.googleapis.com; frame-src {$frame_src}; upgrade-insecure-requests");
 
     if (cotswold_is_https_request()) {
         header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
