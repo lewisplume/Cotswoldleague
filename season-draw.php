@@ -1,6 +1,7 @@
 <?php
 include 'db.php';
 include 'season_data.php';
+include_once 'finals_sync.php';
 
 $active_season_year = $current_season_year ?? 2026;
 
@@ -405,6 +406,20 @@ endforeach; ?>
                     'parking_info' => 'Paid parking',
                     'other_info' => '',
                 ];
+                $finals_date_label = '';
+                foreach ([$a_final_venue, $b_final_venue, $c_final_venue] as $final_venue_row) {
+                    $candidate = trim((string)($final_venue_row['round_date'] ?? ''));
+                    if ($candidate !== '') {
+                        $finals_date_label = $candidate;
+                        break;
+                    }
+                }
+                if ($finals_date_label === '') {
+                    $finals_date_label = trim((string)cotswold_get_finals_date_for_season($conn, $active_season_year));
+                }
+                if ($finals_date_label === '') {
+                    $finals_date_label = $active_season_year . ' Finals';
+                }
                 ?>
                 <div id="round-Finals" class="round-cards grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -415,7 +430,7 @@ endforeach; ?>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-black uppercase tracking-tighter text-sky-400">A Final Location</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium"><?php echo $active_season_year; ?> Finals</span>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo htmlspecialchars($finals_date_label); ?></span>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
@@ -449,7 +464,7 @@ endforeach; ?>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-black uppercase tracking-tighter text-sky-400">B Final Location</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium"><?php echo $active_season_year; ?> Finals</span>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo htmlspecialchars($finals_date_label); ?></span>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
@@ -483,7 +498,7 @@ endforeach; ?>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-black uppercase tracking-tighter text-sky-400">C Final Location</span>
                             </div>
-                            <span class="text-xs text-slate-500 font-medium"><?php echo $active_season_year; ?> Finals</span>
+                            <span class="text-xs text-slate-500 font-medium"><?php echo htmlspecialchars($finals_date_label); ?></span>
                         </div>
                         <div class="p-5">
                             <h3 class="text-xl font-bold mb-4 group-hover:text-sky-400 transition-colors flex items-center justify-between">
