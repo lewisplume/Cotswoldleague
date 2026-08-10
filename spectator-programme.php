@@ -15,9 +15,9 @@ $programme_events_json = json_encode($programme_events, JSON_HEX_TAG | JSON_HEX_
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
 
     <!-- Scripts -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
+    <script src="assets/vendor/html2pdf-0.10.1.bundle.min.js"
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>

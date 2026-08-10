@@ -1,14 +1,13 @@
-const CACHE_NAME = 'gala-scoresheet-v3';
+const CACHE_NAME = 'gala-scoresheet-v4';
 const CORE_ASSETS = [
     'gala_scoresheet.php',
     'gala_scoresheet.js?v=20260504-deadheat',
     'manifest.json',
-    'images/league-logo.svg'
+    'images/league-logo.svg',
+    'assets/vendor/tailwindcss-3.4.17.js',
+    'assets/vendor/lucide-1.31.0.min.js'
 ];
-const OPTIONAL_CDN_ASSETS = [
-    'https://cdn.tailwindcss.com',
-    'https://unpkg.com/lucide@latest/dist/umd/lucide.min.js'
-];
+const OPTIONAL_CDN_ASSETS = [];
 
 self.addEventListener('install', (e) => {
     e.waitUntil(

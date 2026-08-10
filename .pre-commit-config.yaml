@@ -37,3 +37,8 @@ repos:
         entry: php -l
         language: system
         types: [php]
+      - id: cotswold-security-tests
+        name: Cotswold security contract tests
+        entry: bash tests/run.sh
+        language: system
+        pass_filenames: false

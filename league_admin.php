@@ -4,9 +4,12 @@ require_once __DIR__ . '/security_headers.php';
 cotswold_secure_session_start();
 include 'db.php';
 include_once 'finals_sync.php';
+require_once __DIR__ . '/audit_helpers.php';
+require_once __DIR__ . '/image_upload.php';
 
 // Handle Logout
-if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
+    cotswold_require_csrf();
     session_destroy();
     header("Location: league_admin.php");
     exit;
@@ -16,6 +19,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 $login_error = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['super_password'])) {
     if ($_POST['super_password'] === SUPER_ADMIN_PASSWORD) {
+        session_regenerate_id(true);
+        cotswold_ensure_csrf_token(true);
         $_SESSION['super_admin_logged_in'] = true;
         header("Location: league_admin.php");
         exit;
@@ -32,6 +37,8 @@ $error_msg = '';
 $active_admin_tab = 'tab-links';
 
 if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_action'])) {
+    cotswold_require_csrf();
+    cotswold_audit_authenticated_request($conn, 'Super Admin', 'League admin', (string)$_POST['admin_action']);
     
     // --- CLUBS CRUD ---
     if ($_POST['admin_action'] === 'update_club') {
@@ -39,30 +46,35 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $name = $_POST['name'];
         $pool_name = $_POST['pool_name'];
         $postcode = $_POST['postcode'];
-        $website = $_POST['website'];
-        $logo = trim($_POST['logo']);
+        $website = trim($_POST['website']);
+        $logo = basename(trim($_POST['logo']));
         $lat = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
         $lng = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
 
         if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'images/Teams/';
-            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-            $file_info = pathinfo($_FILES['logo_file']['name']);
-            $ext = strtolower($file_info['extension']);
-            $new_filename = preg_replace('/[^a-zA-Z0-9]/', '', $name) . '_logo.' . $ext;
-            if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_dir . $new_filename)) {
-                $logo = $new_filename;
+            try {
+                $logo = cotswold_store_logo_upload($_FILES['logo_file'], __DIR__ . '/images/Teams');
+            } catch (Throwable $e) {
+                $error_msg = $e instanceof InvalidArgumentException ? $e->getMessage() : 'The logo could not be stored.';
+                error_log('Logo upload failed [' . cotswold_request_id() . ']: ' . $e->getMessage());
             }
         }
 
-        $stmt = $conn->prepare("UPDATE clubs SET name=?, pool_name=?, postcode=?, website=?, logo=?, latitude=?, longitude=? WHERE id=?");
-        $stmt->bind_param("ssssssddi", $name, $pool_name, $postcode, $website, $logo, $lat, $lng, $id);
-        if ($stmt->execute()) {
-            $success_msg = "Club '$name' updated successfully.";
-            // Also update club_contacts name just in case sync is needed
-            $conn->query("UPDATE club_contacts SET club_name='" . $conn->real_escape_string($name) . "' WHERE club_id=$id");
-        } else {
-            $error_msg = "Failed to update club: " . $conn->error;
+        $websiteScheme = strtolower((string)parse_url($website, PHP_URL_SCHEME));
+        if ($website !== '' && (!filter_var($website, FILTER_VALIDATE_URL) || !in_array($websiteScheme, ['http', 'https'], true))) {
+            $error_msg = 'Club website must be a valid HTTP or HTTPS address.';
+        }
+
+        if ($error_msg === '') {
+            $stmt = $conn->prepare("UPDATE clubs SET name=?, pool_name=?, postcode=?, website=?, logo=?, latitude=?, longitude=? WHERE id=?");
+            $stmt->bind_param("sssssddi", $name, $pool_name, $postcode, $website, $logo, $lat, $lng, $id);
+            if ($stmt->execute()) {
+                $success_msg = "Club '$name' updated successfully.";
+                $conn->query("UPDATE club_contacts SET club_name='" . $conn->real_escape_string($name) . "' WHERE club_id=$id");
+            } else {
+                $error_msg = 'The club could not be updated.';
+                error_log('Club update failed [' . cotswold_request_id() . ']: ' . $conn->error);
+            }
         }
     }
 
@@ -71,13 +83,16 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
         $pool_name = trim($_POST['pool_name']);
         $postcode = trim($_POST['postcode']);
         $website = trim($_POST['website']);
-        $logo = trim($_POST['logo']);
+        $logo = basename(trim($_POST['logo']));
         $lat = !empty($_POST['latitude']) ? $_POST['latitude'] : null;
         $lng = !empty($_POST['longitude']) ? $_POST['longitude'] : null;
         $initial_pin = trim($_POST['access_pin'] ?? '0000');
 
+        $websiteScheme = strtolower((string)parse_url($website, PHP_URL_SCHEME));
         if ($name === '' || $pool_name === '' || $postcode === '') {
             $error_msg = "Club name, pool name and postcode are required.";
+        } elseif ($website !== '' && (!filter_var($website, FILTER_VALIDATE_URL) || !in_array($websiteScheme, ['http', 'https'], true))) {
+            $error_msg = 'Club website must be a valid HTTP or HTTPS address.';
         } elseif ($initial_pin !== '' && !preg_match('/^\d{4}$/', $initial_pin)) {
             $error_msg = "Initial PIN must be exactly 4 digits.";
         } else {
@@ -97,18 +112,17 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                     : "A retired club named '$name' already exists. Reactivate it instead of adding a duplicate.";
             } else {
                 if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] === UPLOAD_ERR_OK) {
-                    $upload_dir = 'images/Teams/';
-                    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
-                    $file_info = pathinfo($_FILES['logo_file']['name']);
-                    $ext = strtolower($file_info['extension']);
-                    $new_filename = preg_replace('/[^a-zA-Z0-9]/', '', $name) . '_logo.' . $ext;
-                    if (move_uploaded_file($_FILES['logo_file']['tmp_name'], $upload_dir . $new_filename)) {
-                        $logo = $new_filename;
+                    try {
+                        $logo = cotswold_store_logo_upload($_FILES['logo_file'], __DIR__ . '/images/Teams');
+                    } catch (Throwable $e) {
+                        $error_msg = $e instanceof InvalidArgumentException ? $e->getMessage() : 'The logo could not be stored.';
+                        error_log('Logo upload failed [' . cotswold_request_id() . ']: ' . $e->getMessage());
                     }
                 }
 
-                $conn->begin_transaction();
-                try {
+                if ($error_msg === '') {
+                    $conn->begin_transaction();
+                    try {
                     $stmt = $conn->prepare("INSERT INTO clubs (name, pool_name, postcode, website, logo, latitude, longitude, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
                     if (!$stmt) throw new Exception($conn->error);
                     $stmt->bind_param("sssssdd", $name, $pool_name, $postcode, $website, $logo, $lat, $lng);
@@ -126,11 +140,13 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                     $results_stmt->bind_param("ii", $new_club_id, $current_season_year);
                     if (!$results_stmt->execute()) throw new Exception($results_stmt->error);
 
-                    $conn->commit();
-                    $success_msg = "Club '$name' added successfully.";
-                } catch (Exception $e) {
-                    $conn->rollback();
-                    $error_msg = "Failed to add club: " . $e->getMessage();
+                        $conn->commit();
+                        $success_msg = "Club '$name' added successfully.";
+                    } catch (Exception $e) {
+                        $conn->rollback();
+                        $error_msg = 'The club could not be added.';
+                        error_log('Club creation failed [' . cotswold_request_id() . ']: ' . $e->getMessage());
+                    }
                 }
             }
         }
@@ -352,7 +368,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                 event_name=?, distance=?, age_group=?, gender=?, event_type=?, cut_off_time_ms=?,
                 a_final_event_name=?, a_final_distance=?, a_final_cut_off_time_ms=?
                 WHERE id=?");
-            $stmt->bind_param("sssssisisi", 
+            $stmt->bind_param("sssssissii",
                 $event_name, $distance, $age_group, $gender, $event_type, $cut_off_ms,
                 $a_final_event_name, $a_final_distance, $a_final_cut_off_ms, $event_id
             );
@@ -417,7 +433,7 @@ if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admi
                     (event_number, event_name, distance, age_group, gender, event_type, cut_off_time_ms,
                      a_final_event_name, a_final_distance, a_final_cut_off_time_ms, season_year) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("issssisisii", 
+                $stmt->bind_param("isssssissii",
                     $event_number, $event_name, $distance, $age_group, $gender, $event_type, $cut_off_ms,
                     $a_final_event_name, $a_final_distance, $a_final_cut_off_ms, $season_year
                 );
@@ -684,8 +700,8 @@ function cotswold_render_admin_club_card($club) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin | Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body { background-color: #0f172a; }
         .glass-panel { 
@@ -757,9 +773,12 @@ function cotswold_render_admin_club_card($club) {
                         </div>
                     </div>
                     <div class="relative z-10">
-                         <a href="?action=logout" class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                         <form method="post">
+                         <input type="hidden" name="action" value="logout">
+                         <button type="submit" class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                              <i data-lucide="log-out" class="w-4 h-4"></i> Secure Logout
-                         </a>
+                         </button>
+                         </form>
                     </div>
                 </div>
 

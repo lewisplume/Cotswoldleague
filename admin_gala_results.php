@@ -179,8 +179,25 @@
             currentVenues = data.venues;
             renderVenues(data.venues);
         } catch (e) {
-            container.innerHTML = `<div class="col-span-full text-red-400 text-center py-8">Error loading venues: ${e.message}</div>`;
+            container.textContent = `Error loading venues: ${e.message}`;
+            container.className = 'col-span-full text-red-400 text-center py-8';
         }
+    }
+
+    function grEscape(value) {
+        return String(value ?? '').replace(/[&<>"']/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        })[character]);
+    }
+
+    function grLogo(value) {
+        return encodeURIComponent(String(value ?? '').split(/[\\/]/).pop().replace(/[^A-Za-z0-9._-]/g, ''));
+    }
+
+    function importButton(scoresheetId, clubId, clubName, venueName) {
+        if (!clubId) return '';
+        const safeClub = grEscape(clubName);
+        return `<button class="bg-slate-800 hover:bg-sky-900 border border-slate-700 hover:border-sky-500 text-slate-300 hover:text-sky-400 px-2.5 py-1 rounded-md transition-colors" onclick="openImportModal(${Number(scoresheetId) || 0}, ${Number(clubId) || 0}, decodeURIComponent('${encodeURIComponent(String(clubName ?? ''))}'), decodeURIComponent('${encodeURIComponent(String(venueName ?? ''))}'))" title="Import results for ${safeClub}">${safeClub}</button>`;
     }
 
     function renderVenues(venues) {
@@ -210,20 +227,20 @@
                             <span class="${statusConfig.bgClass} ${statusConfig.textClass} text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">${statusConfig.label}</span>
                         </div>
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 bg-white rounded p-1"><img src="images/Teams/${v.host_club_logo}" class="w-full h-full object-contain"></div>
+                            <div class="w-10 h-10 bg-white rounded p-1"><img src="images/Teams/${grLogo(v.host_club_logo)}" alt="" class="w-full h-full object-contain"></div>
                             <div>
-                                <h3 class="font-bold text-white text-sm">${v.host_club_name}</h3>
-                                <p class="text-xs text-slate-400">${v.recorder_name || 'No recorder yet'}</p>
+                                <h3 class="font-bold text-white text-sm">${grEscape(v.host_club_name)}</h3>
+                                <p class="text-xs text-slate-400">${grEscape(v.recorder_name || 'No recorder yet')}</p>
                             </div>
                         </div>
                         
                         <div class="text-[11px] text-slate-500 mb-4 space-y-1">
                             <p class="mb-1 uppercase tracking-widest font-bold">Import Team Results:</p>
                             <div class="flex flex-wrap gap-2">
-                                ${v.team_1_id ? `<button class="bg-slate-800 hover:bg-sky-900 border border-slate-700 hover:border-sky-500 text-slate-300 hover:text-sky-400 px-2.5 py-1 rounded-md transition-colors" onclick="openImportModal(${v.scoresheet_id}, ${v.team_1_id}, '${v.team_1_name}', '${v.host_club_name}')" title="Import results for ${v.team_1_name}">${v.team_1_name}</button>` : ''}
-                                ${v.team_2_id ? `<button class="bg-slate-800 hover:bg-sky-900 border border-slate-700 hover:border-sky-500 text-slate-300 hover:text-sky-400 px-2.5 py-1 rounded-md transition-colors" onclick="openImportModal(${v.scoresheet_id}, ${v.team_2_id}, '${v.team_2_name}', '${v.host_club_name}')" title="Import results for ${v.team_2_name}">${v.team_2_name}</button>` : ''}
-                                ${v.team_3_id ? `<button class="bg-slate-800 hover:bg-sky-900 border border-slate-700 hover:border-sky-500 text-slate-300 hover:text-sky-400 px-2.5 py-1 rounded-md transition-colors" onclick="openImportModal(${v.scoresheet_id}, ${v.team_3_id}, '${v.team_3_name}', '${v.host_club_name}')" title="Import results for ${v.team_3_name}">${v.team_3_name}</button>` : ''}
-                                ${v.team_4_id ? `<button class="bg-slate-800 hover:bg-sky-900 border border-slate-700 hover:border-sky-500 text-slate-300 hover:text-sky-400 px-2.5 py-1 rounded-md transition-colors" onclick="openImportModal(${v.scoresheet_id}, ${v.team_4_id}, '${v.team_4_name}', '${v.host_club_name}')" title="Import results for ${v.team_4_name}">${v.team_4_name}</button>` : ''}
+                                ${importButton(v.scoresheet_id, v.team_1_id, v.team_1_name, v.host_club_name)}
+                                ${importButton(v.scoresheet_id, v.team_2_id, v.team_2_name, v.host_club_name)}
+                                ${importButton(v.scoresheet_id, v.team_3_id, v.team_3_name, v.host_club_name)}
+                                ${importButton(v.scoresheet_id, v.team_4_id, v.team_4_name, v.host_club_name)}
                             </div>
                             ${v.updated_at ? `<p class="mt-2 pt-1 text-[10px]">Updated: ${new Date(v.updated_at).toLocaleString()}</p>` : ''}
                         </div>
@@ -322,7 +339,7 @@
         
         document.getElementById('import-target-scoresheet-id').value = targetScoresheetId;
         document.getElementById('import-club-id').value = clubId;
-        document.getElementById('import-modal-desc').innerHTML = `Import results for <strong>${clubName}</strong> into the <strong>${venueName}</strong> scoresheet.`;
+        document.getElementById('import-modal-desc').innerHTML = `Import results for <strong>${grEscape(clubName)}</strong> into the <strong>${grEscape(venueName)}</strong> scoresheet.`;
         
         document.getElementById('import-round-select').value = currentRound;
         loadSourceVenues();

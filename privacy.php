@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy | The Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -169,7 +169,7 @@
             </div>
 
             <footer class="mt-10 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-                &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+                &copy; <?php echo (int)$current_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume
             </footer>
         </div>
     </main>

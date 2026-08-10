@@ -1,6 +1,8 @@
-# The Cotswold Swimming League - Official Website (Season 2026)
+# The Cotswold Swimming League website and league-management system
 
 This repository contains the source code for the official Cotswold Swimming League website: **thecotswoldleague.co.uk**.
+
+The current technical baseline is documented in [the codebase audit](CODEBASE_AUDIT_2026-08-10.md) and [operations runbook](OPERATIONS_RUNBOOK.md). Older handoff documents are historical context and must not be used as proof that a security control or workflow is complete.
 
 ## Project Overview
 
@@ -8,12 +10,11 @@ The Cotswold League is a unique swimming league focused on development, sporting
 
 ## Key Features
 
-* **Real-time Countdown:** Live timer tracking the precise time until the next major league event or final.
+* **Season-aware Countdown:** Uses the active season's first-round date, or clearly reports that the date is to be confirmed.
 * **Interactive Club Map:** A visual directory powered by Leaflet.js, allowing parents and swimmers to locate all participating clubs with integrated directions.
 * **Live League Table:** Dynamic standings powered by a MySQL database, automatically updating positions and reveals as scores are processed.
-* **Sponsors & Merchandise:** Dedicated section showcasing the main league sponsor (Wyvern Swimwear) and official 2026 merchandise.
 * **Spectator Information:** Comprehensive guide for attendees, including admission pricing, parking details, and warm-up times.
-* **League History & Archive:** A permanent record of past seasons, including hardcoded results for 2026 and historical data for 2020.
+* **League History & Archive:** A permanent, intentionally static record of completed seasons alongside active-season database views.
 
 ### Admin & Representative Tools
 
@@ -23,7 +24,7 @@ The Cotswold League is a unique swimming league focused on development, sporting
     * **Smart Programme Generator:** Automated creation of gala programmes via Google Sheets integration.
     * **Results Matcher:** Intelligent tool for cross-referencing swimmer times with official gala data.
     * **Dynamic Directory Filtering:** Advanced filtering to isolate contacts by standing or specific round match-ups.
-* **Audit Logging:** Automated tracking of all logistical changes made by club representatives to ensure transparency and data integrity.
+* **Audit Logging:** Structured request and change records for protected operational paths. Audit coverage is useful but is not a substitute for named user accounts or external monitoring.
 
 ## Technical Documentation
 
@@ -35,16 +36,16 @@ The project has evolved from a static site to a highly dynamic, DB-driven PHP ap
 
 * **Core Logic:** PHP (v8+) used for backend logic and component-based templating.
 * **Database:** MySQL (`cotswold_league`) manages all persistent scoring and logistical data.
-* **Frontend:** Styled with **Tailwind CSS** for a modern, responsive user experience.
+* **Frontend:** Styled with **Tailwind CSS** and other browser libraries vendored under `assets/vendor/` at recorded versions.
 * **Mapping:** **Leaflet.js** integration for the interactive club directory.
 * **Icons:** Powered by **Lucide**.
-* **Security:** Multi-tiered authentication system for Super Admins and Club Representatives, hardened session cookies, security headers, restricted uploaded-file access, and audit logging.
+* **Security:** Shared club/admin authentication, session-bound CSRF controls, hardened session cookies, server-side score calculation, restricted uploads, output escaping, security headers, and audit logging. Shared credentials remain a known item requiring a staged migration.
 
 ## Security & Privacy
 
 The site applies a shared security baseline through `security_headers.php` and `.htaccess`:
 
-* `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, and HTTPS-only HSTS.
+* `security_headers.php` is the authoritative source for CSP, frame, MIME, referrer, permissions, opener and HSTS headers.
 * PHP sessions are started through `cotswold_secure_session_start()` so login cookies use `HttpOnly`, `SameSite=Lax`, strict session mode, and `Secure` when the request is HTTPS.
 * Uploaded digital teamsheets are stored under `uploads/teamsheets/`, blocked from direct web access by `.htaccess`, and served only through authenticated PHP download checks.
 * Database and admin credentials can be supplied by environment variables: `COTSWOLD_DB_HOST`, `COTSWOLD_DB_USER`, `COTSWOLD_DB_PASS`, `COTSWOLD_DB_NAME`, `COTSWOLD_LEAGUE_PASSWORD`, and `COTSWOLD_SUPER_ADMIN_PASSWORD`.
@@ -57,9 +58,9 @@ This project is a personal initiative to streamline league operations. It is cur
 
 * **XAMPP:** Local Apache server and MySQL database for development and hosting.
 * **Cloudflare Tunnels:** Securely exposes the local server to the public domain.
-* **GitHub:** Version control and remote backup.
+* **GitHub:** Version control. Git is not a database or personal-data backup system.
 
-For production, set the environment variables listed above rather than relying on the local XAMPP defaults embedded as development fallbacks.
+For production, set the environment variables listed above. The tracked fallback application passwords are a known transitional risk and must be removed only as part of a coordinated credential migration so clubs are not locked out.
 
 ### Laptop Shared-Folder Development Database
 
@@ -88,6 +89,16 @@ Verification on 2026-05-16:
 * PHP loaded the project `db.php` runtime config and connected to `cotswold_league`.
 * The existing database reported 15 tables; no schema or seed import was run.
 * `http://127.0.0.1:8000/index.php` returned HTTP 200 with no database connection error.
+
+## Quality checks
+
+Run the complete local quality gate with:
+
+```sh
+bash tests/run.sh
+```
+
+The same checks run in `.github/workflows/quality.yml`.
 
 ## Pre Commit
 

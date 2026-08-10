@@ -6,7 +6,51 @@ if (!isset($current_season_year)) {
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $enableLogoFlair = $currentScript !== 'index.php';
 $navSeasonYear = isset($current_season_year) ? (int)$current_season_year : 2026;
+$hasAuthenticatedSession = session_status() === PHP_SESSION_ACTIVE && (
+    !empty($_SESSION['club_logged_in'])
+    || !empty($_SESSION['super_admin_logged_in'])
+    || !empty($_SESSION['logged_in'])
+);
 ?>
+
+<?php if ($hasAuthenticatedSession): ?>
+<script>
+    (() => {
+        const readCsrfToken = () => {
+            const match = document.cookie.match(/(?:^|;\s*)cotswold_csrf=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        };
+
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = (input, init = {}) => {
+            const requestUrl = new URL(typeof input === 'string' ? input : input.url, window.location.href);
+            const method = String(init.method || (typeof input !== 'string' && input.method) || 'GET').toUpperCase();
+            if (requestUrl.origin === window.location.origin && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+                const headers = new Headers(init.headers || (typeof input !== 'string' ? input.headers : undefined));
+                const token = readCsrfToken();
+                if (token) headers.set('X-CSRF-Token', token);
+                init = { ...init, headers, credentials: init.credentials || 'same-origin' };
+            }
+            return originalFetch(input, init);
+        };
+
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || String(form.method).toUpperCase() !== 'POST') return;
+            const actionUrl = new URL(form.getAttribute('action') || window.location.href, window.location.href);
+            if (actionUrl.origin !== window.location.origin) return;
+            let field = form.querySelector('input[name="_csrf_token"]');
+            if (!field) {
+                field = document.createElement('input');
+                field.type = 'hidden';
+                field.name = '_csrf_token';
+                form.appendChild(field);
+            }
+            field.value = readCsrfToken();
+        }, true);
+    })();
+</script>
+<?php endif; ?>
 
 <?php if ($currentScript !== 'gala_scoresheet.php'): ?>
 <script>

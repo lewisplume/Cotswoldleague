@@ -67,8 +67,9 @@ if ($current_club_id) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League Smart Results Matcher</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/xlsx-0.20.3.full.min.js"></script>
+    <script src="workbook_validation.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
@@ -440,6 +441,7 @@ if ($current_club_id) {
                 
                 const data = await response.arrayBuffer();
                 const workbook = XLSX.read(data, { type: 'array' });
+                await CotswoldWorkbook.validate(workbook, { kind: 'teamsheet', arrayBuffer: data, filename: 'Digital Teamsheet' });
 
                 document.getElementById('sheetSelectContainer').classList.remove('hidden');
                 const titleEl = document.getElementById('workbookNameDisplay');
@@ -471,6 +473,7 @@ if ($current_club_id) {
                 
                 const data = await response.arrayBuffer();
                 const workbook = XLSX.read(data, { type: 'array' });
+                await CotswoldWorkbook.validate(workbook, { kind: 'teamsheet', arrayBuffer: data, filename });
 
                 document.getElementById('sheetSelectContainer').classList.remove('hidden');
                 const titleEl = document.getElementById('workbookNameDisplay');
@@ -511,6 +514,7 @@ if ($current_club_id) {
 
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
+            await CotswoldWorkbook.validate(workbook, { kind: 'teamsheet', arrayBuffer: data, file });
 
             setupSheetSelector(workbook, 'teamSheetSelector', (wb, sheet) => processTeamsheet(wb, sheet));
             
@@ -561,6 +565,7 @@ if ($current_club_id) {
                 
                 const data = await response.arrayBuffer();
                 const workbook = XLSX.read(data, { type: 'array' });
+                await CotswoldWorkbook.validate(workbook, { kind: 'results', arrayBuffer: data, filename: url });
                 
                 setupSheetSelector(workbook, 'resultsSheetSelector', (wb, sheet) => processResults(wb, sheet));
             } catch (error) {
@@ -578,6 +583,7 @@ if ($current_club_id) {
 
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
+            await CotswoldWorkbook.validate(workbook, { kind: 'results', arrayBuffer: data, file });
 
             setupSheetSelector(workbook, 'resultsSheetSelector', (wb, sheet) => processResults(wb, sheet));
         }

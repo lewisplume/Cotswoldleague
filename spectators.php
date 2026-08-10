@@ -4,8 +4,11 @@ include 'season_data.php';
 
 // Fetch Round 1, Round 2, Round 3, and Round 4 points for Spectators page
 $completed_points = [];
-$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4 FROM results r JOIN clubs c ON r.club_id = c.id";
-$result = $conn->query($sql);
+$sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4 FROM results r JOIN clubs c ON r.club_id = c.id WHERE r.season_year = ?";
+$points_stmt = $conn->prepare($sql);
+$points_stmt->bind_param('i', $current_season_year);
+$points_stmt->execute();
+$result = $points_stmt->get_result();
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $completed_points[1][$row['name']] = $row['round_1'];
@@ -19,8 +22,11 @@ if ($result && $result->num_rows > 0) {
 
 // Fetch Venue Details from DB
 $venue_db = [];
-$v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id";
-$v_res = $conn->query($v_sql);
+$v_sql = "SELECT vd.*, c.name AS host_club_name FROM venue_details vd JOIN clubs c ON vd.club_id = c.id WHERE vd.season_year = ?";
+$venue_stmt = $conn->prepare($v_sql);
+$venue_stmt->bind_param('i', $current_season_year);
+$venue_stmt->execute();
+$v_res = $venue_stmt->get_result();
 if ($v_res && $v_res->num_rows > 0) {
     while ($row = $v_res->fetch_assoc()) {
         // Key by round and host for lookup
@@ -46,8 +52,8 @@ function getPoints($round, $team, $completed_points)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Spectators</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -75,7 +81,7 @@ function getPoints($round, $team, $completed_points)
             Spectator <span class="text-sky-500">Information</span>
         </h1>
         <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-            Everything you need to know for the 2026 Cotswold League rounds.
+            Everything you need to know for the <?php echo (int)$current_season_year; ?> Cotswold League rounds.
         </p>
     </div>
 
@@ -199,7 +205,7 @@ function getPoints($round, $team, $completed_points)
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+            &copy; <?php echo (int)$current_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume
         </footer>
     </div>
 

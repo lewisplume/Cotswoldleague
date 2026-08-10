@@ -2,11 +2,13 @@
 require_once __DIR__ . '/security_headers.php';
 cotswold_secure_session_start();
 include 'db.php';
+require_once __DIR__ . '/audit_helpers.php';
 
 $active_season_year = $current_season_year ?? 2026;
 
 // Handle Logout
-if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
+    cotswold_require_csrf();
     session_destroy();
     header("Location: teamportal.php");
     exit;
@@ -31,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if ($result->num_rows === 1) {
             $row = $result->fetch_assoc();
+            session_regenerate_id(true);
+            cotswold_ensure_csrf_token(true);
             $_SESSION['club_logged_in'] = true;
             $_SESSION['club_id'] = $club_id;
             $_SESSION['club_name'] = $row['club_name'];
@@ -100,6 +104,8 @@ function cotswold_portal_gala_label($round_number, $gala_type = 'round') {
 
 // HANDLE AUTHENTICATED ACTIONS
 if ($is_logged_in && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    cotswold_require_csrf();
+    cotswold_audit_authenticated_request($conn, $current_club_name ?: 'Club User', 'Club portal', (string)($_POST['action'] ?? 'unknown'));
 
     // Action: Update Contacts
     if (isset($_POST['action']) && $_POST['action'] === 'update_contacts') {
@@ -423,12 +429,16 @@ if ($is_logged_in) {
 
     // 6. Recent venue audit logs (Documents tab)
     $recent_logs = [];
-    $log_res = $conn->query("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 3");
+    $log_stmt = $conn->prepare("SELECT * FROM audit_log WHERE club_name = ? ORDER BY timestamp DESC LIMIT 3");
+    $log_stmt->bind_param("s", $current_club_name);
+    $log_stmt->execute();
+    $log_res = $log_stmt->get_result();
     if ($log_res && $log_res->num_rows > 0) {
         while ($l = $log_res->fetch_assoc()) {
             $recent_logs[] = $l;
         }
     }
+    $log_stmt->close();
 } else {
     // Populate Dropdown for Login
     $sql = "SELECT cc.club_id, cc.club_name FROM club_contacts cc JOIN clubs c ON cc.club_id = c.id WHERE c.is_active = 1 ORDER BY cc.club_name ASC";
@@ -448,9 +458,9 @@ if ($is_logged_in) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Portal | Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
+    <script src="assets/vendor/xlsx-0.20.3.full.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -613,10 +623,13 @@ if ($is_logged_in) {
                             <i data-lucide="arrow-left" class="w-4 h-4"></i> Portal Home
                         </a>
                         <?php endif; ?>
-                        <a href="?action=logout"
+                        <form method="post">
+                            <input type="hidden" name="action" value="logout">
+                            <button type="submit"
                             class="bg-slate-800 hover:bg-red-500/10 hover:text-red-400 border border-slate-700 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i data-lucide="log-out" class="w-4 h-4"></i> Logout
-                        </a>
+                            </button>
+                        </form>
                         <?php else: ?>
                         <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
                             <i data-lucide="shield-check" class="w-4 h-4"></i> Editing as Super Admin
@@ -1494,7 +1507,7 @@ if ($is_logged_in) {
                                 <h3 class="text-sm font-bold text-white flex items-center gap-2">
                                     <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i> Latest changes
                                 </h3>
-                                <a href="audit_log.php" class="text-[11px] text-slate-400 hover:text-white transition-colors">View Log</a>
+                                <span class="text-[11px] text-slate-500">Your club only</span>
                             </div>
                             <?php if (!empty($recent_logs)): ?>
                                 <div class="space-y-2.5">

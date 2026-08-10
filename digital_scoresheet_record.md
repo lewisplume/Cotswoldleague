@@ -2,6 +2,16 @@
 **Date:** May 4, 2026
 **Conversation ID:** 514e9f69-e90a-413e-b03f-b92250602fd3
 
+## Security hardening update — 10 August 2026
+
+- Preliminary-round access is now limited to the venue host, finals access to the explicitly assigned finals recorder, and sandbox creation to league administrators.
+- Result-save requests accept only raw time and DQ inputs for an event/club pair already belonging to the editable scoresheet.
+- Points, places, statuses, and totals are recalculated by PHP after saves and again at submission, verification, and publication. Browser calculations remain for immediate/offline display but are not authoritative.
+- Verified and published scoresheets reject further club result edits unless the league administrator first returns the sheet to an editable state.
+- The server scoring implementation is covered by access/dead-heat regression tests and a deterministic 100-case parity comparison against the existing JavaScript engine.
+- Authenticated scoresheet mutations require a session-bound CSRF token. The shared navigation layer attaches the current cookie-backed token to form and fetch requests, including delayed offline replay after a fresh login.
+- Browser dependencies are served from pinned local copies, and the scoresheet service-worker cache is versioned as `gala-scoresheet-v4` so installed devices receive the dependency/security update.
+
 ## 1. Project Objective
 The goal was to transform the static, pre-defined gala results system into a **Flexible Digital Scoresheet** capable of handling real-world variations on the poolside. This includes dynamic team counts (4, 6, or 8 teams), absent teams, unplanned substitutions, and post-gala reconciliation for Super Admins.
 
@@ -44,7 +54,7 @@ The goal was to transform the static, pre-defined gala results system into a **F
 - `mark_absent`: Toggles the `is_absent` flag and clears lane assignments.
 - `add_team`: Injects a new club into the current scoresheet.
 - `create_sandbox`: Generates an isolated test gala under `season_year = 9999`.
-- `swap_teams`: Handles complex multi-record transactions for the Virtual Swap tool.
+- `swap_teams` in `gala_admin_api.php`: Handles complex multi-record transactions for the Virtual Swap tool.
 - `find_by_venue`: Resolves the correct scoresheet for the active season before the page creates or resumes a gala.
 - `save_lanes` and `save_batch`: Persist lane assignments and timing updates, with offline queueing handled in the browser and synchronization when the device reconnects.
 

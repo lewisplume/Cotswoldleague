@@ -9,6 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+cotswold_require_same_site_request(true);
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (isset($data['action'])) {

@@ -6,6 +6,9 @@
 require_once __DIR__ . '/security_headers.php';
 cotswold_secure_session_start();
 include 'db.php';
+require_once __DIR__ . '/gala_access.php';
+require_once __DIR__ . '/gala_scoring.php';
+require_once __DIR__ . '/audit_helpers.php';
 
 header('Content-Type: application/json');
 
@@ -21,23 +24,20 @@ if (!$is_super_admin && !$is_club_logged_in) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    cotswold_require_csrf(true);
+    cotswold_audit_authenticated_request($conn, $is_super_admin ? 'Super Admin' : (string)($_SESSION['club_name'] ?? 'Club User'), 'Scoresheet', $action);
+}
+
 function cotswold_is_final_venue_row($row) {
     return ((int)($row['round_number'] ?? 0) === 99) || in_array($row['gala_type'] ?? 'round', ['a_final', 'b_final', 'c_final'], true);
 }
 
-function cotswold_user_can_access_scoresheet_venue($row, $is_super_admin, $current_club_id) {
-    if ($is_super_admin) {
-        return true;
-    }
-    if (!cotswold_is_final_venue_row($row)) {
-        return true;
-    }
-    return !empty($row['final_scoresheet_club_id']) && (int)$row['final_scoresheet_club_id'] === (int)$current_club_id;
-}
-
 function cotswold_load_scoresheet_access_row($conn, $scoresheet_id) {
-    $stmt = $conn->prepare("SELECT gs.id, COALESCE(vd.round_number, gs.round_number) AS round_number,
+    $stmt = $conn->prepare("SELECT gs.id, gs.status, COALESCE(vd.round_number, gs.round_number) AS round_number,
                COALESCE(vd.gala_type, gs.gala_type) AS gala_type,
+               gs.host_club_id,
+               vd.club_id AS venue_host_club_id,
                vd.final_scoresheet_club_id
         FROM gala_scoresheets gs
         LEFT JOIN venue_details vd ON gs.venue_detail_id = vd.id
@@ -60,9 +60,101 @@ function cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_adm
         exit;
     }
     if (!cotswold_user_can_access_scoresheet_venue($row, $is_super_admin, $current_club_id)) {
-        echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+        http_response_code(403);
+        echo json_encode(['error' => 'This scoresheet has not been assigned to your club.']);
         exit;
     }
+    if (!in_array($row['status'], ['draft', 'in_progress', 'submitted'], true)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'This scoresheet is verified or published and is no longer editable.']);
+        exit;
+    }
+}
+
+function cotswold_normalize_raw_result(array $input): array {
+    $time_value = $input['time_ms'] ?? null;
+    if ($time_value === '' || $time_value === null) {
+        $time_ms = null;
+    } elseif (filter_var($time_value, FILTER_VALIDATE_INT) === false) {
+        throw new InvalidArgumentException('Invalid result time.');
+    } else {
+        $time_ms = (int)$time_value;
+        if ($time_ms < 0 || $time_ms > 86400000) {
+            throw new InvalidArgumentException('Result time is outside the accepted range.');
+        }
+    }
+
+    $is_dq = !empty($input['is_dq']) ? 1 : 0;
+    $dq_reason = $is_dq ? trim((string)($input['dq_reason'] ?? '')) : '';
+    if (strlen($dq_reason) > 255) {
+        throw new InvalidArgumentException('DQ reason must be 255 characters or fewer.');
+    }
+
+    return [
+        'event_id' => (int)($input['event_id'] ?? 0),
+        'club_id' => (int)($input['club_id'] ?? 0),
+        'time_ms' => $time_ms,
+        'is_dq' => $is_dq,
+        'dq_reason' => $dq_reason !== '' ? $dq_reason : null,
+    ];
+}
+
+function cotswold_save_raw_results($conn, int $scoresheet_id, array $inputs, int $active_season_year): int {
+    if (count($inputs) > 1000) {
+        throw new InvalidArgumentException('Too many results in one request.');
+    }
+
+    $membership = $conn->prepare("SELECT gs.status
+        FROM gala_results gr
+        JOIN gala_scoresheets gs ON gs.id = gr.scoresheet_id
+        JOIN gala_teams gt ON gt.scoresheet_id = gr.scoresheet_id AND gt.club_id = gr.club_id
+        JOIN gala_events ge ON ge.id = gr.event_id
+        WHERE gr.scoresheet_id = ? AND gr.event_id = ? AND gr.club_id = ?
+          AND gt.is_absent = 0
+          AND (gs.season_year = 9999 OR ge.season_year = gs.season_year)");
+    $update = $conn->prepare("UPDATE gala_results
+        SET time_ms = ?, is_dq = ?, dq_reason = ?, is_verified = 0,
+            source_type = 'live', source_scoresheet_id = NULL, imported_by = NULL, imported_at = NULL
+        WHERE scoresheet_id = ? AND event_id = ? AND club_id = ?");
+
+    $saved = 0;
+    foreach ($inputs as $input) {
+        $result = cotswold_normalize_raw_result($input);
+        if ($result['event_id'] <= 0 || $result['club_id'] <= 0) {
+            throw new InvalidArgumentException('Missing result event or club.');
+        }
+
+        $membership->bind_param('iii', $scoresheet_id, $result['event_id'], $result['club_id']);
+        $membership->execute();
+        $row = $membership->get_result()->fetch_assoc();
+        if (!$row) {
+            throw new InvalidArgumentException('Result does not belong to this scoresheet.');
+        }
+        if (!in_array($row['status'], ['draft', 'in_progress', 'submitted'], true)) {
+            throw new InvalidArgumentException('This scoresheet is no longer editable.');
+        }
+
+        $update->bind_param(
+            'iisiii',
+            $result['time_ms'],
+            $result['is_dq'],
+            $result['dq_reason'],
+            $scoresheet_id,
+            $result['event_id'],
+            $result['club_id']
+        );
+        $update->execute();
+        $saved++;
+    }
+
+    $membership->close();
+    $update->close();
+    $affected_event_ids = array_values(array_unique(array_map(
+        static fn(array $input): int => (int)($input['event_id'] ?? 0),
+        $inputs
+    )));
+    cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year, $affected_event_ids);
+    return $saved;
 }
 
 function cotswold_precreate_results_for_club($conn, $scoresheet_id, $club_id) {
@@ -146,6 +238,12 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $season_year = intval($_POST['season_year'] ?? $active_season_year);
     $venue_row = null;
 
+    if ($venue_detail_id <= 0 && !$is_super_admin) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Club scoresheets must be created from an assigned venue.']);
+        exit;
+    }
+
     if ($venue_detail_id > 0) {
         $v_stmt = $conn->prepare("SELECT round_number, gala_type, club_id, final_scoresheet_club_id, season_year, team_1_id, team_2_id, team_3_id, team_4_id, team_5_id, team_6_id, team_7_id, team_8_id FROM venue_details WHERE id = ?");
         $v_stmt->bind_param("i", $venue_detail_id);
@@ -165,7 +263,8 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!cotswold_user_can_access_scoresheet_venue($venue_row, $is_super_admin, $current_club_id)) {
-            echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+            http_response_code(403);
+            echo json_encode(['error' => 'This scoresheet has not been assigned to your club.']);
             exit;
         }
 
@@ -256,6 +355,11 @@ if ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // POST: Create a SANDBOX scoresheet (Isolated Testing)
 // =====================================================
 if ($action === 'create_sandbox' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$is_super_admin) {
+        http_response_code(403);
+        echo json_encode(['error' => 'The testing sandbox is available to league administrators only.']);
+        exit;
+    }
     $host_club_id = intval($_POST['host_club_id'] ?? 0);
     $team_ids_input = $_POST['team_ids'] ?? []; // Array of club IDs
     $season_year = 9999; // Special year for sandbox
@@ -321,6 +425,7 @@ if ($action === 'load' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $s = $conn->prepare("SELECT gs.*, c.name AS host_club_name,
                vd.round_number AS venue_round_number,
                vd.gala_type AS venue_gala_type,
+               vd.club_id AS venue_host_club_id,
                vd.final_scoresheet_club_id
         FROM gala_scoresheets gs
         JOIN clubs c ON gs.host_club_id = c.id
@@ -339,10 +444,13 @@ if ($action === 'load' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $scoresheet_access_row = [
         'round_number' => $scoresheet['venue_round_number'] ?? $scoresheet['round_number'],
         'gala_type' => $scoresheet['venue_gala_type'] ?? $scoresheet['gala_type'],
+        'host_club_id' => $scoresheet['host_club_id'] ?? null,
+        'venue_host_club_id' => $scoresheet['venue_host_club_id'] ?? null,
         'final_scoresheet_club_id' => $scoresheet['final_scoresheet_club_id'] ?? null,
     ];
     if (!cotswold_user_can_access_scoresheet_venue($scoresheet_access_row, $is_super_admin, $current_club_id)) {
-        echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+        http_response_code(403);
+        echo json_encode(['error' => 'This scoresheet has not been assigned to your club.']);
         exit;
     }
 
@@ -499,6 +607,7 @@ if ($action === 'substitute_team' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->query("UPDATE gala_results SET club_id = $new_club_id, time_ms = NULL, is_dq = 0, dq_reason = NULL, is_verified = 0, points = 0, place = NULL, status = 'pending' WHERE scoresheet_id = $scoresheet_id AND club_id = $old_club_id");
         cotswold_precreate_results_for_club($conn, $scoresheet_id, $new_club_id);
         $conn->query("UPDATE gala_scoresheets SET status = 'in_progress', updated_at = NOW() WHERE id = $scoresheet_id AND status = 'draft'");
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Database error']);
@@ -527,6 +636,7 @@ if ($action === 'mark_absent' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $clear->bind_param("ii", $scoresheet_id, $club_id);
         $clear->execute();
         $clear->close();
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Database error']);
@@ -560,6 +670,7 @@ if ($action === 'add_team' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->execute()) {
         cotswold_precreate_results_for_club($conn, $scoresheet_id, $new_club_id);
         $conn->query("UPDATE gala_scoresheets SET team_count = team_count + 1, status = 'in_progress', updated_at = NOW() WHERE id = $scoresheet_id");
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Database error']);
@@ -573,41 +684,27 @@ if ($action === 'add_team' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // =====================================================
 if ($action === 'save_result' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
-    $event_id = intval($_POST['event_id'] ?? 0);
-    $club_id = intval($_POST['club_id'] ?? 0);
-    $time_ms = isset($_POST['time_ms']) && $_POST['time_ms'] !== '' ? intval($_POST['time_ms']) : null;
-    $is_dq = intval($_POST['is_dq'] ?? 0);
-    $dq_reason = $_POST['dq_reason'] ?? null;
-    $is_verified = intval($_POST['is_verified'] ?? 0);
-    $points = intval($_POST['points'] ?? 0);
-    $place = isset($_POST['place']) && $_POST['place'] !== '' ? intval($_POST['place']) : null;
-    $status = $_POST['status'] ?? 'pending';
-
-    if (!$scoresheet_id || !$event_id || !$club_id) {
+    if (!$scoresheet_id) {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
     cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
-    $stmt = $conn->prepare("INSERT INTO gala_results
-        (scoresheet_id, event_id, club_id, time_ms, is_dq, dq_reason, is_verified, points, place, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            time_ms = VALUES(time_ms),
-            is_dq = VALUES(is_dq),
-            dq_reason = VALUES(dq_reason),
-            is_verified = VALUES(is_verified),
-            points = VALUES(points),
-            place = VALUES(place),
-            status = VALUES(status)");
-    $stmt->bind_param("iiiiisiiis", $scoresheet_id, $event_id, $club_id, $time_ms, $is_dq, $dq_reason, $is_verified, $points, $place, $status);
-    $stmt->execute();
-    $stmt->close();
-
-    // Update scoresheet timestamp
-    $conn->query("UPDATE gala_scoresheets SET updated_at = NOW() WHERE id = $scoresheet_id");
-
-    echo json_encode(['success' => true]);
+    $conn->begin_transaction();
+    try {
+        cotswold_save_raw_results($conn, $scoresheet_id, [$_POST], $active_season_year);
+        $conn->commit();
+        echo json_encode(['success' => true]);
+    } catch (InvalidArgumentException $e) {
+        $conn->rollback();
+        http_response_code(422);
+        echo json_encode(['error' => $e instanceof InvalidArgumentException ? $e->getMessage() : 'The result could not be saved.']);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Scoresheet result save failed: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'The result could not be saved.']);
+    }
     exit;
 }
 
@@ -618,45 +715,27 @@ if ($action === 'save_batch' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
     $results = json_decode($_POST['results'] ?? '[]', true);
 
-    if (!$scoresheet_id || empty($results)) {
+    if (!$scoresheet_id || !is_array($results) || empty($results)) {
         echo json_encode(['error' => 'Missing data']);
         exit;
     }
     cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
-    $stmt = $conn->prepare("INSERT INTO gala_results
-        (scoresheet_id, event_id, club_id, time_ms, is_dq, dq_reason, is_verified, points, place, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            time_ms = VALUES(time_ms),
-            is_dq = VALUES(is_dq),
-            dq_reason = VALUES(dq_reason),
-            is_verified = VALUES(is_verified),
-            points = VALUES(points),
-            place = VALUES(place),
-            status = VALUES(status)");
-
-    $saved = 0;
-    foreach ($results as $r) {
-        $time_ms = $r['time_ms'] ?? null;
-        $is_dq = intval($r['is_dq'] ?? 0);
-        $dq_reason = $r['dq_reason'] ?? null;
-        $is_verified = intval($r['is_verified'] ?? 0);
-        $points = intval($r['points'] ?? 0);
-        $place = $r['place'] ?? null;
-        $status = $r['status'] ?? 'pending';
-        $event_id = intval($r['event_id']);
-        $club_id = intval($r['club_id']);
-
-        $stmt->bind_param("iiiiisiiis", $scoresheet_id, $event_id, $club_id, $time_ms, $is_dq, $dq_reason, $is_verified, $points, $place, $status);
-        $stmt->execute();
-        $saved++;
+    $conn->begin_transaction();
+    try {
+        $saved = cotswold_save_raw_results($conn, $scoresheet_id, $results, $active_season_year);
+        $conn->commit();
+        echo json_encode(['success' => true, 'saved' => $saved]);
+    } catch (InvalidArgumentException $e) {
+        $conn->rollback();
+        http_response_code(422);
+        echo json_encode(['error' => $e instanceof InvalidArgumentException ? $e->getMessage() : 'The results could not be saved.']);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Scoresheet batch save failed: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'The results could not be saved.']);
     }
-    $stmt->close();
-
-    $conn->query("UPDATE gala_scoresheets SET updated_at = NOW() WHERE id = $scoresheet_id");
-
-    echo json_encode(['success' => true, 'saved' => $saved]);
     exit;
 }
 
@@ -674,6 +753,7 @@ if ($action === 'set_live_public' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
     if ($enabled) {
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
         $stmt = $conn->prepare("UPDATE gala_scoresheets SET live_public_enabled = 1, live_public_started_at = COALESCE(live_public_started_at, NOW()), updated_at = NOW() WHERE id = ? AND status = 'in_progress'");
     } else {
         $stmt = $conn->prepare("UPDATE gala_scoresheets SET live_public_enabled = 0, updated_at = NOW() WHERE id = ?");
@@ -697,15 +777,30 @@ if ($action === 'set_live_public' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // =====================================================
 if ($action === 'submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
-    $total_points_json = $_POST['total_points_json'] ?? null;
     cotswold_require_scoresheet_access($conn, $scoresheet_id, $is_super_admin, $current_club_id);
 
-    $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'submitted', submitted_at = NOW(), total_points_json = ?, live_public_enabled = 0 WHERE id = ? AND status IN ('draft', 'in_progress', 'submitted')");
-    $stmt->bind_param("si", $total_points_json, $scoresheet_id);
-    $stmt->execute();
-    $stmt->close();
-
-    echo json_encode(['success' => true, 'message' => 'Scoresheet submitted for verification']);
+    $conn->begin_transaction();
+    try {
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
+        $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'submitted', submitted_at = NOW(), live_public_enabled = 0 WHERE id = ? AND status IN ('draft', 'in_progress', 'submitted')");
+        $stmt->bind_param('i', $scoresheet_id);
+        $stmt->execute();
+        if ($stmt->affected_rows < 1) {
+            throw new InvalidArgumentException('This scoresheet is no longer available for submission.');
+        }
+        $stmt->close();
+        $conn->commit();
+        echo json_encode(['success' => true, 'message' => 'Scoresheet submitted for verification']);
+    } catch (InvalidArgumentException $e) {
+        $conn->rollback();
+        http_response_code(422);
+        echo json_encode(['error' => $e instanceof InvalidArgumentException ? $e->getMessage() : 'The scoresheet could not be submitted.']);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Scoresheet submission failed: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'The scoresheet could not be submitted.']);
+    }
     exit;
 }
 
@@ -739,7 +834,7 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    $v_check = $conn->prepare("SELECT id, round_number, gala_type, final_scoresheet_club_id FROM venue_details WHERE id = ? AND season_year = ?");
+    $v_check = $conn->prepare("SELECT id, round_number, gala_type, club_id, final_scoresheet_club_id FROM venue_details WHERE id = ? AND season_year = ?");
     $v_check->bind_param("ii", $venue_detail_id, $season);
     $v_check->execute();
     $v_check_res = $v_check->get_result();
@@ -751,7 +846,8 @@ if ($action === 'find_by_venue' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $v_check->close();
 
     if (!cotswold_user_can_access_scoresheet_venue($venue_access_row, $is_super_admin, $current_club_id)) {
-        echo json_encode(['error' => 'Final scoresheet access has not been assigned to your club.']);
+        http_response_code(403);
+        echo json_encode(['error' => 'This scoresheet has not been assigned to your club.']);
         exit;
     }
 

@@ -4,12 +4,11 @@ cotswold_secure_session_start();
 include 'db.php';
 
 // Security Check
-$has_legacy_rep_session = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
-$has_team_portal_session = isset($_SESSION['club_logged_in']) && $_SESSION['club_logged_in'] === true;
 $has_super_admin_session = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true;
 
-if (!$has_legacy_rep_session && !$has_team_portal_session && !$has_super_admin_session) {
-    header("Location: teamportal.php");
+if (!$has_super_admin_session) {
+    http_response_code(403);
+    header("Location: league_admin.php");
     exit;
 }
 
@@ -30,8 +29,8 @@ if ($result && $result->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Audit Log</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body { background-color: #0f172a; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
@@ -51,7 +50,7 @@ if ($result && $result->num_rows > 0) {
                 System <span class="text-sky-500">Audit Log</span>
             </h1>
             <div class="text-end">
-                 <p class="text-xs text-slate-500 uppercase tracking-widest">Portal access</p>
+                 <p class="text-xs text-slate-500 uppercase tracking-widest">Super administrator access</p>
             </div>
         </div>
 

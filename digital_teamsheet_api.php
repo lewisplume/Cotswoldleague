@@ -3,6 +3,7 @@ require_once __DIR__ . '/security_headers.php';
 cotswold_secure_session_start();
 include 'db.php';
 include_once 'finals_sync.php';
+require_once __DIR__ . '/audit_helpers.php';
 
 header('Content-Type: application/json');
 
@@ -15,6 +16,11 @@ $current_club_name = $_SESSION['club_name'] ?? 'Club User';
 if (!$is_logged_in && !$is_super_admin) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    cotswold_require_csrf(true);
+    cotswold_audit_authenticated_request($conn, $is_super_admin ? 'Super Admin' : $current_club_name, 'Teamsheet', (string)($_GET['action'] ?? $_POST['action'] ?? ''));
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -837,6 +843,27 @@ if ($action === 'save_swimmers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $season = (int)($_POST['season'] ?? $active_season_year);
     $swimmers = json_input('swimmers');
     $seen_ids = [];
+
+    // Validate every client-supplied primary key before writing anything. New
+    // swimmers use id=0; an existing ID must already belong to this club and
+    // season. This prevents one club from updating another club's row through
+    // the ON DUPLICATE KEY branch below.
+    $owner_check = $conn->prepare('SELECT id FROM club_swimmers WHERE id = ? AND club_id = ? AND season_year = ?');
+    foreach ($swimmers as $swimmer) {
+        $requested_id = (int)($swimmer['id'] ?? 0);
+        if ($requested_id <= 0) {
+            continue;
+        }
+        $owner_check->bind_param('iii', $requested_id, $target_club_id, $season);
+        $owner_check->execute();
+        if (!$owner_check->get_result()->fetch_assoc()) {
+            $owner_check->close();
+            http_response_code(403);
+            echo json_encode(['error' => 'A swimmer record does not belong to this club and season. Please reload the swimmer list.']);
+            exit;
+        }
+    }
+    $owner_check->close();
 
     $stmt = $conn->prepare("INSERT INTO club_swimmers
         (id, club_id, season_year, swimmer_name, age_group, pb_free_25, pb_back_25, pb_breast_25, pb_fly_25,

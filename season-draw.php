@@ -188,8 +188,8 @@ function cotswold_render_venue_details($venue_info)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Season Draw</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <script src="gala_scoresheet.js?v=20260514-public-live"></script>
     <style>
         body {

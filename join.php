@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Join Us</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body { background-color: #0f172a; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
@@ -96,7 +96,7 @@
                         <i data-lucide="pound-sterling" class="w-6 h-6"></i>
                     </div>
                     <h3 class="font-bold text-lg mb-2">Fees</h3>
-                    <p class="text-sm text-slate-400">Membership fees are typically £100 per year & due by Nov 30th. <strong>Note:</strong> 2026 Season fees have been waived.</p>
+                    <p class="text-sm text-slate-400">Membership fees and payment dates are confirmed to clubs by the league for each season.</p>
                 </div>
             </div>
         </div>
@@ -198,7 +198,7 @@
         </div>
 
         <footer class="mt-20 text-center text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-            &copy; 2026 The Cotswold Swimming League | Built by Lewis Plume
+            &copy; <?php echo (int)$current_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume
         </footer>
     </div>
 

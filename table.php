@@ -12,6 +12,51 @@ $sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4,
        ORDER BY total DESC, c.name ASC";
 $result = $conn->query($sql);
 
+$final_venues = [];
+$final_venue_stmt = $conn->prepare("SELECT vd.gala_type, vd.venue_name FROM venue_details vd WHERE vd.season_year = ? AND (vd.round_number = 99 OR vd.gala_type IN ('a_final','b_final','c_final'))");
+$final_venue_stmt->bind_param('i', $current_season_year);
+$final_venue_stmt->execute();
+$final_venue_result = $final_venue_stmt->get_result();
+while ($venue = $final_venue_result->fetch_assoc()) {
+    $final_venues[$venue['gala_type']] = trim((string)$venue['venue_name']);
+}
+$final_venue_stmt->close();
+
+$club_names_by_id = [];
+$club_name_result = $conn->query('SELECT id, name FROM clubs');
+if ($club_name_result) {
+    while ($club = $club_name_result->fetch_assoc()) {
+        $club_names_by_id[(int)$club['id']] = (string)$club['name'];
+    }
+}
+
+$published_finals = [];
+$published_stmt = $conn->prepare("SELECT gala_type, total_points_json FROM gala_scoresheets WHERE season_year = ? AND gala_type IN ('a_final','b_final','c_final') AND status = 'published' ORDER BY updated_at DESC, id DESC");
+$published_stmt->bind_param('i', $current_season_year);
+$published_stmt->execute();
+$published_result = $published_stmt->get_result();
+while ($published = $published_result->fetch_assoc()) {
+    $tier = (string)$published['gala_type'];
+    if (isset($published_finals[$tier])) {
+        continue;
+    }
+    $totals = json_decode((string)$published['total_points_json'], true);
+    if (!is_array($totals)) {
+        continue;
+    }
+    $rows = [];
+    foreach ($totals as $clubId => $points) {
+        $clubId = (int)$clubId;
+        if (!isset($club_names_by_id[$clubId]) || !is_numeric($points)) {
+            continue;
+        }
+        $rows[] = ['name' => $club_names_by_id[$clubId], 'points' => (float)$points];
+    }
+    usort($rows, static fn(array $a, array $b): int => ($b['points'] <=> $a['points']) ?: strcmp($a['name'], $b['name']));
+    $published_finals[$tier] = $rows;
+}
+$published_stmt->close();
+
 // Process Season Data for Table Context
 $team_next_gala = [];
 $team_hosting_rounds = [];
@@ -48,8 +93,8 @@ foreach ($season_draw as $round) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | League Table</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -127,17 +172,11 @@ if ($result->num_rows > 0) {
 
         echo '<tr class="table-row-hover transition-colors">';
         echo '<td class="px-4 py-3 text-sm font-medium text-slate-500 italic">' . $pos++ . '</td>';
-        echo '<td class="px-4 py-3 text-sm font-bold text-white">' . $row["name"] . '</td>';
+        echo '<td class="px-4 py-3 text-sm font-bold text-white">' . htmlspecialchars($row["name"], ENT_QUOTES, 'UTF-8') . '</td>';
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_1"] > 0 ? $row["round_1"] : '-') . '</td>';
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_2"] > 0 ? $row["round_2"] : '-') . '</td>';
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . ($row["round_3"] > 0 ? $row["round_3"] : '-') . '</td>';
         $round_4_display = ($row["round_4"] > 0 ? $row["round_4"] : '-');
-        if ($row["name"] === 'Burnham-On-Sea') {
-            $round_4_display .= '<sup class="text-amber-400 font-bold ml-0.5">*</sup>';
-        }
-        elseif ($row["name"] === 'Yeovil') {
-            $round_4_display .= '<sup class="text-amber-400 font-bold ml-0.5">*</sup>';
-        }
         echo '<td class="px-4 py-3 text-sm text-slate-600 text-center">' . $round_4_display . '</td>';
         echo '<td class="px-4 py-3 text-sm font-black text-sky-500 text-center count-up" data-target="' . $row["total"] . '">0</td>';
         echo '</tr>';
@@ -147,10 +186,6 @@ if ($result->num_rows > 0) {
                     </tbody>
                 </table>
             </div>
-            <div class="px-4 py-3 border-t border-white/5 text-[11px] text-slate-400">
-                <p>* Burnham-On-Sea R4: Virtual scores used using their Round 1 times.</p>
-                <p>* Yeovil R4: Virtual scores used using their Round 2 times.</p>
-            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -158,14 +193,14 @@ if ($result->num_rows > 0) {
                 <div class="flex items-center gap-3 mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-                        <h4 class="font-bold text-sm">A Final - Hutton Moor Leisure Centre</h4>
+                        <h4 class="font-bold text-sm">A Final - <?php echo htmlspecialchars($final_venues['a_final'] ?? 'Venue to be confirmed', ENT_QUOTES, 'UTF-8'); ?></h4>
                     </div>
                 </div>
                 <ul class="space-y-2 mt-4">
                     <?php foreach ($a_final as $t): ?>
                     <li class="flex justify-between text-xs text-slate-300 border-b border-white/5 pb-1 last:border-0">
                         <span>
-                            <?php echo $t['name']; ?>
+                            <?php echo htmlspecialchars($t['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </span>
                         <span class="font-bold text-emerald-400">
                             <?php echo $t['total']; ?>
@@ -178,13 +213,13 @@ endforeach; ?>
             <div class="glass-panel p-6 rounded-2xl">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></div>
-                    <h4 class="font-bold text-sm">B Final - Pontypool Leisure Centre</h4>
+                    <h4 class="font-bold text-sm">B Final - <?php echo htmlspecialchars($final_venues['b_final'] ?? 'Venue to be confirmed', ENT_QUOTES, 'UTF-8'); ?></h4>
                 </div>
                 <ul class="space-y-2 mt-4">
                     <?php foreach ($b_final as $t): ?>
                     <li class="flex justify-between text-xs text-slate-300 border-b border-white/5 pb-1 last:border-0">
                         <span>
-                            <?php echo $t['name']; ?>
+                            <?php echo htmlspecialchars($t['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </span>
                         <span class="font-bold text-amber-400">
                             <?php echo $t['total']; ?>
@@ -197,13 +232,13 @@ endforeach; ?>
             <div class="glass-panel p-6 rounded-2xl">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-2 h-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50"></div>
-                    <h4 class="font-bold text-sm">C Final - Easton Leisure Centre</h4>
+                    <h4 class="font-bold text-sm">C Final - <?php echo htmlspecialchars($final_venues['c_final'] ?? 'Venue to be confirmed', ENT_QUOTES, 'UTF-8'); ?></h4>
                 </div>
                 <ul class="space-y-2 mt-4">
                     <?php foreach ($c_final as $t): ?>
                     <li class="flex justify-between text-xs text-slate-300 border-b border-white/5 pb-1 last:border-0">
                         <span>
-                            <?php echo $t['name']; ?>
+                            <?php echo htmlspecialchars($t['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </span>
                         <span class="font-bold text-rose-400">
                             <?php echo $t['total']; ?>
@@ -223,47 +258,33 @@ endforeach; ?>
             <p class="text-sm text-slate-400">Cotswold Swimming Series <?php echo $current_season_year; ?> Finals Day</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-emerald-500">
-                <h3 class="font-bold text-xl mb-4 text-emerald-400 flex items-center gap-2">
-                    <i data-lucide="trophy" class="w-5 h-5"></i> A Final
+            <?php
+            $finalCards = [
+                'a_final' => ['label' => 'A Final', 'colour' => 'emerald', 'icon' => 'trophy'],
+                'b_final' => ['label' => 'B Final', 'colour' => 'amber', 'icon' => 'medal'],
+                'c_final' => ['label' => 'C Final', 'colour' => 'rose', 'icon' => 'award'],
+            ];
+            foreach ($finalCards as $tier => $card):
+                $tierResults = $published_finals[$tier] ?? [];
+            ?>
+            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-<?php echo $card['colour']; ?>-500">
+                <h3 class="font-bold text-xl mb-4 text-<?php echo $card['colour']; ?>-400 flex items-center gap-2">
+                    <i data-lucide="<?php echo $card['icon']; ?>" class="w-5 h-5"></i> <?php echo $card['label']; ?>
                 </h3>
+                <?php if ($tierResults === []): ?>
+                    <p class="text-sm text-slate-500">Results not yet published for this season.</p>
+                <?php else: ?>
                 <ul class="space-y-2 text-sm text-slate-300">
-                    <li class="flex justify-between"><span>🥇 Monnow SC</span> <span class="font-bold text-emerald-400">271</span></li>
-                    <li class="flex justify-between"><span>🥈 Severnside Tritons</span> <span class="font-bold text-emerald-400">270</span></li>
-                    <li class="flex justify-between"><span>🥉 Cwmbran</span> <span class="font-bold text-emerald-400">259</span></li>
-                    <li class="flex justify-between"><span>COB (City of Bristol)</span> <span class="font-bold">236</span></li>
-                    <li class="flex justify-between"><span>Bridgwater</span> <span class="font-bold">230</span></li>
-                    <li class="flex justify-between"><span>Bath Dolphin</span> <span class="font-bold">228</span></li>
-                    <li class="flex justify-between"><span>Southwold SC</span> <span class="font-bold">208</span></li>
-                    <li class="flex justify-between"><span>Clevedon</span> <span class="font-bold">172</span></li>
+                    <?php foreach ($tierResults as $position => $finalResult): ?>
+                    <li class="flex justify-between gap-3">
+                        <span><?php echo $position < 3 ? ['🥇', '🥈', '🥉'][$position] . ' ' : ''; ?><?php echo htmlspecialchars($finalResult['name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="font-bold text-<?php echo $card['colour']; ?>-400"><?php echo htmlspecialchars((string)$finalResult['points'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </li>
+                    <?php endforeach; ?>
                 </ul>
+                <?php endif; ?>
             </div>
-            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-amber-500">
-                <h3 class="font-bold text-xl mb-4 text-amber-400 flex items-center gap-2">
-                    <i data-lucide="medal" class="w-5 h-5"></i> B Final
-                </h3>
-                <ul class="space-y-2 text-sm text-slate-300">
-                    <li class="flex justify-between"><span>🥇 Brockworth</span> <span class="font-bold text-amber-400">233</span></li>
-                    <li class="flex justify-between"><span>🥈 Backwell</span> <span class="font-bold text-amber-400">196</span></li>
-                    <li class="flex justify-between"><span>🥉 Academy Swim Team</span> <span class="font-bold text-amber-400">191</span></li>
-                    <li class="flex justify-between"><span>Forest of Dean</span> <span class="font-bold">172</span></li>
-                    <li class="flex justify-between"><span>Swindon ASC</span> <span class="font-bold">166</span></li>
-                    <li class="flex justify-between"><span>Wells</span> <span class="font-bold">142</span></li>
-                </ul>
-            </div>
-            <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-rose-500">
-                <h3 class="font-bold text-xl mb-4 text-rose-400 flex items-center gap-2">
-                    <i data-lucide="award" class="w-5 h-5"></i> C Final
-                </h3>
-                <ul class="space-y-2 text-sm text-slate-300">
-                    <li class="flex justify-between"><span>🥇 Bristol North</span> <span class="font-bold text-rose-400">222</span></li>
-                    <li class="flex justify-between"><span>🥈 Dursley</span> <span class="font-bold text-rose-400">172</span></li>
-                    <li class="flex justify-between"><span>🥉 Yeovil</span> <span class="font-bold text-rose-400">153</span></li>
-                    <li class="flex justify-between"><span>Burnham-On-Sea</span> <span class="font-bold">133</span></li>
-                    <li class="flex justify-between"><span>Corsham</span> <span class="font-bold">107</span></li>
-                    <li class="flex justify-between"><span>Newport</span> <span class="font-bold italic">DNS</span></li>
-                </ul>
-            </div>
+            <?php endforeach; ?>
         </div>
 
         <!-- Next Round Draw Table -->

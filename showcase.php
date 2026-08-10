@@ -27,9 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "SELECT c.name, r.round_1, r.round_2, r.round_3, r.round_4, c.logo, 
                 (r.round_1 + r.round_2 + r.round_3 + r.round_4) as total 
                 FROM results r JOIN clubs c ON r.club_id = c.id 
+                WHERE r.season_year = ?
                 ORDER BY total DESC, c.name ASC";
-        
-        $res = $conn->query($sql);
+
+        $results_stmt = $conn->prepare($sql);
+        $results_stmt->bind_param('i', $current_season_year);
+        $results_stmt->execute();
+        $res = $results_stmt->get_result();
         $all_teams = [];
         $pos = 1;
         if ($res) {
@@ -144,9 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Showcase Dashboard | Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
+    <script src="assets/vendor/alpine-3.16.0.min.js" defer></script>
     <style>
         body { background-color: #0f172a; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }

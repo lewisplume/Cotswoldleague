@@ -116,8 +116,8 @@ if ($selected_club_full) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Edit Venues</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="../assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="../assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body { background-color: #0f172a; }
         .glass-panel { background: rgba(15, 23, 42, 0.8); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }

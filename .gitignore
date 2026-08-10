@@ -11,6 +11,11 @@
 .env.*
 config.local.php
 
+# Database backups contain personal and access data. Keep them outside the
+# web project; this rule also prevents accidental re-addition if the local
+# backup job is temporarily pointed here.
+db_backups/
+
 # Ignore macOS system files
 .DS_Store
 .DS_Store*

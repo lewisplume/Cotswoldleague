@@ -1,4 +1,20 @@
-<?php include_once 'db.php'; ?>
+<?php
+include_once 'db.php';
+$active_season_year = (int)($current_season_year ?? date('Y'));
+$round_one_date = null;
+$round_one_result = $conn->query("SELECT round_date FROM venue_details WHERE season_year = {$active_season_year} AND round_number = 1 AND round_date IS NOT NULL AND round_date <> ''");
+if ($round_one_result) {
+    while ($round_one_row = $round_one_result->fetch_assoc()) {
+        foreach (['d/m/Y', 'Y-m-d'] as $format) {
+            $candidate = DateTimeImmutable::createFromFormat('!' . $format, trim((string)$round_one_row['round_date']));
+            if ($candidate && (!$round_one_date || $candidate < $round_one_date)) {
+                $round_one_date = $candidate;
+            }
+        }
+    }
+}
+$round_one_label = $round_one_date ? $round_one_date->format('j F Y') : 'Date to be confirmed';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,8 +23,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Cotswold League | Official Site</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -47,7 +63,7 @@
                 <h1 class="text-4xl md:text-6xl font-extrabold mb-2 tracking-tight">
                     THE <span class="text-sky-500">COTSWOLD</span> LEAGUE
                 </h1>
-                <p class="text-lg text-slate-400 uppercase tracking-widest mb-6">2027 Season</p>
+                <p class="text-lg text-slate-400 uppercase tracking-widest mb-6"><?php echo $active_season_year; ?> Season</p>
 
                 <div class="flex flex-wrap justify-center gap-4">
                     <a href="clubs"
@@ -83,7 +99,7 @@
                         <div class="text-[10px] uppercase tracking-widest text-slate-500">Sec</div>
                     </div>
                 </div>
-                <p class="mt-4 text-slate-500 font-medium text-sm">13 February 2027</p>
+                <p class="mt-4 text-slate-500 font-medium text-sm"><?php echo htmlspecialchars($round_one_label, ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
 
             <!-- ABOUT SECTION -->
@@ -121,7 +137,7 @@
 
             <!-- Sponsor section removed -->
             <footer class="mt-20 text-slate-600 text-[10px] uppercase tracking-[0.3em] text-center">
-                <p>&copy; 2026 The Cotswold Swimming League | Built by Lewis Plume</p>
+                <p>&copy; <?php echo $active_season_year; ?> The Cotswold Swimming League | Built by Lewis Plume</p>
                 <a href="privacy.php" class="inline-block mt-3 text-slate-400 hover:text-sky-400 transition-colors normal-case tracking-normal text-xs">
                     Privacy Policy
                 </a>
@@ -133,12 +149,16 @@
         lucide.createIcons();
 
         // Mobile Menu Toggle Logic is now handled in nav.php but added here as fallback/init
-        // Countdown now targets Round 1 of the 2027 season (13/02/2027)
-        const targetDate = new Date("February 13, 2027 00:00:00").getTime();
+        const targetDate = <?php echo $round_one_date ? json_encode($round_one_date->format(DateTimeInterface::ATOM)) : 'null'; ?>;
 
         const countdown = setInterval(function () {
+            if (!targetDate) {
+                clearInterval(countdown);
+                document.querySelector('.timer-box')?.closest('.grid')?.classList.add('opacity-50');
+                return;
+            }
             const now = new Date().getTime();
-            const distance = targetDate - now;
+            const distance = new Date(targetDate).getTime() - now;
 
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

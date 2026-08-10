@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "metadata_sheet": "_COTSWOLD_META",
+  "metadata_marker_cell": "A1",
+  "metadata_marker": "COTSWOLD_WORKBOOK_SCHEMA",
+  "metadata_version_cell": "A2",
+  "compatibility_policy": "Legacy unversioned workbooks remain accepted after structural validation.",
+  "result_requirements": {
+    "lane_headers": 2,
+    "lane_header_search_rows": 30
+  },
+  "teamsheet_requirements": {
+    "event_number_heading": true
+  },
+  "maximum_file_bytes": 26214400
+}

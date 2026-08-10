@@ -13,8 +13,8 @@ $timekeeper_events_json = json_encode($timekeeper_events, JSON_HEX_TAG | JSON_HE
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timekeeper Sheet | Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap');
 

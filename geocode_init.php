@@ -1,65 +1,91 @@
 <?php
-// Include this file to automatically initialize and geocode club coordinates.
 
-// 1. Check if latitude column exists
-$check_col = $conn->query("SHOW COLUMNS FROM clubs LIKE 'latitude'");
-if ($check_col->num_rows == 0) {
-    // Add columns
-    $conn->query("ALTER TABLE clubs ADD COLUMN latitude DECIMAL(10, 8) DEFAULT NULL");
-    $conn->query("ALTER TABLE clubs ADD COLUMN longitude DECIMAL(11, 8) DEFAULT NULL");
-}
+function cotswold_geocode_request(string $url, string $userAgent = 'CotswoldLeague/1.0'): array
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 12,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_USERAGENT => $userAgent,
+        CURLOPT_HTTPHEADER => ['Accept: application/json'],
+    ]);
+    $body = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
 
-// 2. Fetch clubs that need geocoding
-$sql = "SELECT id, postcode FROM clubs WHERE latitude IS NULL OR longitude IS NULL";
-$result = $conn->query($sql);
-
-if ($result && $result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $id = $row['id'];
-        $postcode = trim($row['postcode']);
-        
-        // Postcodes.io API
-        $url = 'https://api.postcodes.io/postcodes/' . urlencode($postcode);
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Just in case of local cert issues
-        $response = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($httpcode == 200) {
-            $data = json_decode($response, true);
-            if (isset($data['result']['latitude']) && isset($data['result']['longitude'])) {
-                $lat = $data['result']['latitude'];
-                $lng = $data['result']['longitude'];
-                
-                $update_stmt = $conn->prepare("UPDATE clubs SET latitude=?, longitude=? WHERE id=?");
-                $update_stmt->bind_param("ddi", $lat, $lng, $id);
-                $update_stmt->execute();
-            }
-        } else {
-            // Fallback for API fail
-            $nominatim_url = 'https://nominatim.openstreetmap.org/search?format=json&q=' . urlencode($postcode . ', UK');
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $nominatim_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'CotswoldLeagueMap/1.0');
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $nom_res = curl_exec($ch);
-            curl_close($ch);
-            
-            $nom_data = json_decode($nom_res, true);
-            if (is_array($nom_data) && count($nom_data) > 0) {
-                $lat = $nom_data[0]['lat'];
-                $lng = $nom_data[0]['lon'];
-                $update_stmt = $conn->prepare("UPDATE clubs SET latitude=?, longitude=? WHERE id=?");
-                $update_stmt->bind_param("ddi", $lat, $lng, $id);
-                $update_stmt->execute();
-            }
-        }
-        // Be nice to API
-        usleep(100000); 
+    if ($body === false || $status !== 200) {
+        return [null, $error !== '' ? $error : 'HTTP ' . $status];
     }
+
+    $decoded = json_decode($body, true);
+    return is_array($decoded) ? [$decoded, null] : [null, 'Invalid JSON response'];
 }
-?>
+
+function cotswold_valid_coordinates($latitude, $longitude): bool
+{
+    return is_numeric($latitude) && is_numeric($longitude)
+        && (float)$latitude >= 49.0 && (float)$latitude <= 61.0
+        && (float)$longitude >= -9.0 && (float)$longitude <= 3.0;
+}
+
+function cotswold_geocode_postcode(string $postcode): array
+{
+    $postcode = strtoupper(trim($postcode));
+    if (!preg_match('/^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/', $postcode)) {
+        return [null, null, 'Invalid UK postcode'];
+    }
+
+    [$postcodesData, $postcodesError] = cotswold_geocode_request(
+        'https://api.postcodes.io/postcodes/' . rawurlencode($postcode)
+    );
+    $latitude = $postcodesData['result']['latitude'] ?? null;
+    $longitude = $postcodesData['result']['longitude'] ?? null;
+    if (cotswold_valid_coordinates($latitude, $longitude)) {
+        return [(float)$latitude, (float)$longitude, null];
+    }
+
+    [$nominatimData, $nominatimError] = cotswold_geocode_request(
+        'https://nominatim.openstreetmap.org/search?format=json&countrycodes=gb&limit=1&q=' . rawurlencode($postcode),
+        'CotswoldSwimmingLeague/1.0 (league website administrator)'
+    );
+    $latitude = $nominatimData[0]['lat'] ?? null;
+    $longitude = $nominatimData[0]['lon'] ?? null;
+    if (cotswold_valid_coordinates($latitude, $longitude)) {
+        return [(float)$latitude, (float)$longitude, null];
+    }
+
+    return [null, null, $nominatimError ?? $postcodesError ?? 'No location returned'];
+}
+
+function cotswold_geocode_missing_clubs($conn): array
+{
+    $summary = ['updated' => 0, 'failed' => []];
+    $result = $conn->query("SELECT id, name, postcode FROM clubs WHERE is_active = 1 AND (latitude IS NULL OR longitude IS NULL) ORDER BY id ASC");
+    if (!$result) {
+        throw new RuntimeException('Could not load clubs requiring geocoding.');
+    }
+
+    $update = $conn->prepare('UPDATE clubs SET latitude = ?, longitude = ? WHERE id = ?');
+    while ($row = $result->fetch_assoc()) {
+        [$latitude, $longitude, $error] = cotswold_geocode_postcode((string)$row['postcode']);
+        if ($error !== null) {
+            $summary['failed'][] = ['club' => (string)$row['name'], 'error' => $error];
+            continue;
+        }
+        $clubId = (int)$row['id'];
+        $update->bind_param('ddi', $latitude, $longitude, $clubId);
+        if ($update->execute()) {
+            $summary['updated']++;
+        } else {
+            $summary['failed'][] = ['club' => (string)$row['name'], 'error' => 'Database update failed'];
+        }
+        usleep(250000);
+    }
+    $update->close();
+    return $summary;
+}

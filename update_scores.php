@@ -10,11 +10,17 @@ $authenticated = isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_a
 // Fallback password protection
 $pass = "Cotswold2026Galas";
 if (!$authenticated && isset($_POST['password']) && $_POST['password'] === $pass) {
+    cotswold_require_same_site_request();
     $authenticated = true;
 }
 
 // Handle Form Submission
 if ($authenticated && isset($_POST['update_scores'])) {
+    if (isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true) {
+        cotswold_require_csrf();
+    } else {
+        cotswold_require_same_site_request();
+    }
     foreach ($_POST['scores'] as $club_id => $rounds) {
         $r1 = intval($rounds[1]);
         $r2 = intval($rounds[2]);
@@ -61,7 +67,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Scores | Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
 </head>
 <body class="bg-slate-900 text-white p-8">
 
@@ -92,6 +98,9 @@ $result = $conn->query($sql);
 
         <form method="POST" class="space-y-4">
             <input type="hidden" name="password" value="<?php echo $pass; ?>">
+            <?php if (isset($_SESSION['super_admin_logged_in']) && $_SESSION['super_admin_logged_in'] === true): ?>
+            <input type="hidden" name="_csrf_token" value="<?php echo htmlspecialchars(cotswold_ensure_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+            <?php endif; ?>
             <div class="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
                 <table class="w-full text-left">
                     <thead class="bg-slate-900 text-slate-400 text-sm uppercase">

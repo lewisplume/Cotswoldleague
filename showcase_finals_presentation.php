@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League | Finals Showcase</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <style>
         body { background-color: #0f172a; overflow-x: hidden; }
         .gradient-text {
@@ -204,6 +204,16 @@
             }
 
             // Function to generate the exact HTML for a team card
+            function escapeShowcase(value) {
+                return String(value ?? '').replace(/[&<>"']/g, character => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+                })[character]);
+            }
+
+            function safeShowcaseLogo(value) {
+                return encodeURIComponent(String(value ?? '').split(/[\\/]/).pop().replace(/[^A-Za-z0-9._-]/g, ''));
+            }
+
             function generateCardHTML(team) {
                 const isFirstPlace = team.rank === 1;
                 const borderClass = isFirstPlace ? 'rank-1-glow' : 'border-slate-700/50';
@@ -219,9 +229,9 @@
                                 <span class="text-2xl md:text-4xl font-bold ${rankColor}">#${team.rank}</span>
                             </div>
                             <div class="h-16 w-16 md:h-20 md:w-20 bg-white rounded-xl p-1 md:p-2 flex items-center justify-center shrink-0 shadow-md">
-                                <img src="images/Teams/${team.logo}" class="object-contain h-full w-full">
+                                <img src="images/Teams/${safeShowcaseLogo(team.logo)}" alt="" class="object-contain h-full w-full">
                             </div>
-                            <h3 class="text-2xl md:text-4xl font-bold truncate tracking-tight text-white">${team.name}</h3>
+                            <h3 class="text-2xl md:text-4xl font-bold truncate tracking-tight text-white">${escapeShowcase(team.name)}</h3>
                             <div class="ml-auto flex items-end flex-col shrink-0 pl-4">
                                 <span class="text-xs md:text-sm text-slate-400 uppercase font-semibold tracking-wider">Points</span>
                                 <span class="score-display text-4xl md:text-6xl font-black text-sky-400 leading-none" data-target="${team.points}">0</span>

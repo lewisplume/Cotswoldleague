@@ -1,6 +1,6 @@
 # The Cotswold Swimming League - Website Guide and Architecture
 
-This document serves as an in-depth technical guide to the Cotswold Swimming League website. It has been created to provide a complete understanding of how the system works, the technologies involved, the database schemas, and recent advanced updates implemented. This guide should be used if the site needs to be understood, maintained, or recreated in the future.
+This is a maintained orientation guide, not a guarantee of completeness or security. For the current risk baseline and deployment procedures, use [CODEBASE_AUDIT_2026-08-10.md](CODEBASE_AUDIT_2026-08-10.md) and [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md). Historical Word documents and handoff notes may describe superseded behaviour.
 
 ## 1. Project Overview & Technologies
 
@@ -9,9 +9,9 @@ The website is a centralized platform for the Cotswold Swimming League, deliveri
 
 ### 1.2 Technology Stack
 * **Frontend / UI:** 
-  * HTML5 paired with **Tailwind CSS** (via CDN) for rapid, responsive UI development.
+  * HTML5 paired with a vendored, version-recorded **Tailwind CSS browser build**.
   * **Vanilla JavaScript** for asynchronous interactions, countdown timers, and micro-animations.
-  * **Lucide Icons** (via CDN).
+  * Vendored Lucide icons, SheetJS, Alpine, Leaflet and HTML-to-PDF browser libraries under `assets/vendor/`.
 * **Backend:** 
   * **PHP (8+)** handles business logic, server-side data fetching, and HTML templating (e.g., using `nav.php` for consistent navigation).
 * **Database:** 
@@ -34,7 +34,7 @@ Supported environment variables:
 
 If these are not set, the site falls back to local XAMPP development defaults. Production hosting should provide the environment variables so live credentials are not hardcoded.
 
-There are **6 core tables** that drive the platform:
+The application now uses more than the six original tables. The principal groups are club/contact/venue/results, gala events/scoresheets/teams/results, digital swimmers/teamsheets/entries/audit, global settings, audit logs and telemetry. Confirm the deployed schema before any migration; `db.php` still contains transitional runtime DDL that is tracked as technical debt.
 
 ### `clubs`
 Stores static directory information for the participating teams.
@@ -114,15 +114,15 @@ The project has transitioned from static functionality into a highly dynamic and
 * Added historical data for the 2020 season to the archives.
 
 ### Persistent Auditing & Security Tracking 
-* With decentralized access granted to Club Reps for editing venue logistics, an automated `audit_log.php` script was formulated that tracks the user, the old string vs the new string, maintaining 100% visibility over all administrative modifications.
+* Audit records cover venue changes and protected request paths. They do not provide named-user accountability while shared club/admin credentials remain, and coverage must not be described as 100%.
 
 ### Security Headers, Sessions, and Upload Controls
 * `security_headers.php` is included by `db.php` and by session entry points before `session_start()`. It sends the shared security baseline: CSP, frame denial, MIME sniffing protection, referrer policy, permissions policy, cross-origin opener policy, HSTS for HTTPS requests, and removal of `X-Powered-By`.
 * Authenticated pages use `cotswold_secure_session_start()` so PHP session cookies are `HttpOnly`, `SameSite=Lax`, strict-mode, and `Secure` when accessed over HTTPS.
-* `.htaccess` mirrors the core security headers for Apache-hosted requests, including a CSP that allows the current CDN dependencies used by the site.
+* `security_headers.php` is the single authoritative header layer. `.htaccess` denies source-only paths and executable uploads but does not duplicate CSP.
 * Uploaded digital teamsheet documents live in `uploads/teamsheets/`, which is blocked from direct web access. `digital_teamsheet_file.php` validates the viewer's session, checks gala/club sharing rules, resolves the file path under the expected upload directory, and serves it as a private attachment.
 * `fetch_sheet.php` verifies TLS certificates when downloading Google Sheet exports.
-* `track_action.php` only accepts same-origin POST usage, validates the action token, and updates counters via prepared statements.
+* `track_action.php` accepts same-origin POST usage, validates the action name format, and updates counters via prepared statements. It is telemetry, not an authentication or audit control.
 
 ### Privacy Policy
 * `privacy.php` is the canonical public privacy notice. It covers:
@@ -137,7 +137,7 @@ The project has transitioned from static functionality into a highly dynamic and
 
 If restoring this project from scratch:
 1. **Prepare Server:** Install a fresh build of XAMPP.
-2. **Setup DB:** Navigate to `localhost/phpmyadmin`. Create a database named `cotswold_league`.
-3. **Import Scheme:** Import the latest `.sql` snapshot from the `db_backups/` folder.
+2. **Setup DB:** Create a database named `cotswold_league` using a least-privilege runtime account.
+3. **Restore Data:** Restore only from an approved encrypted backup held outside the repository and web document root. There is intentionally no `db_backups/` source folder.
 4. **Environment Context:** For production, set `COTSWOLD_DB_HOST`, `COTSWOLD_DB_USER`, `COTSWOLD_DB_PASS`, `COTSWOLD_DB_NAME`, `COTSWOLD_LEAGUE_PASSWORD`, and `COTSWOLD_SUPER_ADMIN_PASSWORD`. For local XAMPP development, the fallback values in `db.php` usually work out of the box.
 5. **Run Setup:** Copy the directory into `htdocs/`. The logic within the system relies on absolute routing relative to the host, meaning navigating to `http://localhost/cotswoldleague` will boot the project instantly.

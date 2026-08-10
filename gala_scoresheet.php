@@ -37,8 +37,8 @@ while ($row = $res_clubs->fetch_assoc()) {
     <title>Gala Scoresheet | Cotswold League</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/lucide-1.31.0.min.js"></script>
     <!-- Include the scoring engine -->
     <script src="gala_scoresheet.js?v=20260504-deadheat"></script>
     <style>
@@ -635,8 +635,19 @@ while ($row = $res_clubs->fetch_assoc()) {
         }
 
         function showError(msg) {
-            elGalaSubtitle.innerHTML = `<span class="text-red-400 font-bold"><i data-lucide="alert-circle" class="w-4 h-4 inline pb-1"></i> ${msg}</span>`;
+            elGalaSubtitle.textContent = String(msg ?? 'An unexpected error occurred.');
+            elGalaSubtitle.className = 'text-red-400 font-bold';
             lucide.createIcons();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            })[character]);
+        }
+
+        function safeLogo(value) {
+            return encodeURIComponent(String(value ?? '').split(/[\\/]/).pop().replace(/[^A-Za-z0-9._-]/g, ''));
         }
 
         function stableScoresheetUrl(id) {
@@ -1256,8 +1267,8 @@ while ($row = $res_clubs->fetch_assoc()) {
                 headHTML += `
                     <div class="header-cell sticky top-0 z-40 flex-col gap-1 py-2 text-center border-r border-slate-700/50 relative bg-slate-900 shadow-md min-w-0">
                         <span class="text-sky-400 text-[10px] font-bold tracking-widest">LANE ${t.lane_number}</span>
-                        <div class="w-6 h-6 bg-white rounded p-0.5 mx-auto opacity-90 shadow-inner hidden lg:block"><img src="images/Teams/${t.logo}" class="w-full h-full object-contain"></div>
-                        <span class="text-white text-xs whitespace-nowrap overflow-hidden text-ellipsis w-full px-1 leading-tight min-w-0">${t.club_name}</span>
+                        <div class="w-6 h-6 bg-white rounded p-0.5 mx-auto opacity-90 shadow-inner hidden lg:block"><img src="images/Teams/${safeLogo(t.logo)}" alt="" class="w-full h-full object-contain"></div>
+                        <span class="text-white text-xs whitespace-nowrap overflow-hidden text-ellipsis w-full px-1 leading-tight min-w-0">${escapeHtml(t.club_name)}</span>
                     </div>`;
             });
             head.innerHTML = headHTML;
@@ -1272,9 +1283,9 @@ while ($row = $res_clubs->fetch_assoc()) {
                         <div class="flex items-center gap-3 w-full">
                             <div class="bg-slate-950 text-slate-400 text-xs font-bold w-7 h-7 flex items-center justify-center rounded-lg border border-slate-700/50 flex-shrink-0">${ev.event_number}</div>
                             <div class="flex-grow min-w-0">
-                                <div class="font-bold text-sm text-white truncate" title="${ev.event_name}">${ev.event_name}</div>
+                                <div class="font-bold text-sm text-white truncate" title="${escapeHtml(ev.event_name)}">${escapeHtml(ev.event_name)}</div>
                                 <div class="flex gap-2 text-[10px] uppercase tracking-wider text-slate-500 mt-0.5">
-                                    <span class="bg-slate-800 px-1.5 rounded">${ev.distance}</span>
+                                    <span class="bg-slate-800 px-1.5 rounded">${escapeHtml(ev.distance)}</span>
                                     <span class="bg-slate-800 px-1.5 rounded border border-red-500/20 text-red-400">CUT: ${GalaEngine.formatTime(ev.cut_off_time_ms)}</span>
                                 </div>
                             </div>
@@ -1557,7 +1568,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                     inp.value = '';
                     const reason = appState.results[key]?.dq_reason;
                     if (reason) {
-                        outPlace.innerHTML = `<div class="flex flex-col"><span class="text-red-400 uppercase leading-none">DQ</span><span class="text-[9px] text-red-500/70 truncate max-w-[80px] normal-case font-normal mt-0.5" title="${reason}">${reason}</span></div>`;
+                        outPlace.innerHTML = `<div class="flex flex-col"><span class="text-red-400 uppercase leading-none">DQ</span><span class="text-[9px] text-red-500/70 truncate max-w-[80px] normal-case font-normal mt-0.5" title="${escapeHtml(reason)}">${escapeHtml(reason)}</span></div>`;
                     } else {
                         outPlace.innerHTML = '<span class="text-red-400 uppercase">DQ</span>';
                     }
@@ -1604,7 +1615,7 @@ while ($row = $res_clubs->fetch_assoc()) {
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="w-6 h-6 flex items-center justify-center rounded-full border ${posClass} font-bold text-xs shrink-0">${pos}</div>
-                                <div class="font-bold text-sm text-white truncate max-w-[150px]" title="${t.club_name}">${t.club_name}</div>
+                                <div class="font-bold text-sm text-white truncate max-w-[150px]" title="${escapeHtml(t.club_name)}">${escapeHtml(t.club_name)}</div>
                             </div>
                             <div class="text-xl font-bold text-sky-400 shrink-0">${t.total_points}</div>
                         </div>

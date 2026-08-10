@@ -10,6 +10,11 @@
  * and will not create new clubs with guessed venue/contact details.
  */
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 require_once __DIR__ . '/../db.php';
 
 $apply = in_array('--apply', $argv, true);

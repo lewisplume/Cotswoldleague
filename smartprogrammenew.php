@@ -11,8 +11,9 @@ $digitalTeamsheetId = isset($_GET['digital_teamsheet_id']) ? (int)$_GET['digital
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotswold League Coach Programme</title>
     <link rel="icon" href="images/league-logo.svg" type="image/webp">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="assets/vendor/tailwindcss-3.4.17.js"></script>
+    <script src="assets/vendor/xlsx-0.20.3.full.min.js"></script>
+    <script src="workbook_validation.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
@@ -1286,6 +1287,7 @@ $digitalTeamsheetId = isset($_GET['digital_teamsheet_id']) ? (int)$_GET['digital
 
                 const data = await response.arrayBuffer();
                 workbook = XLSX.read(data, { type: 'array' });
+                await CotswoldWorkbook.validate(workbook, { kind: 'teamsheet', arrayBuffer: data, filename: 'Digital Teamsheet' });
 
                 document.querySelectorAll('#workbookNameDisplay').forEach(el => {
                     el.textContent = 'Digital Teamsheet';
@@ -1326,6 +1328,7 @@ $digitalTeamsheetId = isset($_GET['digital_teamsheet_id']) ? (int)$_GET['digital
                 
                 const data = await response.arrayBuffer();
                 workbook = XLSX.read(data, { type: 'array' });
+                await CotswoldWorkbook.validate(workbook, { kind: 'teamsheet', arrayBuffer: data, filename });
 
                 // Update UI with workbook name
                 document.querySelectorAll('#workbookNameDisplay').forEach(el => {

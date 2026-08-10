@@ -7,6 +7,8 @@ require_once __DIR__ . '/security_headers.php';
 cotswold_secure_session_start();
 include 'db.php';
 include_once 'finals_sync.php';
+require_once __DIR__ . '/gala_scoring.php';
+require_once __DIR__ . '/audit_helpers.php';
 
 header('Content-Type: application/json');
 
@@ -17,6 +19,11 @@ $active_season_year = isset($current_season_year) ? (int)$current_season_year : 
 if (!$is_super_admin) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    cotswold_require_csrf(true);
+    cotswold_audit_authenticated_request($conn, 'Super Admin', 'Gala admin', $action);
 }
 
 // =====================================================
@@ -79,15 +86,29 @@ if ($action === 'list_scoresheets' && $_SERVER['REQUEST_METHOD'] === 'GET') {
 // =====================================================
 if ($action === 'verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $scoresheet_id = intval($_POST['scoresheet_id'] ?? 0);
-    
-    $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'verified', verified_by = 'Super Admin', verified_at = NOW() WHERE id = ?");
-    $stmt->bind_param("i", $scoresheet_id);
-    if ($stmt->execute()) {
+
+    $conn->begin_transaction();
+    try {
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
+        $stmt = $conn->prepare("UPDATE gala_scoresheets SET status = 'verified', verified_by = 'Super Admin', verified_at = NOW() WHERE id = ? AND status = 'submitted'");
+        $stmt->bind_param('i', $scoresheet_id);
+        $stmt->execute();
+        if ($stmt->affected_rows < 1) {
+            throw new InvalidArgumentException('Only a submitted scoresheet can be verified.');
+        }
+        $stmt->close();
+        $conn->commit();
         echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['error' => 'Database error']);
+    } catch (InvalidArgumentException $e) {
+        $conn->rollback();
+        http_response_code(422);
+        echo json_encode(['error' => $e->getMessage()]);
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Scoresheet verification failed: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'The scoresheet could not be verified.']);
     }
-    $stmt->close();
     exit;
 }
 
@@ -150,20 +171,7 @@ if ($action === 'publish_round' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // 2. Aggregate points from all verified scoresheets
-    $points_map = []; // [club_id => total_points]
-    foreach ($scoresheets as $sheet) {
-        if (!empty($sheet['total_points_json'])) {
-            $pts = json_decode($sheet['total_points_json'], true);
-            if (is_array($pts)) {
-                foreach ($pts as $club_id => $score) {
-                    $points_map[(int)$club_id] = (int)$score;
-                }
-            }
-        }
-    }
-
-    // 3. Update the main `results` table
+    // 2. Validate the target standings column.
     $round_col = "round_" . $round; // round_1, round_2, etc.
     
     // Ensure column is safe
@@ -174,6 +182,17 @@ if ($action === 'publish_round' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $conn->begin_transaction();
     try {
+        // Recalculate again at the publication boundary. Stored/client totals
+        // are never authoritative, even if a scoresheet was verified earlier.
+        $points_map = [];
+        foreach ($scoresheets as $sheet) {
+            $calculated = cotswold_recalculate_scoresheet($conn, (int)$sheet['id'], $active_season_year);
+            foreach ($calculated['total_points'] as $club_id => $score) {
+                $points_map[(int)$club_id] = (int)$score;
+            }
+        }
+
+        // 3. Update the main `results` table.
         foreach ($points_map as $club_id => $pts) {
             // Check if club exists in results
             $chk = $conn->query("SELECT id FROM results WHERE club_id = $club_id AND season_year = $season");
@@ -202,7 +221,8 @@ if ($action === 'publish_round' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => true, 'message' => $message, 'finals_sync' => $finals_sync]);
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(['error' => 'Database error during publish: ' . $e->getMessage()]);
+        error_log('Round publish failed [' . cotswold_request_id() . ']: ' . $e->getMessage());
+        echo json_encode(['error' => 'The round could not be published.']);
     }
     exit;
 }
@@ -215,18 +235,26 @@ if ($action === 'mark_absent' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $club_id = intval($_POST['club_id'] ?? 0);
     $is_absent = intval($_POST['is_absent'] ?? 1);
 
-    $stmt = $conn->prepare("UPDATE gala_teams SET is_absent = ?, lane_number = NULL WHERE scoresheet_id = ? AND club_id = ?");
-    $stmt->bind_param("iii", $is_absent, $scoresheet_id, $club_id);
-    if ($stmt->execute()) {
+    $conn->begin_transaction();
+    try {
+        $stmt = $conn->prepare("UPDATE gala_teams SET is_absent = ?, lane_number = NULL WHERE scoresheet_id = ? AND club_id = ?");
+        $stmt->bind_param("iii", $is_absent, $scoresheet_id, $club_id);
+        $stmt->execute();
+        $stmt->close();
+
         // If marking absent, also clear any existing results for this team in this scoresheet
         if ($is_absent == 1) {
             $conn->query("UPDATE gala_results SET time_ms = NULL, is_dq = 0, status = 'pending', source_type = 'live' WHERE scoresheet_id = $scoresheet_id AND club_id = $club_id");
         }
+        cotswold_recalculate_scoresheet($conn, $scoresheet_id, $active_season_year);
+        $conn->commit();
         echo json_encode(['success' => true]);
-    } else {
+    } catch (Throwable $e) {
+        $conn->rollback();
+        error_log('Attendance update failed: ' . $e->getMessage());
+        http_response_code(500);
         echo json_encode(['error' => 'Failed to update attendance status.']);
     }
-    $stmt->close();
     exit;
 }
 
@@ -271,12 +299,14 @@ if ($action === 'import_results' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 4. Force status back to in_progress if it was submitted/verified so scoring recalculates
         $conn->query("UPDATE gala_scoresheets SET status = 'in_progress', verified_by = NULL WHERE id = $target_scoresheet_id");
+        cotswold_recalculate_scoresheet($conn, $target_scoresheet_id, $active_season_year);
 
         $conn->commit();
         echo json_encode(['success' => true, 'message' => "Imported $imported_count event results."]);
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(['error' => 'Import failed: ' . $e->getMessage()]);
+        error_log('Result import failed [' . cotswold_request_id() . ']: ' . $e->getMessage());
+        echo json_encode(['error' => 'The results could not be imported.']);
     }
     exit;
 }
@@ -333,12 +363,15 @@ if ($action === 'swap_teams' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 4. Force status to in_progress to recalculate
         $conn->query("UPDATE gala_scoresheets SET status = 'in_progress', verified_by = NULL WHERE id IN ($scoresheet_a, $scoresheet_b)");
+        cotswold_recalculate_scoresheet($conn, $scoresheet_a, $active_season_year);
+        cotswold_recalculate_scoresheet($conn, $scoresheet_b, $active_season_year);
 
         $conn->commit();
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         $conn->rollback();
-        echo json_encode(['error' => 'Swap failed: ' . $e->getMessage()]);
+        error_log('Team swap failed [' . cotswold_request_id() . ']: ' . $e->getMessage());
+        echo json_encode(['error' => 'The teams could not be swapped.']);
     }
     exit;
 }
